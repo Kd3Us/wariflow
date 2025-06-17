@@ -64,6 +64,7 @@
     <div class="form-group">
       <app-user-instructions
         [projectId]="project?.id || ''"
+        [initialInstructions]="project?.instructions || []"
         (instructionsChange)="onInstructionsChange($event)"
       ></app-user-instructions>
     </div>

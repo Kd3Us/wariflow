@@ -34,7 +34,8 @@ export class ProjectsService {
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         priority: 'HIGH',
-        tags: ['design', 'frontend', 'urgent']
+        tags: ['design', 'frontend', 'urgent'],
+        instructions: []
       },
       {
         id: uuidv4(),
@@ -50,7 +51,8 @@ export class ProjectsService {
         attachments: 2,
         isReminderActive: false,
         priority: 'MEDIUM',
-        tags: ['mobile', 'api', 'integration']
+        tags: ['mobile', 'api', 'integration'],
+        instructions: []
       },
       {
         id: uuidv4(),
@@ -67,7 +69,8 @@ export class ProjectsService {
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         priority: 'LOW',
-        tags: ['analytics', 'dashboard', 'metrics']
+        tags: ['analytics', 'dashboard', 'metrics'],
+        instructions: []
       }
     ];
   }
@@ -86,6 +89,7 @@ export class ProjectsService {
       isReminderActive: !!createProjectDto.reminderDate,
       priority: createProjectDto.priority || 'MEDIUM',
       tags: createProjectDto.tags || [],
+      instructions: createProjectDto.instructions || [],
     };
 
     this.projects.push(project);
@@ -96,17 +100,14 @@ export class ProjectsService {
     let filteredProjects = [...this.projects];
 
     if (filters) {
-      // Filtrer par étape
       if (filters.stage) {
         filteredProjects = filteredProjects.filter(p => p.stage === filters.stage);
       }
 
-      // Filtrer par priorité
       if (filters.priority) {
         filteredProjects = filteredProjects.filter(p => p.priority === filters.priority);
       }
 
-      // Recherche textuelle
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         filteredProjects = filteredProjects.filter(p => 
@@ -116,19 +117,16 @@ export class ProjectsService {
         );
       }
 
-      // Filtrer par deadline proche
       if (filters.deadlineInDays) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + filters.deadlineInDays);
         filteredProjects = filteredProjects.filter(p => p.deadline <= targetDate);
       }
 
-      // Filtrer par rappels actifs
       if (filters.hasActiveReminder !== undefined) {
         filteredProjects = filteredProjects.filter(p => p.isReminderActive === filters.hasActiveReminder);
       }
 
-      // Tri
       if (filters.sortBy) {
         const order = filters.sortOrder === 'desc' ? -1 : 1;
         filteredProjects.sort((a, b) => {
@@ -174,14 +172,12 @@ export class ProjectsService {
 
     const project = this.projects[projectIndex];
     
-    // Si les IDs d'équipe sont fournis, récupérer les membres
     if (updateProjectDto.teamIds) {
       const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
       updateProjectDto['team'] = teamMembers;
       delete updateProjectDto.teamIds;
     }
 
-    // Mettre à jour le statut de rappel
     if (updateProjectDto.reminderDate !== undefined) {
       updateProjectDto['isReminderActive'] = !!updateProjectDto.reminderDate;
     }
@@ -198,7 +194,6 @@ export class ProjectsService {
   updateStage(id: string, newStage: ProjectStage): Project {
     const project = this.findOne(id);
     
-    // Vérifier la progression logique des étapes
     const currentStageIndex = PROJECT_STAGE_ORDER.indexOf(project.stage);
     const newStageIndex = PROJECT_STAGE_ORDER.indexOf(newStage);
     
@@ -248,5 +243,4 @@ export class ProjectsService {
       .filter(p => p.isReminderActive && p.reminderDate && p.reminderDate <= new Date())
       .sort((a, b) => a.reminderDate.getTime() - b.reminderDate.getTime());
   }
-
 }

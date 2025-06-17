@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProjectStage } from '../../common/enums/project-stage.enum';
+import { UserInstruction } from '../../common/interfaces/user-instruction.interface';
 
 export class CreateProjectDto {
   @ApiProperty({ description: 'Titre du projet' })
@@ -50,4 +51,9 @@ export class CreateProjectDto {
   @IsDate()
   @Type(() => Date)
   reminderDate?: Date;
+
+  @ApiProperty({ description: 'Instructions du projet', type: 'array', required: false })
+  @IsOptional()
+  @IsArray()
+  instructions?: UserInstruction[];
 }

@@ -25,6 +25,7 @@ export class ProjectFormComponent implements OnInit {
   
   ngOnInit(): void {
     this.initForm();
+    this.initInstructions();
   }
   
   private initForm(): void {
@@ -39,6 +40,12 @@ export class ProjectFormComponent implements OnInit {
       reminderDate: [this.project?.reminderDate ? this.formatDate(this.project.reminderDate) : null],
       teamIds: [this.project?.team?.map(member => member.id) || [], []]
     });
+  }
+  
+  private initInstructions(): void {
+    if (this.project?.instructions) {
+      this.currentInstructions = [...this.project.instructions];
+    }
   }
   
   private formatDate(date: Date): string {
@@ -80,6 +87,9 @@ export class ProjectFormComponent implements OnInit {
       instructions: this.currentInstructions
     };
     
+    console.log('Données du projet à sauvegarder:', projectData);
+    console.log('Instructions actuelles:', this.currentInstructions);
+    
     this.save.emit(projectData);
   }
   
@@ -88,6 +98,7 @@ export class ProjectFormComponent implements OnInit {
   }
   
   onInstructionsChange(instructions: UserInstruction[]): void {
+    console.log('Instructions modifiées:', instructions);
     this.currentInstructions = instructions;
   }
 }

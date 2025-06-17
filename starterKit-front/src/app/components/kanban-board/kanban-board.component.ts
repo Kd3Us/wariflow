@@ -100,7 +100,10 @@ export class KanbanBoardComponent implements OnInit {
   
   saveProject(projectData: Partial<Project>): void {
     if (this.isNewProject) {
-      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt'>);
+      this.projectService.addProject({
+        ...projectData,
+        instructions: projectData.instructions || []
+      } as Omit<Project, 'id' | 'createdAt' | 'updatedAt'>);
     } else if (this.selectedProject) {
       this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
         this.loadProjects();
