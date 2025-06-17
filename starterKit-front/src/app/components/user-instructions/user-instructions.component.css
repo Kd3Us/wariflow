@@ -46,9 +46,9 @@
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary;
 }
 
-/* Solution ciblée uniquement pour l'icône de calendrier */
+
 input[type="date"]::-webkit-calendar-picker-indicator {
-  margin-left: 5px; /* Juste un petit décalage vers la droite */
+  margin-left: 5px;
   opacity: 0.8;
 }
 
