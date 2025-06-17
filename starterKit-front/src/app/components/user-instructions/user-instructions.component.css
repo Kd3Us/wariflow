@@ -17,6 +17,7 @@
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary;
 }
 
+
 .error-message {
   @apply text-sm text-red-600 mt-1;
 }
@@ -43,4 +44,15 @@
 
 .date-input {
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary;
+}
+
+/* Solution ciblée uniquement pour l'icône de calendrier */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: 5px; /* Juste un petit décalage vers la droite */
+  opacity: 0.8;
+}
+
+/* Pour Firefox */
+input[type="date"]::-moz-calendar-picker-indicator {
+  margin-left: 5px;
 }

@@ -13,7 +13,7 @@
   <div *ngIf="showForm" class="instruction-form bg-gray-50 p-4 rounded-lg mb-4">
     <form [formGroup]="instructionForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
-        <label for="title">Titre de l'instruction</label>
+        <label for="title">Titre de l'instruction *</label>
         <input type="text" id="title" formControlName="title" placeholder="Ex: Configurer l'environnement">
         <div class="error-message" *ngIf="instructionForm.get('title')?.invalid && instructionForm.get('title')?.touched">
           Le titre est obligatoire (minimum 3 caractères)
@@ -21,18 +21,24 @@
       </div>
 
       <div class="form-group">
-        <label for="description">Description</label>
+        <label for="description">Description *</label>
         <textarea id="description" formControlName="description" rows="3" placeholder="Décrivez l'instruction en détail"></textarea>
+        <div class="error-message" *ngIf="instructionForm.get('description')?.invalid && instructionForm.get('description')?.touched">
+          La description est obligatoire
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="form-group">
-          <label for="priority">Priorité</label>
+          <label for="priority">Priorité *</label>
           <select id="priority" formControlName="priority">
             <option *ngFor="let priority of priorities" [value]="priority">
               {{ getPriorityLabel(priority) }}
             </option>
           </select>
+          <div class="error-message" *ngIf="instructionForm.get('priority')?.invalid && instructionForm.get('priority')?.touched">
+            La priorité est obligatoire
+          </div>
         </div>
 
         <div class="form-group">

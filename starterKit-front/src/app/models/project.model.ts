@@ -13,6 +13,16 @@ export interface TeamMember {
   avatar?: string;
 }
 
+export interface UserInstruction {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  dueDate?: Date;
+  completed: boolean;
+  createdAt: Date;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -29,14 +39,5 @@ export interface Project {
   reminderDate?: Date;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   tags: string[];
-}
-
-export interface UserInstruction {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  dueDate?: Date;
-  completed: boolean;
-  createdAt: Date;
+  instructions: UserInstruction[];
 }

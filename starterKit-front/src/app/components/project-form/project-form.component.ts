@@ -19,11 +19,15 @@ export class ProjectFormComponent implements OnInit {
   projectForm!: FormGroup;
   projectStages = Object.values(ProjectStage);
   priorities = ['LOW', 'MEDIUM', 'HIGH'];
+  currentInstructions: UserInstruction[] = [];
   
   constructor(private fb: FormBuilder) {}
   
   ngOnInit(): void {
     this.initForm();
+    if (this.project && this.project.instructions) {
+      this.currentInstructions = [...this.project.instructions];
+    }
   }
   
   private initForm(): void {
@@ -36,7 +40,7 @@ export class ProjectFormComponent implements OnInit {
       priority: [this.project?.priority || 'MEDIUM', [Validators.required]],
       tags: [this.project?.tags || []],
       reminderDate: [this.project?.reminderDate ? this.formatDate(this.project.reminderDate) : null],
-      teamIds: [this.project?.team.map(member => member.id) || [], []]
+      teamIds: [this.project?.team?.map(member => member.id) || [], []]
     });
   }
   
@@ -65,7 +69,8 @@ export class ProjectFormComponent implements OnInit {
       reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
       tags: typeof formData.tags === 'string' 
         ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-        : formData.tags
+        : formData.tags,
+      instructions: this.currentInstructions
     };
     
     this.save.emit(projectData);
@@ -76,6 +81,6 @@ export class ProjectFormComponent implements OnInit {
   }
 
   onInstructionsChange(instructions: UserInstruction[]): void {
-  console.log('Instructions mises à jour:', instructions);
-}
+    this.currentInstructions = [...instructions];
+  }
 }

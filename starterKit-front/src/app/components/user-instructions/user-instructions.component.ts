@@ -35,7 +35,7 @@ export class UserInstructionsComponent {
   private initForm(): void {
     this.instructionForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
-      description: [''],
+      description: ['', [Validators.required]],
       priority: ['MEDIUM', [Validators.required]],
       dueDate: ['']
     });
