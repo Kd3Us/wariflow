@@ -1,0 +1,153 @@
+<div class="p-6 h-[calc(100vh-64px)] overflow-hidden flex flex-col">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Tableau de project</h1>
+    <button
+      (click)="openProjectForm()"
+      class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
+    >
+      <span class="material-icons text-lg">add</span>
+      Créer projet
+    </button>
+  </div>
+
+  <div class="flex gap-5 overflow-x-auto pb-4 h-full">
+    <!-- IDEE Column -->
+    <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
+      <div class="flex items-center mb-4">
+        <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.IDEE }}</h2>
+        <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ ideeProjects.length }}</span>
+        <button
+          (click)="openProjectForm(ProjectStage.IDEE)"
+          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+        >
+          <span class="material-icons text-lg">add</span>
+        </button>
+      </div>
+
+      <div
+        cdkDropList
+        #ideeList="cdkDropList"
+        [cdkDropListData]="ideeProjects"
+        [cdkDropListConnectedTo]="[mvpList, tractionList, leveeList]"
+        class="flex-grow overflow-y-auto min-h-[100px] p-1"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <app-project-card
+          *ngFor="let project of ideeProjects"
+          [project]="project"
+          cdkDrag
+          [cdkDragData]="project"
+          class="mb-4"
+          (edit)="editProject($event)"
+          (delete)="deleteProject($event)"
+        ></app-project-card>
+      </div>
+    </div>
+
+    <!-- MVP Column -->
+    <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
+      <div class="flex items-center mb-4">
+        <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.MVP }}</h2>
+        <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ mvpProjects.length }}</span>
+        <button
+          (click)="openProjectForm(ProjectStage.MVP)"
+          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+        >
+          <span class="material-icons text-lg">add</span>
+        </button>
+      </div>
+
+      <div
+        cdkDropList
+        #mvpList="cdkDropList"
+        [cdkDropListData]="mvpProjects"
+        [cdkDropListConnectedTo]="[ideeList, tractionList, leveeList]"
+        class="flex-grow overflow-y-auto min-h-[100px] p-1"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <app-project-card
+          *ngFor="let project of mvpProjects"
+          [project]="project"
+          cdkDrag
+          [cdkDragData]="project"
+          class="mb-4"
+          (edit)="editProject($event)"
+          (delete)="deleteProject($event)"
+        ></app-project-card>
+      </div>
+    </div>
+
+    <!-- TRACTION Column -->
+    <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
+      <div class="flex items-center mb-4">
+        <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.TRACTION }}</h2>
+        <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ tractionProjects.length }}</span>
+        <button
+          (click)="openProjectForm(ProjectStage.TRACTION)"
+          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+        >
+          <span class="material-icons text-lg">add</span>
+        </button>
+      </div>
+
+      <div
+        cdkDropList
+        #tractionList="cdkDropList"
+        [cdkDropListData]="tractionProjects"
+        [cdkDropListConnectedTo]="[ideeList, mvpList, leveeList]"
+        class="flex-grow overflow-y-auto min-h-[100px] p-1"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <app-project-card
+          *ngFor="let project of tractionProjects"
+          [project]="project"
+          cdkDrag
+          [cdkDragData]="project"
+          class="mb-4"
+          (edit)="editProject($event)"
+          (delete)="deleteProject($event)"
+        ></app-project-card>
+      </div>
+    </div>
+
+    <!-- LEVEE Column -->
+    <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
+      <div class="flex items-center mb-4">
+        <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.LEVEE }}</h2>
+        <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ leveeProjects.length }}</span>
+        <button
+          (click)="openProjectForm(ProjectStage.LEVEE)"
+          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+        >
+          <span class="material-icons text-lg">add</span>
+        </button>
+      </div>
+
+      <div
+        cdkDropList
+        #leveeList="cdkDropList"
+        [cdkDropListData]="leveeProjects"
+        [cdkDropListConnectedTo]="[ideeList, mvpList, tractionList]"
+        class="flex-grow overflow-y-auto min-h-[100px] p-1"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <app-project-card
+          *ngFor="let project of leveeProjects"
+          [project]="project"
+          cdkDrag
+          [cdkDragData]="project"
+          class="mb-4"
+          (edit)="editProject($event)"
+          (delete)="deleteProject($event)"
+        ></app-project-card>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-project-form
+  *ngIf="showProjectForm"
+  [project]="selectedProject"
+  (save)="saveProject($event)"
+  (cancel)="closeProjectForm()"
+></app-project-form>

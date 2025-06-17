@@ -1,0 +1,111 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { ProjectService } from '../../services/project.service';
+import { Project, ProjectStage } from '../../models/project.model';
+import { ProjectCardComponent } from '../project-card/project-card.component';
+import { ProjectFormComponent } from '../project-form/project-form.component';
+
+@Component({
+  selector: 'app-kanban-board',
+  standalone: true,
+  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent],
+  templateUrl: './kanban-board.component.html'
+})
+
+export class KanbanBoardComponent implements OnInit {
+  ProjectStage = ProjectStage;
+  ideeProjects: Project[] = [];
+  mvpProjects: Project[] = [];
+  tractionProjects: Project[] = [];
+  leveeProjects: Project[] = [];
+  
+  selectedProject: Project | null = null;
+  showProjectForm = false;
+  isNewProject = true;
+  
+  constructor(private projectService: ProjectService) {}
+  
+  ngOnInit(): void {
+    this.loadProjects();
+  }
+  
+  loadProjects(): void {
+    this.projectService.getProjects().subscribe(projects => {
+      this.ideeProjects = projects.filter(p => p.stage === ProjectStage.IDEE);
+      this.mvpProjects = projects.filter(p => p.stage === ProjectStage.MVP);
+      this.tractionProjects = projects.filter(p => p.stage === ProjectStage.TRACTION);
+      this.leveeProjects = projects.filter(p => p.stage === ProjectStage.LEVEE);
+    });
+  }
+  
+  drop(event: CdkDragDrop<Project[]>): void {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex,
+      );
+      
+      // Update project stage
+      const project = event.container.data[event.currentIndex];
+      
+      // Determine the new stage based on the container data
+      let newStage: ProjectStage;
+      if (event.container.data === this.ideeProjects) {
+        newStage = ProjectStage.IDEE;
+      } else if (event.container.data === this.mvpProjects) {
+        newStage = ProjectStage.MVP;
+      } else if (event.container.data === this.tractionProjects) {
+        newStage = ProjectStage.TRACTION;
+      } else if (event.container.data === this.leveeProjects) {
+        newStage = ProjectStage.LEVEE;
+      } else {
+        return;
+      }
+      
+      // Update project stage locally
+      project.stage = newStage;
+      
+      // Update project stage in backend and reload projects
+      this.projectService.updateProjectStage(project.id, newStage).subscribe(() => {
+        this.loadProjects();
+      });
+    }
+  }
+  
+  openProjectForm(stage: ProjectStage = ProjectStage.IDEE): void {
+    this.isNewProject = true;
+    this.selectedProject = null;
+    this.showProjectForm = true;
+  }
+  
+  editProject(project: Project): void {
+    this.isNewProject = false;
+    this.selectedProject = project;
+    this.showProjectForm = true;
+  }
+  
+  deleteProject(project: Project): void {
+    this.projectService.deleteProject(project.id);
+  }
+  
+  closeProjectForm(): void {
+    this.showProjectForm = false;
+    this.selectedProject = null;
+  }
+  
+  saveProject(projectData: Partial<Project>): void {
+    if (this.isNewProject) {
+      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt'>);
+    } else if (this.selectedProject) {
+      this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
+        this.loadProjects();
+      });
+    }
+    this.closeProjectForm();
+  }
+}
