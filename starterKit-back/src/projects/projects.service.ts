@@ -34,8 +34,7 @@ export class ProjectsService {
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         priority: 'HIGH',
-        tags: ['design', 'frontend', 'urgent'],
-        instructions: []
+        tags: ['design', 'frontend', 'urgent']
       },
       {
         id: uuidv4(),
@@ -51,44 +50,24 @@ export class ProjectsService {
         attachments: 2,
         isReminderActive: false,
         priority: 'MEDIUM',
-        tags: ['mobile', 'api', 'integration'],
-        instructions: []
+        tags: ['mobile', 'api', 'integration']
       },
       {
         id: uuidv4(),
         title: 'Dashboard Analytics',
-        description: 'Développement du tableau de bord analytique avec métriques temps réel',
+        description: 'Développement du tableau de bord analytics avec métriques en temps réel',
         stage: ProjectStage.IDEE,
         progress: 15,
         deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
         team: [teamMembers[1], teamMembers[4]],
-        comments: 1,
-        attachments: 0,
+        comments: 8,
+        attachments: 1,
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         priority: 'LOW',
-        tags: ['analytics', 'dashboard', 'metrics'],
-        instructions: []
-      },
-      {
-        id: uuidv4(),
-        title: 'Security Audit',
-        description: 'Audit de sécurité complet de l\'infrastructure et des applications',
-        stage: ProjectStage.LEVEE,
-        progress: 90,
-        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-        team: [teamMembers[0], teamMembers[3], teamMembers[4]],
-        comments: 12,
-        attachments: 8,
-        isReminderActive: true,
-        reminderDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-        priority: 'HIGH',
-        tags: ['security', 'audit', 'infrastructure'],
-        instructions: []
+        tags: ['analytics', 'dashboard', 'metrics']
       }
     ];
   }
@@ -97,22 +76,16 @@ export class ProjectsService {
     const teamMembers = this.teamsService.findByIds(createProjectDto.teamIds);
     
     const project: Project = {
-      id: this.generateId(),
-      title: createProjectDto.title,
-      description: createProjectDto.description,
-      stage: createProjectDto.stage,
-      progress: createProjectDto.progress,
-      deadline: createProjectDto.deadline,
+      id: uuidv4(),
+      ...createProjectDto,
       team: teamMembers,
-      priority: createProjectDto.priority || 'MEDIUM',
-      tags: createProjectDto.tags || [],
-      reminderDate: createProjectDto.reminderDate,
-      isReminderActive: !!createProjectDto.reminderDate,
-      instructions: createProjectDto.instructions || [],
-      comments: 0,
-      attachments: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
+      comments: 0,
+      attachments: 0,
+      isReminderActive: !!createProjectDto.reminderDate,
+      priority: createProjectDto.priority || 'MEDIUM',
+      tags: createProjectDto.tags || [],
     };
 
     this.projects.push(project);
@@ -123,33 +96,39 @@ export class ProjectsService {
     let filteredProjects = [...this.projects];
 
     if (filters) {
+      // Filtrer par étape
       if (filters.stage) {
         filteredProjects = filteredProjects.filter(p => p.stage === filters.stage);
       }
 
+      // Filtrer par priorité
       if (filters.priority) {
         filteredProjects = filteredProjects.filter(p => p.priority === filters.priority);
       }
 
+      // Recherche textuelle
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        filteredProjects = filteredProjects.filter(p =>
+        filteredProjects = filteredProjects.filter(p => 
           p.title.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower) ||
           p.tags.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
 
+      // Filtrer par deadline proche
       if (filters.deadlineInDays) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + filters.deadlineInDays);
         filteredProjects = filteredProjects.filter(p => p.deadline <= targetDate);
       }
 
+      // Filtrer par rappels actifs
       if (filters.hasActiveReminder !== undefined) {
         filteredProjects = filteredProjects.filter(p => p.isReminderActive === filters.hasActiveReminder);
       }
 
+      // Tri
       if (filters.sortBy) {
         const order = filters.sortOrder === 'desc' ? -1 : 1;
         filteredProjects.sort((a, b) => {
@@ -195,18 +174,16 @@ export class ProjectsService {
 
     const project = this.projects[projectIndex];
     
+    // Si les IDs d'équipe sont fournis, récupérer les membres
     if (updateProjectDto.teamIds) {
       const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
       updateProjectDto['team'] = teamMembers;
       delete updateProjectDto.teamIds;
     }
 
+    // Mettre à jour le statut de rappel
     if (updateProjectDto.reminderDate !== undefined) {
       updateProjectDto['isReminderActive'] = !!updateProjectDto.reminderDate;
-    }
-
-    if (updateProjectDto.instructions) {
-      updateProjectDto['instructions'] = updateProjectDto.instructions;
     }
 
     this.projects[projectIndex] = {
@@ -221,6 +198,7 @@ export class ProjectsService {
   updateStage(id: string, newStage: ProjectStage): Project {
     const project = this.findOne(id);
     
+    // Vérifier la progression logique des étapes
     const currentStageIndex = PROJECT_STAGE_ORDER.indexOf(project.stage);
     const newStageIndex = PROJECT_STAGE_ORDER.indexOf(newStage);
     
@@ -271,7 +249,4 @@ export class ProjectsService {
       .sort((a, b) => a.reminderDate.getTime() - b.reminderDate.getTime());
   }
 
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
-  }
 }

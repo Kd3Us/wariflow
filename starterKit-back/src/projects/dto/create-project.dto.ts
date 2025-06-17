@@ -1,42 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProjectStage } from '../../common/enums/project-stage.enum';
-
-export class UserInstructionDto {
-  @ApiProperty({ description: 'ID de l\'instruction' })
-  @IsString()
-  @IsNotEmpty()
-  id: string;
-
-  @ApiProperty({ description: 'Titre de l\'instruction' })
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @ApiProperty({ description: 'Description de l\'instruction' })
-  @IsString()
-  @IsNotEmpty()
-  description: string;
-
-  @ApiProperty({ description: 'Priorité de l\'instruction', enum: ['LOW', 'MEDIUM', 'HIGH'] })
-  @IsEnum(['LOW', 'MEDIUM', 'HIGH'])
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-
-  @ApiProperty({ description: 'Date d\'échéance de l\'instruction', required: false })
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  dueDate?: Date;
-
-  @ApiProperty({ description: 'Statut de completion', default: false })
-  completed: boolean;
-
-  @ApiProperty({ description: 'Date de création' })
-  @IsDate()
-  @Type(() => Date)
-  createdAt: Date;
-}
 
 export class CreateProjectDto {
   @ApiProperty({ description: 'Titre du projet' })
@@ -85,11 +50,4 @@ export class CreateProjectDto {
   @IsDate()
   @Type(() => Date)
   reminderDate?: Date;
-
-  @ApiProperty({ description: 'Instructions du projet', type: [UserInstructionDto], required: false })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UserInstructionDto)
-  instructions?: UserInstructionDto[];
 }

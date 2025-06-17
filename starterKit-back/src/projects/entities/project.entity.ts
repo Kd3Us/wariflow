@@ -1,16 +1,6 @@
 import { ProjectStage } from '../../common/enums/project-stage.enum';
 import { TeamMember } from '../../common/interfaces/team-member.interface';
 
-export interface UserInstruction {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  dueDate?: Date;
-  completed: boolean;
-  createdAt: Date;
-}
-
 export class Project {
   id: string;
   title: string;
@@ -27,5 +17,4 @@ export class Project {
   reminderDate?: Date;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   tags: string[];
-  instructions: UserInstruction[];
 }
