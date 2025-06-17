@@ -43,6 +43,4 @@
 
 .date-input {
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary;
-  background-position: calc(100% - 8px) center;
-  padding-right: 36px;
 }
