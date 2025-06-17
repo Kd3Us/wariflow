@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Project, ProjectStage } from '../../models/project.model';
+import { UserInstructionsComponent, UserInstruction } from '../user-instructions/user-instructions.component';
 
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, UserInstructionsComponent],
   templateUrl: './project-form.component.html',
   styleUrls: ['./project-form.component.css']
 })
@@ -73,4 +74,8 @@ export class ProjectFormComponent implements OnInit {
   onCancel(): void {
     this.cancel.emit();
   }
+
+  onInstructionsChange(instructions: UserInstruction[]): void {
+  console.log('Instructions mises à jour:', instructions);
+}
 }
