@@ -41,7 +41,19 @@ export class ProjectService {
   }
 
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): void {
-    this.http.post<Project>(this.apiUrl, project)
+    const createProjectData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline instanceof Date ? project.deadline.toISOString() : project.deadline,
+      teamIds: project.teamIds || [],
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate
+    };
+
+    this.http.post<Project>(this.apiUrl, createProjectData)
       .pipe(
         map(newProject => ({
           ...newProject,
@@ -55,7 +67,14 @@ export class ProjectService {
           this.projectsSubject.next([...currentProjects, newProject]);
         })
       )
-      .subscribe();
+      .subscribe({
+        next: (newProject) => {
+          console.log('Projet créé avec succès:', newProject);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création du projet:', error);
+        }
+      });
   }
 
   updateProject(project: Project): void {

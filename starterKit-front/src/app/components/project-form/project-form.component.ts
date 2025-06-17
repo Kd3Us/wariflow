@@ -54,11 +54,7 @@ export class ProjectFormComponent implements OnInit {
   }
   
   onSubmit(): void {
-    console.log('onSubmit appelé');
-    console.log('Formulaire valide:', this.projectForm.valid);
-    
     if (this.projectForm.invalid) {
-      console.log('Formulaire invalide:', this.projectForm.errors);
       this.projectForm.markAllAsTouched();
       return;
     }
@@ -74,22 +70,24 @@ export class ProjectFormComponent implements OnInit {
       priority: formData.priority,
       tags: typeof formData.tags === 'string' 
         ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-        : (formData.tags || []),
-      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
+        : formData.tags || [],
       teamIds: formData.teamIds || [],
-      instructions: this.currentInstructions || []
+      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
+      team: [],
+      comments: 0,
+      attachments: 0,
+      isReminderActive: !!formData.reminderDate,
+      instructions: this.currentInstructions
     };
     
-    console.log('Données à sauvegarder:', projectData);
     this.save.emit(projectData);
   }
   
   onCancel(): void {
     this.cancel.emit();
   }
-
+  
   onInstructionsChange(instructions: UserInstruction[]): void {
-    console.log('Instructions changées:', instructions);
-    this.currentInstructions = [...instructions];
+    this.currentInstructions = instructions;
   }
 }
