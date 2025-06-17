@@ -1,92 +1,76 @@
 <div class="overlay" (click)="onCancel()"></div>
-
 <div class="modal" (click)="$event.stopPropagation()">
   <div class="modal-header">
-    <h2>{{ project ? 'Modifier le projet' : 'Créer un nouveau projet' }}</h2>
+    <h2>{{ project ? 'Edit Project' : 'New Project' }}</h2>
     <button type="button" class="close-button" (click)="onCancel()">
       <span class="material-icons">close</span>
     </button>
   </div>
-
+  
   <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
     <div class="form-group">
-      <label for="title">Titre du projet *</label>
-      <input type="text" id="title" formControlName="title" placeholder="Entrez le titre du projet">
+      <label for="title">Title</label>
+      <input type="text" id="title" formControlName="title" placeholder="Project title">
       <div class="error-message" *ngIf="projectForm.get('title')?.invalid && projectForm.get('title')?.touched">
-        Le titre est obligatoire (minimum 3 caractères)
+        Title is required and must be at least 3 characters
       </div>
     </div>
-
+    
     <div class="form-group">
-      <label for="description">Description *</label>
-      <textarea id="description" formControlName="description" rows="3" placeholder="Décrivez votre projet"></textarea>
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" placeholder="Project description" rows="3"></textarea>
       <div class="error-message" *ngIf="projectForm.get('description')?.invalid && projectForm.get('description')?.touched">
-        La description est obligatoire
+        Description is required
       </div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="form-group">
-        <label for="stage">Étape du projet</label>
-        <select id="stage" formControlName="stage">
-          <option *ngFor="let stage of projectStages" [value]="stage">{{ stage }}</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="progress">Progression ({{ projectForm.get('progress')?.value }}%)</label>
-        <input type="range" id="progress" formControlName="progress" min="0" max="100" step="5">
-      </div>
+    
+    <div class="form-group">
+      <label for="stage">Stage</label>
+      <select id="stage" formControlName="stage">
+        <option *ngFor="let stage of projectStages" [value]="stage">{{ stage }}</option>
+      </select>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="form-group">
-        <label for="priority">Priorité *</label>
-        <select id="priority" formControlName="priority">
-          <option value="LOW">Faible</option>
-          <option value="MEDIUM">Moyenne</option>
-          <option value="HIGH">Élevée</option>
-        </select>
-        <div class="error-message" *ngIf="projectForm.get('priority')?.invalid && projectForm.get('priority')?.touched">
-          La priorité est obligatoire
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="deadline">Date limite *</label>
-        <input type="date" id="deadline" formControlName="deadline">
-        <div class="error-message" *ngIf="projectForm.get('deadline')?.invalid && projectForm.get('deadline')?.touched">
-          La date limite est obligatoire
-        </div>
-      </div>
+    
+    <div class="form-group">
+      <label for="priority">Priority</label>
+      <select id="priority" formControlName="priority">
+        <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+      </select>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="form-group">
-        <label for="tags">Tags (séparés par des virgules)</label>
-        <input type="text" id="tags" formControlName="tags" placeholder="urgent, innovation, client">
-      </div>
-
-      <div class="form-group">
-        <label for="reminderDate">Date de rappel</label>
-        <input type="date" id="reminderDate" formControlName="reminderDate">
+    
+    <div class="form-group">
+      <label for="progress">Progress ({{ projectForm.get('progress')?.value }}%)</label>
+      <input type="range" id="progress" formControlName="progress" min="0" max="100" step="5">
+    </div>
+    
+    <div class="form-group">
+      <label for="deadline">Deadline</label>
+      <input type="date" id="deadline" formControlName="deadline">
+      <div class="error-message" *ngIf="projectForm.get('deadline')?.invalid && projectForm.get('deadline')?.touched">
+        Deadline is required
       </div>
     </div>
 
     <div class="form-group">
-      <div class="instructions-section">
-        <app-user-instructions 
-          [projectId]="project?.id || ''"
-          (instructionsChange)="onInstructionsChange($event)">
-        </app-user-instructions>
-      </div>
+      <label for="reminderDate">Reminder Date (Optional)</label>
+      <input type="date" id="reminderDate" formControlName="reminderDate">
     </div>
 
+    <div class="form-group">
+      <label for="tags">Tags (comma-separated)</label>
+      <input type="text" id="tags" formControlName="tags" placeholder="tag1, tag2, tag3">
+    </div>
+
+    <div class="form-group">
+      <app-user-instructions
+        [projectId]="project?.id || ''"
+        (instructionsChange)="onInstructionsChange($event)"
+      ></app-user-instructions>
+    </div>
+    
     <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="onCancel()">Annuler</button>
-      <button type="submit" class="btn-primary" [disabled]="projectForm.invalid">
-        {{ project ? 'Mettre à jour' : 'Créer le projet' }}
-      </button>
+      <button type="button" class="btn-secondary" (click)="onCancel()">Cancel</button>
+      <button type="submit" class="btn-primary" [disabled]="projectForm.invalid">Save</button>
     </div>
   </form>
 </div>

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -19,8 +19,9 @@ export interface UserInstruction {
   templateUrl: './user-instructions.component.html',
   styleUrls: ['./user-instructions.component.css']
 })
-export class UserInstructionsComponent {
+export class UserInstructionsComponent implements OnInit, OnChanges {
   @Input() projectId: string = '';
+  @Input() initialInstructions: UserInstruction[] = [];
   @Output() instructionsChange = new EventEmitter<UserInstruction[]>();
 
   instructions: UserInstruction[] = [];
@@ -30,6 +31,23 @@ export class UserInstructionsComponent {
 
   constructor(private fb: FormBuilder) {
     this.initForm();
+  }
+
+  ngOnInit(): void {
+    this.loadInstructions();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialInstructions']) {
+      this.loadInstructions();
+    }
+  }
+
+  private loadInstructions(): void {
+    if (this.initialInstructions && this.initialInstructions.length > 0) {
+      this.instructions = [...this.initialInstructions];
+      this.instructionsChange.emit(this.instructions);
+    }
   }
 
   private initForm(): void {

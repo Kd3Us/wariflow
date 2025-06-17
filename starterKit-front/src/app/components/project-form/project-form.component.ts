@@ -25,9 +25,6 @@ export class ProjectFormComponent implements OnInit {
   
   ngOnInit(): void {
     this.initForm();
-    if (this.project && this.project.instructions) {
-      this.currentInstructions = [...this.project.instructions];
-    }
   }
   
   private initForm(): void {
@@ -57,22 +54,33 @@ export class ProjectFormComponent implements OnInit {
   }
   
   onSubmit(): void {
+    console.log('onSubmit appelé');
+    console.log('Formulaire valide:', this.projectForm.valid);
+    
     if (this.projectForm.invalid) {
+      console.log('Formulaire invalide:', this.projectForm.errors);
       this.projectForm.markAllAsTouched();
       return;
     }
     
     const formData = this.projectForm.value;
+    
     const projectData = {
-      ...formData,
+      title: formData.title,
+      description: formData.description,
+      stage: formData.stage,
+      progress: formData.progress,
       deadline: new Date(formData.deadline),
-      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
+      priority: formData.priority,
       tags: typeof formData.tags === 'string' 
         ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-        : formData.tags,
-      instructions: this.currentInstructions
+        : (formData.tags || []),
+      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
+      teamIds: formData.teamIds || [],
+      instructions: this.currentInstructions || []
     };
     
+    console.log('Données à sauvegarder:', projectData);
     this.save.emit(projectData);
   }
   
@@ -81,6 +89,7 @@ export class ProjectFormComponent implements OnInit {
   }
 
   onInstructionsChange(instructions: UserInstruction[]): void {
+    console.log('Instructions changées:', instructions);
     this.currentInstructions = [...instructions];
   }
 }
