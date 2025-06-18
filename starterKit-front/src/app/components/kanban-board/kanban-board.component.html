@@ -11,17 +11,10 @@
   </div>
 
   <div class="flex gap-5 overflow-x-auto pb-4 h-full">
-    <!-- IDEE Column -->
     <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
       <div class="flex items-center mb-4">
         <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.IDEE }}</h2>
         <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ ideeProjects.length }}</span>
-        <button
-          (click)="openProjectForm(ProjectStage.IDEE)"
-          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-        >
-          <span class="material-icons text-lg">add</span>
-        </button>
       </div>
 
       <div
@@ -40,21 +33,15 @@
           class="mb-4"
           (edit)="editProject($event)"
           (delete)="deleteProject($event)"
+          (projectUpdated)="onProjectUpdated($event)"
         ></app-project-card>
       </div>
     </div>
 
-    <!-- MVP Column -->
     <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
       <div class="flex items-center mb-4">
         <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.MVP }}</h2>
         <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ mvpProjects.length }}</span>
-        <button
-          (click)="openProjectForm(ProjectStage.MVP)"
-          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-        >
-          <span class="material-icons text-lg">add</span>
-        </button>
       </div>
 
       <div
@@ -73,21 +60,15 @@
           class="mb-4"
           (edit)="editProject($event)"
           (delete)="deleteProject($event)"
+          (projectUpdated)="onProjectUpdated($event)"
         ></app-project-card>
       </div>
     </div>
 
-    <!-- TRACTION Column -->
     <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
       <div class="flex items-center mb-4">
         <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.TRACTION }}</h2>
         <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ tractionProjects.length }}</span>
-        <button
-          (click)="openProjectForm(ProjectStage.TRACTION)"
-          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-        >
-          <span class="material-icons text-lg">add</span>
-        </button>
       </div>
 
       <div
@@ -106,21 +87,15 @@
           class="mb-4"
           (edit)="editProject($event)"
           (delete)="deleteProject($event)"
+          (projectUpdated)="onProjectUpdated($event)"
         ></app-project-card>
       </div>
     </div>
 
-    <!-- LEVEE Column -->
     <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
       <div class="flex items-center mb-4">
         <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.LEVEE }}</h2>
         <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ leveeProjects.length }}</span>
-        <button
-          (click)="openProjectForm(ProjectStage.LEVEE)"
-          class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-        >
-          <span class="material-icons text-lg">add</span>
-        </button>
       </div>
 
       <div
@@ -139,6 +114,7 @@
           class="mb-4"
           (edit)="editProject($event)"
           (delete)="deleteProject($event)"
+          (projectUpdated)="onProjectUpdated($event)"
         ></app-project-card>
       </div>
     </div>
