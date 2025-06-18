@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Project } from './entities/project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { AddUsersToProjectDto } from './dto/add-users-to-project.dto';
 import { FilterProjectsDto } from './dto/filter-projects.dto';
 import { ProjectStage, PROJECT_STAGE_ORDER } from '../common/enums/project-stage.enum';
 import { TeamsService } from '../teams/teams.service';
@@ -56,44 +57,40 @@ export class ProjectsService {
       },
       {
         id: uuidv4(),
-        title: 'Dashboard Analytics',
-        description: 'Développement du tableau de bord analytics avec métriques en temps réel',
+        title: 'E-commerce Platform',
+        description: 'Développement d\'une plateforme e-commerce complète avec paiements sécurisés',
         stage: ProjectStage.IDEE,
         progress: 15,
         deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
-        team: [teamMembers[1], teamMembers[4]],
+        team: [teamMembers[0], teamMembers[4]],
         comments: 8,
         attachments: 1,
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         priority: 'LOW',
-        tags: ['analytics', 'dashboard', 'metrics'],
+        tags: ['e-commerce', 'backend', 'paiement'],
+        instructions: []
+      },
+      {
+        id: uuidv4(),
+        title: 'Marketing Analytics Dashboard',
+        description: 'Dashboard analytique pour le suivi des campagnes marketing et ROI',
+        stage: ProjectStage.LEVEE,
+        progress: 95,
+        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
+        team: [teamMembers[1], teamMembers[3], teamMembers[4]],
+        comments: 12,
+        attachments: 8,
+        isReminderActive: false,
+        priority: 'HIGH',
+        tags: ['analytics', 'dashboard', 'marketing'],
         instructions: []
       }
     ];
-  }
-
-  create(createProjectDto: CreateProjectDto): Project {
-    const teamMembers = this.teamsService.findByIds(createProjectDto.teamIds);
-    
-    const project: Project = {
-      id: uuidv4(),
-      ...createProjectDto,
-      team: teamMembers,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      comments: 0,
-      attachments: 0,
-      isReminderActive: !!createProjectDto.reminderDate,
-      priority: createProjectDto.priority || 'MEDIUM',
-      tags: createProjectDto.tags || [],
-      instructions: createProjectDto.instructions || [],
-    };
-
-    this.projects.push(project);
-    return project;
   }
 
   findAll(filters?: FilterProjectsDto): Project[] {
@@ -103,36 +100,34 @@ export class ProjectsService {
       if (filters.stage) {
         filteredProjects = filteredProjects.filter(p => p.stage === filters.stage);
       }
-
       if (filters.priority) {
         filteredProjects = filteredProjects.filter(p => p.priority === filters.priority);
       }
-
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        filteredProjects = filteredProjects.filter(p => 
+        filteredProjects = filteredProjects.filter(p =>
           p.title.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower) ||
           p.tags.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
-
-      if (filters.deadlineInDays) {
+      if (filters.deadlineInDays !== undefined) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + filters.deadlineInDays);
         filteredProjects = filteredProjects.filter(p => p.deadline <= targetDate);
       }
-
       if (filters.hasActiveReminder !== undefined) {
         filteredProjects = filteredProjects.filter(p => p.isReminderActive === filters.hasActiveReminder);
       }
-
       if (filters.sortBy) {
-        const order = filters.sortOrder === 'desc' ? -1 : 1;
         filteredProjects.sort((a, b) => {
-          let aValue, bValue;
+          let aValue: any, bValue: any;
           
           switch (filters.sortBy) {
+            case 'createdAt':
+              aValue = a.createdAt.getTime();
+              bValue = b.createdAt.getTime();
+              break;
             case 'deadline':
               aValue = a.deadline.getTime();
               bValue = b.deadline.getTime();
@@ -141,13 +136,11 @@ export class ProjectsService {
               aValue = a.progress;
               bValue = b.progress;
               break;
-            case 'createdAt':
             default:
-              aValue = a.createdAt.getTime();
-              bValue = b.createdAt.getTime();
-              break;
+              return 0;
           }
           
+          const order = filters.sortOrder === 'desc' ? -1 : 1;
           return (aValue - bValue) * order;
         });
       }
@@ -164,31 +157,45 @@ export class ProjectsService {
     return project;
   }
 
-  update(id: string, updateProjectDto: UpdateProjectDto): Project {
-    const projectIndex = this.projects.findIndex(p => p.id === id);
-    if (projectIndex === -1) {
-      throw new NotFoundException(`Projet avec l'ID ${id} non trouvé`);
-    }
+  create(createProjectDto: CreateProjectDto): Project {
+    const teamMembers = this.teamsService.findByIds(createProjectDto.teamIds || []);
+    
+    const newProject: Project = {
+      id: uuidv4(),
+      title: createProjectDto.title,
+      description: createProjectDto.description,
+      stage: createProjectDto.stage,
+      progress: createProjectDto.progress || 0,
+      deadline: createProjectDto.deadline,
+      priority: createProjectDto.priority || 'MEDIUM',
+      tags: createProjectDto.tags || [],
+      reminderDate: createProjectDto.reminderDate,
+      team: teamMembers,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      comments: 0,
+      attachments: 0,
+      isReminderActive: !!createProjectDto.reminderDate,
+      instructions: []
+    };
 
-    const project = this.projects[projectIndex];
+    this.projects.push(newProject);
+    return newProject;
+  }
+
+  update(id: string, updateProjectDto: UpdateProjectDto): Project {
+    const project = this.findOne(id);
     
     if (updateProjectDto.teamIds) {
       const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
-      updateProjectDto['team'] = teamMembers;
-      delete updateProjectDto.teamIds;
+      project.team = teamMembers;
+      const { teamIds, ...updateData } = updateProjectDto;
+      Object.assign(project, updateData, { updatedAt: new Date() });
+    } else {
+      Object.assign(project, updateProjectDto, { updatedAt: new Date() });
     }
 
-    if (updateProjectDto.reminderDate !== undefined) {
-      updateProjectDto['isReminderActive'] = !!updateProjectDto.reminderDate;
-    }
-
-    this.projects[projectIndex] = {
-      ...project,
-      ...updateProjectDto,
-      updatedAt: new Date(),
-    };
-
-    return this.projects[projectIndex];
+    return project;
   }
 
   updateStage(id: string, newStage: ProjectStage): Project {
@@ -196,14 +203,50 @@ export class ProjectsService {
     
     const currentStageIndex = PROJECT_STAGE_ORDER.indexOf(project.stage);
     const newStageIndex = PROJECT_STAGE_ORDER.indexOf(newStage);
-    
-    if (newStageIndex < currentStageIndex - 1 || newStageIndex > currentStageIndex + 1) {
+
+    if (Math.abs(newStageIndex - currentStageIndex) > 1) {
       throw new BadRequestException(
-        `Impossible de passer directement de ${project.stage} à ${newStage}. Les étapes doivent être consécutives.`
+        `Impossible de passer de ${project.stage} à ${newStage}. Les étapes doivent être consécutives.`
       );
     }
 
     return this.update(id, { stage: newStage });
+  }
+
+  addUsersToProject(projectId: string, addUsersDto: AddUsersToProjectDto): Project {
+    const project = this.findOne(projectId);
+    const currentTeamIds = project.team.map(member => member.id);
+    const newUserIds = addUsersDto.userIds.filter(id => !currentTeamIds.includes(id));
+
+    if (newUserIds.length === 0) {
+      throw new BadRequestException('All specified users are already in the project team');
+    }
+
+    const newMembers = this.teamsService.findByIds(newUserIds);
+    if (newMembers.length !== newUserIds.length) {
+      const foundIds = newMembers.map(m => m.id);
+      const notFoundIds = newUserIds.filter(id => !foundIds.includes(id));
+      throw new NotFoundException(`Users not found: ${notFoundIds.join(', ')}`);
+    }
+
+    project.team.push(...newMembers);
+    project.updatedAt = new Date();
+
+    return project;
+  }
+
+  removeUserFromProject(projectId: string, userId: string): Project {
+    const project = this.findOne(projectId);
+    const userIndex = project.team.findIndex(member => member.id === userId);
+
+    if (userIndex === -1) {
+      throw new NotFoundException(`User ${userId} is not a member of this project`);
+    }
+
+    project.team.splice(userIndex, 1);
+    project.updatedAt = new Date();
+
+    return project;
   }
 
   remove(id: string): void {
