@@ -2,12 +2,11 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Project, ProjectStage } from '../../models/project.model';
-import { UserInstructionsComponent, UserInstruction } from '../user-instructions/user-instructions.component';
 
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UserInstructionsComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './project-form.component.html',
   styleUrls: ['./project-form.component.css']
 })
@@ -19,13 +18,11 @@ export class ProjectFormComponent implements OnInit {
   projectForm!: FormGroup;
   projectStages = Object.values(ProjectStage);
   priorities = ['LOW', 'MEDIUM', 'HIGH'];
-  currentInstructions: UserInstruction[] = [];
   
   constructor(private fb: FormBuilder) {}
   
   ngOnInit(): void {
     this.initForm();
-    this.initInstructions();
   }
   
   private initForm(): void {
@@ -38,14 +35,8 @@ export class ProjectFormComponent implements OnInit {
       priority: [this.project?.priority || 'MEDIUM', [Validators.required]],
       tags: [this.project?.tags || []],
       reminderDate: [this.project?.reminderDate ? this.formatDate(this.project.reminderDate) : null],
-      teamIds: [this.project?.team?.map(member => member.id) || [], []]
+      teamIds: [this.project?.team.map(member => member.id) || [], []]
     });
-  }
-  
-  private initInstructions(): void {
-    if (this.project?.instructions) {
-      this.currentInstructions = [...this.project.instructions];
-    }
   }
   
   private formatDate(date: Date): string {
@@ -67,38 +58,19 @@ export class ProjectFormComponent implements OnInit {
     }
     
     const formData = this.projectForm.value;
-    
     const projectData = {
-      title: formData.title,
-      description: formData.description,
-      stage: formData.stage,
-      progress: formData.progress,
+      ...formData,
       deadline: new Date(formData.deadline),
-      priority: formData.priority,
+      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
       tags: typeof formData.tags === 'string' 
         ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-        : formData.tags || [],
-      teamIds: formData.teamIds || [],
-      reminderDate: formData.reminderDate ? new Date(formData.reminderDate) : undefined,
-      team: [],
-      comments: 0,
-      attachments: 0,
-      isReminderActive: !!formData.reminderDate,
-      instructions: this.currentInstructions
+        : formData.tags
     };
-    
-    console.log('Données du projet à sauvegarder:', projectData);
-    console.log('Instructions actuelles:', this.currentInstructions);
     
     this.save.emit(projectData);
   }
   
   onCancel(): void {
     this.cancel.emit();
-  }
-  
-  onInstructionsChange(instructions: UserInstruction[]): void {
-    console.log('Instructions modifiées:', instructions);
-    this.currentInstructions = instructions;
   }
 }

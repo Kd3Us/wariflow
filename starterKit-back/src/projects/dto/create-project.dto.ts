@@ -1,61 +1,53 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProjectStage } from '../../common/enums/project-stage.enum';
-import { UserInstructionDto } from './user-instruction.dto';
 
 export class CreateProjectDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Titre du projet' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Description du projet' })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ enum: ProjectStage })
+  @ApiProperty({ enum: ProjectStage, description: 'Étape du projet' })
   @IsEnum(ProjectStage)
   stage: ProjectStage;
 
-  @ApiProperty({ minimum: 0, maximum: 100 })
+  @ApiProperty({ description: 'Progression du projet (0-100)', minimum: 0, maximum: 100 })
   @IsNumber()
   @Min(0)
   @Max(100)
   progress: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Date limite du projet' })
   @IsDate()
   @Type(() => Date)
   deadline: Date;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ description: 'IDs des membres de l\'équipe', type: [String] })
   @IsArray()
   @IsString({ each: true })
   teamIds: string[];
 
-  @ApiProperty({ enum: ['LOW', 'MEDIUM', 'HIGH'], required: false })
+  @ApiProperty({ description: 'Priorité du projet', enum: ['LOW', 'MEDIUM', 'HIGH'], required: false })
   @IsOptional()
   @IsEnum(['LOW', 'MEDIUM', 'HIGH'])
   priority?: 'LOW' | 'MEDIUM' | 'HIGH';
 
-  @ApiProperty({ type: [String], required: false })
+  @ApiProperty({ description: 'Tags du projet', type: [String], required: false })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ description: 'Date de rappel', required: false })
   @IsOptional()
   @IsDate()
   @Type(() => Date)
   reminderDate?: Date;
-
-  @ApiProperty({ type: [UserInstructionDto], required: false })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UserInstructionDto)
-  instructions?: UserInstructionDto[];
 }

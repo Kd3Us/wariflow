@@ -15,7 +15,6 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { AddUsersToProjectDto } from './dto/add-users-to-project.dto';
 import { FilterProjectsDto } from './dto/filter-projects.dto';
 import { UpdateStageDto } from './dto/update-stage.dto';
 import { Project } from './entities/project.entity';
@@ -46,6 +45,8 @@ export class ProjectsController {
   getVerificationToken(): any {
     return {message: 'vaifier', isValid: false}
   }
+
+
 
   @Get('by-stage')
   @ApiOperation({ summary: 'Récupérer les projets groupés par étape' })
@@ -92,29 +93,6 @@ export class ProjectsController {
   @ApiResponse({ status: 404, description: 'Projet non trouvé' })
   updateStage(@Param('id') id: string, @Body() updateStageDto: UpdateStageDto): Project {
     return this.projectsService.updateStage(id, updateStageDto.stage);
-  }
-
-  @Post(':id/users')
-  @ApiOperation({ summary: 'Ajouter des utilisateurs à un projet' })
-  @ApiResponse({ status: 200, description: 'Utilisateurs ajoutés avec succès', type: Project })
-  @ApiResponse({ status: 400, description: 'Utilisateurs déjà dans l\'équipe' })
-  @ApiResponse({ status: 404, description: 'Projet ou utilisateurs non trouvés' })
-  addUsersToProject(
-    @Param('id') id: string,
-    @Body() addUsersDto: AddUsersToProjectDto
-  ): Project {
-    return this.projectsService.addUsersToProject(id, addUsersDto);
-  }
-
-  @Delete(':id/users/:userId')
-  @ApiOperation({ summary: 'Retirer un utilisateur d\'un projet' })
-  @ApiResponse({ status: 200, description: 'Utilisateur retiré avec succès', type: Project })
-  @ApiResponse({ status: 404, description: 'Projet ou utilisateur non trouvé' })
-  removeUserFromProject(
-    @Param('id') projectId: string,
-    @Param('userId') userId: string
-  ): Project {
-    return this.projectsService.removeUserFromProject(projectId, userId);
   }
 
   @Delete(':id')

@@ -41,19 +41,7 @@ export class ProjectService {
   }
 
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): void {
-    const createProjectData = {
-      title: project.title,
-      description: project.description,
-      stage: project.stage,
-      progress: project.progress || 0,
-      deadline: project.deadline instanceof Date ? project.deadline.toISOString() : project.deadline,
-      teamIds: project.teamIds || [],
-      priority: project.priority || 'MEDIUM',
-      tags: project.tags || [],
-      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate
-    };
-
-    this.http.post<Project>(this.apiUrl, createProjectData)
+    this.http.post<Project>(this.apiUrl, project)
       .pipe(
         map(newProject => ({
           ...newProject,
@@ -67,14 +55,7 @@ export class ProjectService {
           this.projectsSubject.next([...currentProjects, newProject]);
         })
       )
-      .subscribe({
-        next: (newProject) => {
-          console.log('Projet créé avec succès:', newProject);
-        },
-        error: (error) => {
-          console.error('Erreur lors de la création du projet:', error);
-        }
-      });
+      .subscribe();
   }
 
   updateProject(project: Project): void {
@@ -120,11 +101,10 @@ export class ProjectService {
           map(updatedProject => ({
             ...updatedProject,
             deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
-            reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
-            createdAt: new Date(updatedProject.createdAt),
-            updatedAt: new Date(updatedProject.updatedAt)
+            reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined
           })),
           tap(updatedProject => {
+            const currentProjects = this.projectsSubject.value;
             const index = currentProjects.findIndex(p => p.id === updatedProject.id);
             if (index !== -1) {
               currentProjects[index] = updatedProject;
@@ -132,62 +112,24 @@ export class ProjectService {
             }
           })
         );
-    } else {
-      throw new Error('Project not found');
     }
+    return new Observable<Project>();
   }
 
-  addUsersToProject(projectId: string, userIds: string[]): Observable<Project> {
-    return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds })
-      .pipe(
-        map(updatedProject => ({
-          ...updatedProject,
-          deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
-          reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
-          createdAt: new Date(updatedProject.createdAt),
-          updatedAt: new Date(updatedProject.updatedAt)
-        })),
-        tap(updatedProject => {
-          const currentProjects = this.projectsSubject.value;
-          const index = currentProjects.findIndex(p => p.id === updatedProject.id);
-          if (index !== -1) {
-            currentProjects[index] = updatedProject;
-            this.projectsSubject.next([...currentProjects]);
-          }
-        })
-      );
-  }
-
-  removeUserFromProject(projectId: string, userId: string): Observable<Project> {
-    return this.http.delete<Project>(`${this.apiUrl}/${projectId}/users/${userId}`)
-      .pipe(
-        map(updatedProject => ({
-          ...updatedProject,
-          deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
-          reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
-          createdAt: new Date(updatedProject.createdAt),
-          updatedAt: new Date(updatedProject.updatedAt)
-        })),
-        tap(updatedProject => {
-          const currentProjects = this.projectsSubject.value;
-          const index = currentProjects.findIndex(p => p.id === updatedProject.id);
-          if (index !== -1) {
-            currentProjects[index] = updatedProject;
-            this.projectsSubject.next([...currentProjects]);
-          }
-        })
-      );
-  }
-
-  deleteProject(projectId: string): void {
-    this.http.delete(`${this.apiUrl}/${projectId}`)
+  deleteProject(id: string): void {
+    this.http.delete(`${this.apiUrl}/${id}`)
       .pipe(
         tap(() => {
           const currentProjects = this.projectsSubject.value;
-          const filteredProjects = currentProjects.filter(p => p.id !== projectId);
-          this.projectsSubject.next(filteredProjects);
+          this.projectsSubject.next(currentProjects.filter(p => p.id !== id));
         })
       )
       .subscribe();
+  }
+
+  getProjectsByStage(stage: ProjectStage): Observable<Project[]> {
+    return this.projects$.pipe(
+      map(projects => projects.filter(project => project.stage === stage))
+    );
   }
 }
