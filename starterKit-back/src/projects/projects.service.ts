@@ -7,16 +7,21 @@ import { AddUsersToProjectDto } from './dto/add-users-to-project.dto';
 import { FilterProjectsDto } from './dto/filter-projects.dto';
 import { ProjectStage, PROJECT_STAGE_ORDER } from '../common/enums/project-stage.enum';
 import { TeamsService } from '../teams/teams.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class ProjectsService {
   private projects: Project[] = [];
 
-  constructor(private readonly teamsService: TeamsService) {
+  constructor(
+    private readonly teamsService: TeamsService,
+    private readonly logger: LoggerService
+  ) {
     this.initializeMockData();
   }
 
   private initializeMockData() {
+    this.logger.log('Initialisation des données mock des projets', 'ProjectsService');
     const teamMembers = this.teamsService.findAll();
     
     this.projects = [
@@ -69,68 +74,66 @@ export class ProjectsService {
         attachments: 1,
         isReminderActive: true,
         reminderDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        priority: 'LOW',
-        tags: ['e-commerce', 'backend', 'paiement'],
-        instructions: []
-      },
-      {
-        id: uuidv4(),
-        title: 'Marketing Analytics Dashboard',
-        description: 'Dashboard analytique pour le suivi des campagnes marketing et ROI',
-        stage: ProjectStage.LEVEE,
-        progress: 95,
-        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-        team: [teamMembers[1], teamMembers[3], teamMembers[4]],
-        comments: 12,
-        attachments: 8,
-        isReminderActive: false,
         priority: 'HIGH',
-        tags: ['analytics', 'dashboard', 'marketing'],
+        tags: ['e-commerce', 'backend', 'fintech'],
         instructions: []
       }
     ];
+    
+    this.logger.log(`${this.projects.length} projets mock initialisés avec succès`, 'ProjectsService');
   }
 
   findAll(filters?: FilterProjectsDto): Project[] {
+    this.logger.log(`Récupération de tous les projets avec filtres: ${JSON.stringify(filters || {})}`, 'ProjectsService');
+    
     let filteredProjects = [...this.projects];
 
     if (filters) {
       if (filters.stage) {
         filteredProjects = filteredProjects.filter(p => p.stage === filters.stage);
+        this.logger.debug(`Filtrage par stage '${filters.stage}': ${filteredProjects.length} projets`, 'ProjectsService');
       }
+      
       if (filters.priority) {
         filteredProjects = filteredProjects.filter(p => p.priority === filters.priority);
+        this.logger.debug(`Filtrage par priorité '${filters.priority}': ${filteredProjects.length} projets`, 'ProjectsService');
       }
+      
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        filteredProjects = filteredProjects.filter(p =>
+        filteredProjects = filteredProjects.filter(p => 
           p.title.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower) ||
           p.tags.some(tag => tag.toLowerCase().includes(searchLower))
         );
+        this.logger.debug(`Recherche textuelle '${filters.search}': ${filteredProjects.length} projets trouvés`, 'ProjectsService');
       }
-      if (filters.deadlineInDays !== undefined) {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + filters.deadlineInDays);
-        filteredProjects = filteredProjects.filter(p => p.deadline <= targetDate);
+
+      if (filters.deadlineInDays) {
+        const targetDate = new Date(Date.now() + filters.deadlineInDays * 24 * 60 * 60 * 1000);
+        filteredProjects = filteredProjects.filter(p => p.deadline && p.deadline <= targetDate);
+        this.logger.debug(`Filtrage par deadline dans ${filters.deadlineInDays} jours: ${filteredProjects.length} projets`, 'ProjectsService');
       }
+
       if (filters.hasActiveReminder !== undefined) {
         filteredProjects = filteredProjects.filter(p => p.isReminderActive === filters.hasActiveReminder);
+        this.logger.debug(`Filtrage par rappels actifs: ${filteredProjects.length} projets`, 'ProjectsService');
       }
+
       if (filters.sortBy) {
+        const sortOrder = filters.sortOrder === 'desc' ? -1 : 1;
         filteredProjects.sort((a, b) => {
-          let aValue: any, bValue: any;
-          
+          let aValue: any;
+          let bValue: any;
+
           switch (filters.sortBy) {
             case 'createdAt':
-              aValue = a.createdAt.getTime();
-              bValue = b.createdAt.getTime();
+              aValue = new Date(a.createdAt).getTime();
+              bValue = new Date(b.createdAt).getTime();
               break;
             case 'deadline':
-              aValue = a.deadline.getTime();
-              bValue = b.deadline.getTime();
+              aValue = a.deadline ? new Date(a.deadline).getTime() : 0;
+              bValue = b.deadline ? new Date(b.deadline).getTime() : 0;
               break;
             case 'progress':
               aValue = a.progress;
@@ -139,151 +142,221 @@ export class ProjectsService {
             default:
               return 0;
           }
-          
-          const order = filters.sortOrder === 'desc' ? -1 : 1;
-          return (aValue - bValue) * order;
+
+          return aValue < bValue ? -sortOrder : aValue > bValue ? sortOrder : 0;
         });
+        this.logger.debug(`Tri par '${filters.sortBy}' ordre '${filters.sortOrder}' appliqué`, 'ProjectsService');
       }
     }
 
+    this.logger.log(`${filteredProjects.length} projets retournés après filtrage`, 'ProjectsService');
     return filteredProjects;
   }
 
+  getByStage(): Record<string, Project[]> {
+    this.logger.log('Récupération des projets groupés par stage', 'ProjectsService');
+    
+    const projectsByStage: Record<string, Project[]> = {};
+    
+    Object.values(ProjectStage).forEach(stage => {
+      projectsByStage[stage] = this.projects.filter(p => p.stage === stage);
+    });
+
+    this.logger.log(`Projets groupés par stage: ${Object.entries(projectsByStage).map(([stage, projects]) => `${stage}:${projects.length}`).join(', ')}`, 'ProjectsService');
+    return projectsByStage;
+  }
+
+  getProjectsByStage(): Record<string, Project[]> {
+    return this.getByStage();
+  }
+
+  getUpcomingDeadlines(days: number = 7): Project[] {
+    this.logger.log(`Récupération des projets avec deadline dans ${days} jours`, 'ProjectsService');
+    
+    const targetDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const upcomingProjects = this.projects.filter(p => 
+      p.deadline && p.deadline <= targetDate && p.deadline >= new Date()
+    );
+
+    this.logger.log(`${upcomingProjects.length} projets avec deadline proche trouvés`, 'ProjectsService');
+    return upcomingProjects;
+  }
+
+  getActiveReminders(): Project[] {
+    this.logger.log('Récupération des projets avec rappels actifs', 'ProjectsService');
+    
+    const activeRemindersProjects = this.projects.filter(p => p.isReminderActive);
+    
+    this.logger.log(`${activeRemindersProjects.length} projets avec rappels actifs trouvés`, 'ProjectsService');
+    return activeRemindersProjects;
+  }
+
   findOne(id: string): Project {
+    this.logger.log(`Recherche du projet avec ID: ${id}`, 'ProjectsService');
+    
     const project = this.projects.find(p => p.id === id);
     if (!project) {
+      this.logger.warn(`Projet avec l'ID ${id} non trouvé`, 'ProjectsService');
       throw new NotFoundException(`Projet avec l'ID ${id} non trouvé`);
     }
+    
+    this.logger.log(`Projet trouvé: ${project.title}`, 'ProjectsService');
     return project;
   }
 
   create(createProjectDto: CreateProjectDto): Project {
-    const teamMembers = this.teamsService.findByIds(createProjectDto.teamIds || []);
+    this.logger.log(`Création d'un nouveau projet: ${createProjectDto.title}`, 'ProjectsService');
     
-    const newProject: Project = {
-      id: uuidv4(),
-      title: createProjectDto.title,
-      description: createProjectDto.description,
-      stage: createProjectDto.stage,
-      progress: createProjectDto.progress || 0,
-      deadline: createProjectDto.deadline,
-      priority: createProjectDto.priority || 'MEDIUM',
-      tags: createProjectDto.tags || [],
-      reminderDate: createProjectDto.reminderDate,
-      team: teamMembers,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      comments: 0,
-      attachments: 0,
-      isReminderActive: !!createProjectDto.reminderDate,
-      instructions: []
-    };
+    try {
+      const teamMembers = this.teamsService.findByIds(createProjectDto.teamIds || []);
+      
+      const newProject: Project = {
+        id: uuidv4(),
+        title: createProjectDto.title,
+        description: createProjectDto.description,
+        stage: createProjectDto.stage,
+        progress: createProjectDto.progress || 0,
+        deadline: createProjectDto.deadline,
+        priority: createProjectDto.priority || 'MEDIUM',
+        tags: createProjectDto.tags || [],
+        reminderDate: createProjectDto.reminderDate,
+        team: teamMembers,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        comments: 0,
+        attachments: 0,
+        isReminderActive: !!createProjectDto.reminderDate,
+        instructions: []
+      };
 
-    this.projects.push(newProject);
-    return newProject;
+      this.projects.push(newProject);
+      this.logger.log(`Projet créé avec succès - ID: ${newProject.id}, Titre: ${newProject.title}`, 'ProjectsService');
+      
+      return newProject;
+    } catch (error) {
+      this.logger.error(`Erreur lors de la création du projet: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
+    }
   }
 
   update(id: string, updateProjectDto: UpdateProjectDto): Project {
-    const project = this.findOne(id);
+    this.logger.log(`Mise à jour du projet ${id}`, 'ProjectsService');
     
-    if (updateProjectDto.teamIds) {
-      const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
-      project.team = teamMembers;
-      const { teamIds, ...updateData } = updateProjectDto;
-      Object.assign(project, updateData, { updatedAt: new Date() });
-    } else {
-      Object.assign(project, updateProjectDto, { updatedAt: new Date() });
-    }
+    try {
+      const project = this.findOne(id);
+      
+      if (updateProjectDto.teamIds) {
+        const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
+        project.team = teamMembers;
+        this.logger.debug(`Équipe mise à jour pour le projet ${id}: ${teamMembers.length} membres`, 'ProjectsService');
+        const { teamIds, ...updateData } = updateProjectDto;
+        Object.assign(project, updateData, { updatedAt: new Date() });
+      } else {
+        Object.assign(project, updateProjectDto, { updatedAt: new Date() });
+      }
 
-    return project;
+      this.logger.log(`Projet ${id} mis à jour avec succès`, 'ProjectsService');
+      return project;
+    } catch (error) {
+      this.logger.error(`Erreur lors de la mise à jour du projet ${id}: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
+    }
   }
 
   updateStage(id: string, newStage: ProjectStage): Project {
-    const project = this.findOne(id);
+    this.logger.log(`Changement de stage du projet ${id} vers ${newStage}`, 'ProjectsService');
     
-    const currentStageIndex = PROJECT_STAGE_ORDER.indexOf(project.stage);
-    const newStageIndex = PROJECT_STAGE_ORDER.indexOf(newStage);
+    try {
+      const project = this.findOne(id);
+      
+      const currentStageIndex = PROJECT_STAGE_ORDER.indexOf(project.stage);
+      const newStageIndex = PROJECT_STAGE_ORDER.indexOf(newStage);
 
-    if (Math.abs(newStageIndex - currentStageIndex) > 1) {
-      throw new BadRequestException(
-        `Impossible de passer de ${project.stage} à ${newStage}. Les étapes doivent être consécutives.`
-      );
+      if (Math.abs(newStageIndex - currentStageIndex) > 1) {
+        this.logger.warn(`Tentative de changement de stage invalide: ${project.stage} vers ${newStage}`, 'ProjectsService');
+        throw new BadRequestException(
+          `Impossible de passer de ${project.stage} à ${newStage}. Les transitions ne peuvent se faire que vers l'étape suivante ou précédente.`
+        );
+      }
+
+      const oldStage = project.stage;
+      project.stage = newStage;
+      project.updatedAt = new Date();
+
+      this.logger.log(`Stage du projet ${id} changé avec succès: ${oldStage} → ${newStage}`, 'ProjectsService');
+      return project;
+    } catch (error) {
+      this.logger.error(`Erreur lors du changement de stage du projet ${id}: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
     }
-
-    return this.update(id, { stage: newStage });
   }
 
-  addUsersToProject(projectId: string, addUsersDto: AddUsersToProjectDto): Project {
-    const project = this.findOne(projectId);
-    const currentTeamIds = project.team.map(member => member.id);
-    const newUserIds = addUsersDto.userIds.filter(id => !currentTeamIds.includes(id));
-
-    if (newUserIds.length === 0) {
-      throw new BadRequestException('All specified users are already in the project team');
+  addUsersToProject(id: string, addUsersDto: AddUsersToProjectDto): Project {
+    this.logger.log(`Ajout d'utilisateurs au projet ${id}: ${JSON.stringify(addUsersDto.userIds)}`, 'ProjectsService');
+    
+    try {
+      const project = this.findOne(id);
+      const usersToAdd = this.teamsService.findByIds(addUsersDto.userIds);
+      
+      const existingUserIds = project.team.map(member => member.id);
+      const newUsers = usersToAdd.filter(user => !existingUserIds.includes(user.id));
+      
+      if (newUsers.length === 0) {
+        this.logger.warn(`Aucun nouvel utilisateur à ajouter au projet ${id} - tous sont déjà membres`, 'ProjectsService');
+        throw new BadRequestException('Tous les utilisateurs sont déjà dans l\'équipe du projet');
+      }
+      
+      project.team.push(...newUsers);
+      project.updatedAt = new Date();
+      
+      this.logger.log(`${newUsers.length} utilisateurs ajoutés au projet ${id}: ${newUsers.map(u => u.name).join(', ')}`, 'ProjectsService');
+      return project;
+    } catch (error) {
+      this.logger.error(`Erreur lors de l'ajout d'utilisateurs au projet ${id}: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
     }
-
-    const newMembers = this.teamsService.findByIds(newUserIds);
-    if (newMembers.length !== newUserIds.length) {
-      const foundIds = newMembers.map(m => m.id);
-      const notFoundIds = newUserIds.filter(id => !foundIds.includes(id));
-      throw new NotFoundException(`Users not found: ${notFoundIds.join(', ')}`);
-    }
-
-    project.team.push(...newMembers);
-    project.updatedAt = new Date();
-
-    return project;
   }
 
   removeUserFromProject(projectId: string, userId: string): Project {
-    const project = this.findOne(projectId);
-    const userIndex = project.team.findIndex(member => member.id === userId);
-
-    if (userIndex === -1) {
-      throw new NotFoundException(`User ${userId} is not a member of this project`);
+    this.logger.log(`Suppression de l'utilisateur ${userId} du projet ${projectId}`, 'ProjectsService');
+    
+    try {
+      const project = this.findOne(projectId);
+      const userIndex = project.team.findIndex(member => member.id === userId);
+      
+      if (userIndex === -1) {
+        this.logger.warn(`Utilisateur ${userId} non trouvé dans le projet ${projectId}`, 'ProjectsService');
+        throw new NotFoundException('Utilisateur non trouvé dans l\'équipe du projet');
+      }
+      
+      const removedUser = project.team[userIndex];
+      project.team.splice(userIndex, 1);
+      project.updatedAt = new Date();
+      
+      this.logger.log(`Utilisateur ${removedUser.name} (${userId}) supprimé du projet ${projectId}`, 'ProjectsService');
+      return project;
+    } catch (error) {
+      this.logger.error(`Erreur lors de la suppression de l'utilisateur ${userId} du projet ${projectId}: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
     }
-
-    project.team.splice(userIndex, 1);
-    project.updatedAt = new Date();
-
-    return project;
   }
 
   remove(id: string): void {
-    const projectIndex = this.projects.findIndex(p => p.id === id);
-    if (projectIndex === -1) {
-      throw new NotFoundException(`Projet avec l'ID ${id} non trouvé`);
-    }
-    this.projects.splice(projectIndex, 1);
-  }
-
-  getProjectsByStage(): Record<ProjectStage, Project[]> {
-    const projectsByStage = {
-      [ProjectStage.IDEE]: [],
-      [ProjectStage.MVP]: [],
-      [ProjectStage.TRACTION]: [],
-      [ProjectStage.LEVEE]: [],
-    };
-
-    this.projects.forEach(project => {
-      projectsByStage[project.stage].push(project);
-    });
-
-    return projectsByStage;
-  }
-
-  getUpcomingDeadlines(days: number = 7): Project[] {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + days);
+    this.logger.log(`Suppression du projet ${id}`, 'ProjectsService');
     
-    return this.projects
-      .filter(p => p.deadline <= targetDate && p.deadline >= new Date())
-      .sort((a, b) => a.deadline.getTime() - b.deadline.getTime());
-  }
-
-  getActiveReminders(): Project[] {
-    return this.projects
-      .filter(p => p.isReminderActive && p.reminderDate && p.reminderDate <= new Date())
-      .sort((a, b) => a.reminderDate.getTime() - b.reminderDate.getTime());
+    try {
+      const index = this.projects.findIndex(p => p.id === id);
+      if (index === -1) {
+        this.logger.warn(`Projet ${id} non trouvé pour suppression`, 'ProjectsService');
+        throw new NotFoundException(`Projet avec l'ID ${id} non trouvé`);
+      }
+      
+      const deletedProject = this.projects[index];
+      this.projects.splice(index, 1);
+      this.logger.log(`Projet '${deletedProject.title}' (${id}) supprimé avec succès`, 'ProjectsService');
+    } catch (error) {
+      this.logger.error(`Erreur lors de la suppression du projet ${id}: ${error.message}`, error.stack, 'ProjectsService');
+      throw error;
+    }
   }
 }
