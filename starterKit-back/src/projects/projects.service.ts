@@ -84,48 +84,49 @@ export class ProjectsService {
   }
 
   findAll(filters?: FilterProjectsDto): Project[] {
-    this.logger.log(`Récupération de tous les projets avec filtres: ${JSON.stringify(filters || {})}`, 'ProjectsService');
+    this.logger.log('Récupération de tous les projets avec filtres', 'ProjectsService');
     
     let filteredProjects = [...this.projects];
 
     if (filters) {
       if (filters.stage) {
         filteredProjects = filteredProjects.filter(p => p.stage === filters.stage);
-        this.logger.debug(`Filtrage par stage '${filters.stage}': ${filteredProjects.length} projets`, 'ProjectsService');
+        this.logger.debug(`Filtre par stage '${filters.stage}' appliqué`, 'ProjectsService');
       }
-      
+
       if (filters.priority) {
         filteredProjects = filteredProjects.filter(p => p.priority === filters.priority);
-        this.logger.debug(`Filtrage par priorité '${filters.priority}': ${filteredProjects.length} projets`, 'ProjectsService');
+        this.logger.debug(`Filtre par priorité '${filters.priority}' appliqué`, 'ProjectsService');
       }
-      
+
       if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
+        const searchTerm = filters.search.toLowerCase();
         filteredProjects = filteredProjects.filter(p => 
-          p.title.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower) ||
-          p.tags.some(tag => tag.toLowerCase().includes(searchLower))
+          p.title.toLowerCase().includes(searchTerm) || 
+          p.description.toLowerCase().includes(searchTerm) ||
+          p.tags.some(tag => tag.toLowerCase().includes(searchTerm))
         );
-        this.logger.debug(`Recherche textuelle '${filters.search}': ${filteredProjects.length} projets trouvés`, 'ProjectsService');
+        this.logger.debug(`Recherche textuelle '${filters.search}' appliquée`, 'ProjectsService');
       }
 
       if (filters.deadlineInDays) {
         const targetDate = new Date(Date.now() + filters.deadlineInDays * 24 * 60 * 60 * 1000);
-        filteredProjects = filteredProjects.filter(p => p.deadline && p.deadline <= targetDate);
-        this.logger.debug(`Filtrage par deadline dans ${filters.deadlineInDays} jours: ${filteredProjects.length} projets`, 'ProjectsService');
+        filteredProjects = filteredProjects.filter(p => 
+          p.deadline && p.deadline <= targetDate && p.deadline >= new Date()
+        );
+        this.logger.debug(`Filtre deadline dans ${filters.deadlineInDays} jours appliqué`, 'ProjectsService');
       }
 
       if (filters.hasActiveReminder !== undefined) {
         filteredProjects = filteredProjects.filter(p => p.isReminderActive === filters.hasActiveReminder);
-        this.logger.debug(`Filtrage par rappels actifs: ${filteredProjects.length} projets`, 'ProjectsService');
+        this.logger.debug(`Filtre rappels actifs '${filters.hasActiveReminder}' appliqué`, 'ProjectsService');
       }
 
       if (filters.sortBy) {
         const sortOrder = filters.sortOrder === 'desc' ? -1 : 1;
         filteredProjects.sort((a, b) => {
-          let aValue: any;
-          let bValue: any;
-
+          let aValue: any, bValue: any;
+          
           switch (filters.sortBy) {
             case 'createdAt':
               aValue = new Date(a.createdAt).getTime();
@@ -226,11 +227,12 @@ export class ProjectsService {
         comments: 0,
         attachments: 0,
         isReminderActive: !!createProjectDto.reminderDate,
-        instructions: []
+        instructions: createProjectDto.instructions || []
       };
 
       this.projects.push(newProject);
       this.logger.log(`Projet créé avec succès - ID: ${newProject.id}, Titre: ${newProject.title}`, 'ProjectsService');
+      this.logger.log(`Instructions ajoutées: ${newProject.instructions.length}`, 'ProjectsService');
       
       return newProject;
     } catch (error) {
@@ -249,11 +251,26 @@ export class ProjectsService {
         const teamMembers = this.teamsService.findByIds(updateProjectDto.teamIds);
         project.team = teamMembers;
         this.logger.debug(`Équipe mise à jour pour le projet ${id}: ${teamMembers.length} membres`, 'ProjectsService');
-        const { teamIds, ...updateData } = updateProjectDto;
-        Object.assign(project, updateData, { updatedAt: new Date() });
-      } else {
-        Object.assign(project, updateProjectDto, { updatedAt: new Date() });
       }
+
+      // Mettre à jour toutes les propriétés
+      if (updateProjectDto.title !== undefined) project.title = updateProjectDto.title;
+      if (updateProjectDto.description !== undefined) project.description = updateProjectDto.description;
+      if (updateProjectDto.stage !== undefined) project.stage = updateProjectDto.stage;
+      if (updateProjectDto.progress !== undefined) project.progress = updateProjectDto.progress;
+      if (updateProjectDto.deadline !== undefined) project.deadline = updateProjectDto.deadline;
+      if (updateProjectDto.priority !== undefined) project.priority = updateProjectDto.priority;
+      if (updateProjectDto.tags !== undefined) project.tags = updateProjectDto.tags;
+      if (updateProjectDto.reminderDate !== undefined) {
+        project.reminderDate = updateProjectDto.reminderDate;
+        project.isReminderActive = !!updateProjectDto.reminderDate;
+      }
+      if (updateProjectDto.instructions !== undefined) {
+        project.instructions = updateProjectDto.instructions;
+        this.logger.log(`Instructions mises à jour: ${project.instructions.length}`, 'ProjectsService');
+      }
+
+      project.updatedAt = new Date();
 
       this.logger.log(`Projet ${id} mis à jour avec succès`, 'ProjectsService');
       return project;
@@ -333,7 +350,7 @@ export class ProjectsService {
       project.team.splice(userIndex, 1);
       project.updatedAt = new Date();
       
-      this.logger.log(`Utilisateur ${removedUser.name} (${userId}) supprimé du projet ${projectId}`, 'ProjectsService');
+      this.logger.log(`Utilisateur ${removedUser.name} supprimé du projet ${projectId}`, 'ProjectsService');
       return project;
     } catch (error) {
       this.logger.error(`Erreur lors de la suppression de l'utilisateur ${userId} du projet ${projectId}: ${error.message}`, error.stack, 'ProjectsService');
@@ -345,15 +362,16 @@ export class ProjectsService {
     this.logger.log(`Suppression du projet ${id}`, 'ProjectsService');
     
     try {
-      const index = this.projects.findIndex(p => p.id === id);
-      if (index === -1) {
-        this.logger.warn(`Projet ${id} non trouvé pour suppression`, 'ProjectsService');
+      const projectIndex = this.projects.findIndex(p => p.id === id);
+      if (projectIndex === -1) {
+        this.logger.warn(`Projet avec l'ID ${id} non trouvé pour suppression`, 'ProjectsService');
         throw new NotFoundException(`Projet avec l'ID ${id} non trouvé`);
       }
       
-      const deletedProject = this.projects[index];
-      this.projects.splice(index, 1);
-      this.logger.log(`Projet '${deletedProject.title}' (${id}) supprimé avec succès`, 'ProjectsService');
+      const deletedProject = this.projects[projectIndex];
+      this.projects.splice(projectIndex, 1);
+      
+      this.logger.log(`Projet ${deletedProject.title} supprimé avec succès`, 'ProjectsService');
     } catch (error) {
       this.logger.error(`Erreur lors de la suppression du projet ${id}: ${error.message}`, error.stack, 'ProjectsService');
       throw error;

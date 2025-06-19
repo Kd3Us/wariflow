@@ -96,39 +96,45 @@ export class ProjectCardComponent {
 
   get isNearDeadline(): boolean {
     if (!this.project.deadline) return false;
-    const deadline = new Date(this.project.deadline);
     const now = new Date();
-    const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 3 && diffDays > 0;
+    const deadline = new Date(this.project.deadline);
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 7;
   }
 
   get isPastDeadline(): boolean {
     if (!this.project.deadline) return false;
-    return new Date(this.project.deadline) < new Date();
+    const now = new Date();
+    const deadline = new Date(this.project.deadline);
+    return deadline < now;
   }
 
   get deadlineText(): string {
-    if (!this.project.deadline) return 'No deadline';
-    if (this.isPastDeadline) {
-      return 'Overdue';
+    if (!this.project.deadline) return '';
+    const now = new Date();
+    const deadline = new Date(this.project.deadline);
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return `${Math.abs(diffDays)}j en retard`;
     }
-    return formatDistanceToNow(new Date(this.project.deadline), { addSuffix: true, locale: fr });
+    return `${diffDays}j restants`;
   }
 
   formatReminderDate(): string {
     if (!this.project.reminderDate) return '';
-    return formatDistanceToNow(new Date(this.project.reminderDate), { addSuffix: true, locale: fr });
+    return new Date(this.project.reminderDate).toLocaleDateString('fr-FR');
   }
 
-  getProgressColor(): string {
-    if (this.project.progress >= 75) {
-      return '#48bb78';
-    } else if (this.project.progress >= 50) {
-      return '#6b46c1';
-    } else if (this.project.progress >= 25) {
-      return '#f6ad55';
-    } else {
-      return '#e53e3e';
-    }
+  get completedInstructions(): number {
+    if (!this.project.instructions) return 0;
+    return this.project.instructions.filter(instruction => instruction.completed).length;
+  }
+
+  get instructionProgress(): number {
+    if (!this.project.instructions || this.project.instructions.length === 0) return 0;
+    return Math.round((this.completedInstructions / this.project.instructions.length) * 100);
   }
 }

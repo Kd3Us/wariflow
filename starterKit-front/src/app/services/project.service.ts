@@ -50,8 +50,12 @@ export class ProjectService {
       teamIds: project.teamIds || [],
       priority: project.priority || 'MEDIUM',
       tags: project.tags || [],
-      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate
+      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate,
+      instructions: project.instructions || []
     };
+
+    console.log('Données envoyées au backend:', createProjectData);
+    console.log('Instructions à sauvegarder:', createProjectData.instructions);
 
     this.http.post<Project>(this.apiUrl, createProjectData)
       .pipe(
@@ -63,6 +67,7 @@ export class ProjectService {
           updatedAt: new Date(newProject.updatedAt)
         })),
         tap(newProject => {
+          console.log('Projet créé avec instructions:', newProject.instructions);
           const currentProjects = this.projectsSubject.value;
           this.projectsSubject.next([...currentProjects, newProject]);
         })
@@ -70,6 +75,7 @@ export class ProjectService {
       .subscribe({
         next: (newProject) => {
           console.log('Projet créé avec succès:', newProject);
+          console.log('Nombre d\'instructions sauvegardées:', newProject.instructions?.length || 0);
         },
         error: (error) => {
           console.error('Erreur lors de la création du projet:', error);
@@ -78,7 +84,23 @@ export class ProjectService {
   }
 
   updateProject(project: Project): void {
-    this.http.put<Project>(`${this.apiUrl}/${project.id}`, project)
+    const updateData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline instanceof Date ? project.deadline.toISOString() : project.deadline,
+      teamIds: project.team?.map(member => member.id) || [],
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate,
+      instructions: project.instructions || []
+    };
+
+    console.log('Données de mise à jour envoyées:', updateData);
+    console.log('Instructions à mettre à jour:', updateData.instructions);
+
+    this.http.put<Project>(`${this.apiUrl}/${project.id}`, updateData)
       .pipe(
         map(updatedProject => ({
           ...updatedProject,
@@ -88,6 +110,8 @@ export class ProjectService {
           updatedAt: new Date(updatedProject.updatedAt)
         })),
         tap(updatedProject => {
+          console.log('Projet mis à jour reçu:', updatedProject);
+          console.log('Instructions après mise à jour:', updatedProject.instructions);
           const currentProjects = this.projectsSubject.value;
           const index = currentProjects.findIndex(p => p.id === updatedProject.id);
           if (index !== -1) {
@@ -96,7 +120,14 @@ export class ProjectService {
           }
         })
       )
-      .subscribe();
+      .subscribe({
+        next: (updatedProject) => {
+          console.log('Projet mis à jour avec succès:', updatedProject.title);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la mise à jour du projet:', error);
+        }
+      });
   }
 
   updateProjectStage(projectId: string, stage: ProjectStage): Observable<Project> {
