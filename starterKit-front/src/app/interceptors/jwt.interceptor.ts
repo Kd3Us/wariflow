@@ -12,11 +12,11 @@ import { JwtService } from '../services/jwt.service';
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
   constructor(private jwtService: JwtService) {}
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  /*intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     throw new Error('Method not implemented.');
-  }
+  }*/
 
-  /*intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Ne pas intercepter les requêtes d'authentification
     if (request.url.includes('/auth/verify')) {
       return next.handle(request);
@@ -58,5 +58,5 @@ export class JwtInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
-  }*/
+  }
 } 

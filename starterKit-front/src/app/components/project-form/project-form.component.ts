@@ -130,23 +130,6 @@ export class ProjectFormComponent implements OnInit {
       teamIds: this.selectedTeamIds,
       instructions: this.currentInstructions
     };
-
-    // Si c'est une modification, ajouter l'ID et l'équipe existante
-    if (this.project) {
-      Object.assign(projectData, {
-        id: this.project.id,
-        team: this.project.team,
-        createdAt: this.project.createdAt,
-        updatedAt: new Date(),
-        comments: this.project.comments,
-        attachments: this.project.attachments,
-        isReminderActive: !!projectData.reminderDate
-      });
-    }
-    
-    console.log('Données du projet à sauvegarder:', projectData);
-    console.log('Instructions actuelles:', this.currentInstructions);
-    console.log('Mode:', this.project ? 'Modification' : 'Création');
     
     this.save.emit(projectData);
   }

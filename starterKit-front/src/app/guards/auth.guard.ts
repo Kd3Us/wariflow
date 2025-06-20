@@ -10,9 +10,9 @@ export const authGuard: CanActivateFn = (route, state) => {
 
 
   // disable jwt check
-  return of(true);
+  //return of(true);
 
-  /*return jwtService.checkTokenAndRedirect().pipe(
+  return jwtService.checkTokenAndRedirect().pipe(
     tap(isValid => console.log('AuthGuard received verification result:', isValid)),
     catchError((error) => {
       console.error('AuthGuard caught error during token verification:', error);
@@ -20,5 +20,5 @@ export const authGuard: CanActivateFn = (route, state) => {
       jwtService.redirectLoginPage();
       return of(false);
     })
-  );*/
+  );
 }; 

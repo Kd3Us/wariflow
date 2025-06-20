@@ -76,24 +76,6 @@
     </span>
   </div>
 
-  <!-- ✨ NOUVELLE SECTION: Affichage des instructions - SEULE MODIFICATION ✨ -->
-  <div *ngIf="project.instructions && project.instructions.length > 0" class="instructions-summary mb-4">
-    <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
-      <span class="material-icons text-sm">assignment</span>
-      <span>{{ completedInstructions }}/{{ project.instructions.length }} instructions</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-        <div 
-          class="bg-green-500 h-1.5 rounded-full transition-all duration-300"
-          [style.width.%]="instructionProgress"
-        ></div>
-      </div>
-      <span class="text-xs font-medium text-gray-600">{{ instructionProgress }}%</span>
-    </div>
-  </div>
-  <!-- ✨ FIN DE LA NOUVELLE SECTION ✨ -->
-
   <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-4 relative">
     <div
       class="h-full bg-secondary transition-all duration-300"

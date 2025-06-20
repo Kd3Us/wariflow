@@ -13,8 +13,12 @@ Une API REST NestJS pour la gestion du cycle de vie des projets avec système de
 - **Drag & drop** entre étapes (API)
 - **Gestion d'équipes** et assignation
 - **Tags et priorités** pour l'organisation
+- **Authentification par token** avec vérification SpeedPresta
 
 ### API Endpoints
+
+#### Authentification
+- `POST /auth/login` - Connexion avec vérification de token SpeedPresta
 
 #### Projets
 - `GET /projects` - Liste tous les projets avec filtres
@@ -134,3 +138,29 @@ Les projets suivent un workflow linéaire :
 - **IDEE** → **MVP** → **TRACTION** → **LEVEE**
 
 Les transitions ne peuvent se faire que vers l'étape suivante ou précédente pour maintenir la cohérence.
+
+## 🔐 Authentification
+
+L'application utilise un middleware de vérification de token qui fait appel à l'API SpeedPresta pour valider les tokens.
+
+### Configuration
+
+Créez un fichier `.env` basé sur `.env.example` :
+
+```bash
+# SpeedPresta API Configuration
+SPEEDPRESTA_API_URL=https://api.speedpresta.com/api/v1/verify/token
+SPEEDPRESTA_TIMEOUT=10000
+```
+
+### Utilisation
+
+Pour accéder à la route `/auth/login`, envoyez le token dans le header `Authorization` :
+
+```bash
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Pour plus de détails, consultez [TOKEN_MIDDLEWARE.md](./TOKEN_MIDDLEWARE.md).
