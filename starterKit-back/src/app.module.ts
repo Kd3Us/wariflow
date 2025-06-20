@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
-import { LoggerModule } from './common/logger/logger.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
-  imports: [
-    LoggerModule,
-    ProjectsModule, 
-    TeamsModule
-  ],
+  imports: [ProjectsModule, TeamsModule, CommonModule],
   controllers: [],
   providers: [],
 })

@@ -1,6 +1,6 @@
 export const environment = {
-  // URL de l'API externe pour l'authentification
-  externaleAuthUrl: 'http://localhost:3000/auth',
-  // URL pour vérifier le token
-  verifyTokenUrl: 'http://localhost:3000/auth/verify'
+  apiProjectURL: 'http://18.169.1.118:3009/projects',
+  externaleAuthUrl: "https://startupkit.distribute.app/",
+  verifyTokenUrl: "http://18.169.1.118:3009/auth/login",
+  jwtSecret: "votre_secret_jwt"
 };

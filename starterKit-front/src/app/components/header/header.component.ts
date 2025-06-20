@@ -1,9 +1,10 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { JwtService } from '../../services/jwt.service';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -15,12 +16,13 @@ import { FormsModule } from '@angular/forms';
   ],
   templateUrl: './header.component.html',
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   user = {
     name: '',
     avatar: 'https://i.pravatar.cc/150?img=12' // Avatar par défaut
   };
   isMenuOpen = false;
+  private tokenSubscription: Subscription | null = null;
 
   constructor(
     private jwtService: JwtService,
@@ -40,15 +42,27 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit() {
-    const decodedToken = this.jwtService.decodeToken();
-    if (decodedToken) {
-      // Utilise le nom complet du token s'il existe
-      this.user.name = decodedToken.name;
+    // S'abonner aux changements du token
+    this.tokenSubscription = this.jwtService.token$.subscribe(decodedToken => {
+      if (decodedToken) {
+        // Utilise le nom complet du token s'il existe
+        this.user.name = decodedToken.name;
+      } else {
+        // Si pas de token, réinitialiser le nom
+        this.user.name = '';
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // Nettoyer l'abonnement pour éviter les fuites mémoire
+    if (this.tokenSubscription) {
+      this.tokenSubscription.unsubscribe();
     }
   }
 
   logout() {
     this.jwtService.removeToken();
-    this.jwtService.checkTokenAndRedirect();
+    this.jwtService.redirectLoginPage();
   }
 }

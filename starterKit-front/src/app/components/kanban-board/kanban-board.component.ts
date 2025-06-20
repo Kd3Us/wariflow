@@ -38,20 +38,6 @@ export class KanbanBoardComponent implements OnInit {
       this.leveeProjects = projects.filter(p => p.stage === ProjectStage.LEVEE);
     });
   }
-
-  onProjectUpdated(updatedProject: Project): void {
-    const updateInList = (list: Project[]) => {
-      const index = list.findIndex(p => p.id === updatedProject.id);
-      if (index !== -1) {
-        list[index] = updatedProject;
-      }
-    };
-
-    updateInList(this.ideeProjects);
-    updateInList(this.mvpProjects);
-    updateInList(this.tractionProjects);
-    updateInList(this.leveeProjects);
-  }
   
   drop(event: CdkDragDrop<Project[]>): void {
     if (event.previousContainer === event.container) {
@@ -64,8 +50,10 @@ export class KanbanBoardComponent implements OnInit {
         event.currentIndex,
       );
       
+      // Update project stage
       const project = event.container.data[event.currentIndex];
       
+      // Determine the new stage based on the container data
       let newStage: ProjectStage;
       if (event.container.data === this.ideeProjects) {
         newStage = ProjectStage.IDEE;
@@ -79,58 +67,45 @@ export class KanbanBoardComponent implements OnInit {
         return;
       }
       
-      this.projectService.updateProjectStage(project.id, newStage).subscribe({
-        next: (updatedProject) => {
-          const index = event.container.data.findIndex(p => p.id === updatedProject.id);
-          if (index !== -1) {
-            event.container.data[index] = updatedProject;
-          }
-        },
-        error: (error) => {
-          console.error('Erreur lors de la mise à jour de l\'étape:', error);
-          transferArrayItem(
-            event.container.data,
-            event.previousContainer.data,
-            event.currentIndex,
-            event.previousIndex,
-          );
-        }
+      // Update project stage locally
+      project.stage = newStage;
+      
+      // Update project stage in backend and reload projects
+      this.projectService.updateProjectStage(project.id, newStage).subscribe(() => {
+        this.loadProjects();
       });
     }
   }
   
-  openProjectForm(initialStage?: ProjectStage): void {
-    this.selectedProject = null;
+  openProjectForm(stage: ProjectStage = ProjectStage.IDEE): void {
     this.isNewProject = true;
+    this.selectedProject = null;
     this.showProjectForm = true;
   }
   
   editProject(project: Project): void {
-    this.selectedProject = project;
     this.isNewProject = false;
+    this.selectedProject = project;
     this.showProjectForm = true;
   }
   
   deleteProject(project: Project): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer le projet "${project.title}" ?`)) {
-      this.projectService.deleteProject(project.id);
-      this.loadProjects();
-    }
-  }
-  
-  saveProject(projectData: Partial<Project>): void {
-    if (this.isNewProject) {
-      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt' | 'updatedAt'>);
-    } else if (this.selectedProject) {
-      const updatedProject = { ...this.selectedProject, ...projectData };
-      this.projectService.updateProject(updatedProject);
-    }
-    this.closeProjectForm();
-    setTimeout(() => this.loadProjects(), 100);
+    this.projectService.deleteProject(project.id);
   }
   
   closeProjectForm(): void {
     this.showProjectForm = false;
     this.selectedProject = null;
+  }
+  
+  saveProject(projectData: Partial<Project>): void {
+    if (this.isNewProject) {
+      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt'>);
+    } else if (this.selectedProject) {
+      this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
+        this.loadProjects();
+      });
+    }
+    this.closeProjectForm();
   }
 }

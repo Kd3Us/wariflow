@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Frontend Angular avec Nginx
+  frontend:
+    build:
+      context: ./starterKit-front
+      dockerfile: Dockerfile
+    container_name: speedpresta-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - speedpresta-network
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+  # Backend NestJS
+  backend:
+    build:
+      context: ./starterKit-back
+      dockerfile: Dockerfile
+    container_name: speedpresta-backend
+    restart: unless-stopped
+    ports:
+      - "3009:3009"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=project_lifecycle
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+    depends_on:
+      - postgres
+    networks:
+      - speedpresta-network
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: speedpresta-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: project_lifecycle
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - speedpresta-network
+
+  # Interface d'administration PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: speedpresta-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - speedpresta-network
+
+volumes:
+  postgres_data:
+
+networks:
+  speedpresta-network:
+    driver: bridge 

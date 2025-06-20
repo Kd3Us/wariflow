@@ -8,7 +8,7 @@ async function bootstrap() {
 
   // Enable CORS for frontend integration
   app.enableCors({
-    origin: ['http://localhost:3009', 'http://localhost:4200'],
+    origin: ['http://localhost:3009', 'http://localhost:4200','http://localhost', 'http://18.169.1.118'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
@@ -29,6 +29,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('projects')
     .addTag('teams')
+    .addBearerAuth()
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
