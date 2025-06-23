@@ -73,11 +73,12 @@ export class ProjectsController {
   @ApiQuery({ name: 'days', required: false, description: 'Nombre de jours (défaut: 7)' })
   @ApiResponse({ status: 200, description: 'Projets avec deadlines proches', type: [Project] })
   @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
-  getUpcomingDeadlines(@Req() req: Request, @Query('days') days?: number): Project[] {
+  getUpcomingDeadlines(@Req() req: Request, @Query('days') days?: string): Project[] {
     const validatedToken = req['validatedToken'];
     console.log('Fetching upcoming deadlines with token:', validatedToken);
     
-    return this.projectsService.getUpcomingDeadlines(days ? Number(days) : 7);
+    const daysNumber = days ? parseInt(days, 10) : 7;
+    return this.projectsService.getUpcomingDeadlines(daysNumber);
   }
 
   @Get('active-reminders')
@@ -94,7 +95,7 @@ export class ProjectsController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Récupérer un projet spécifique' })
+  @ApiOperation({ summary: 'Récupérer un projet par son ID' })
   @ApiResponse({ status: 200, description: 'Projet trouvé', type: Project })
   @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
   @ApiResponse({ status: 404, description: 'Projet non trouvé' })
@@ -133,25 +134,35 @@ export class ProjectsController {
   }
 
   @Post(':id/users')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Ajouter des utilisateurs à un projet' })
   @ApiResponse({ status: 200, description: 'Utilisateurs ajoutés avec succès', type: Project })
   @ApiResponse({ status: 400, description: 'Utilisateurs déjà dans l\'équipe' })
   @ApiResponse({ status: 404, description: 'Projet ou utilisateurs non trouvés' })
   addUsersToProject(
     @Param('id') id: string,
-    @Body() addUsersDto: AddUsersToProjectDto
+    @Body() addUsersDto: AddUsersToProjectDto,
+    @Req() req: Request
   ): Project {
+    const validatedToken = req['validatedToken'];
+    console.log('Adding users to project with token:', validatedToken);
+    
     return this.projectsService.addUsersToProject(id, addUsersDto);
   }
 
   @Delete(':id/users/:userId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Retirer un utilisateur d\'un projet' })
   @ApiResponse({ status: 200, description: 'Utilisateur retiré avec succès', type: Project })
   @ApiResponse({ status: 404, description: 'Projet ou utilisateur non trouvé' })
   removeUserFromProject(
     @Param('id') projectId: string,
-    @Param('userId') userId: string
+    @Param('userId') userId: string,
+    @Req() req: Request
   ): Project {
+    const validatedToken = req['validatedToken'];
+    console.log('Removing user from project with token:', validatedToken);
+    
     return this.projectsService.removeUserFromProject(projectId, userId);
   }
 
