@@ -2,14 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ProjectService } from '../../services/project.service';
+import { LoaderService } from '../../services/loader.service';
 import { Project, ProjectStage } from '../../models/project.model';
 import { ProjectCardComponent } from '../project-card/project-card.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
+import { OnboardingComponent } from '../onboarding/onboarding.component';
+import { LoaderComponent } from '../loader/loader.component';
+import { Observable } from 'rxjs';
+
 
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent],
+  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent, OnboardingComponent, LoaderComponent],
   templateUrl: './kanban-board.component.html'
 })
 
@@ -23,8 +28,16 @@ export class KanbanBoardComponent implements OnInit {
   selectedProject: Project | null = null;
   showProjectForm = false;
   isNewProject = true;
+  isCreatingFirstProject = false;
   
-  constructor(private projectService: ProjectService) {}
+  isLoading$: Observable<boolean>;
+  
+  constructor(
+    private projectService: ProjectService,
+    private loaderService: LoaderService
+  ) {
+    this.isLoading$ = this.loaderService.isLoading$;
+  }
   
   ngOnInit(): void {
     this.loadProjects();
@@ -75,6 +88,11 @@ export class KanbanBoardComponent implements OnInit {
         this.loadProjects();
       });
     }
+  }
+
+  creatingFirstProject() {
+    this.isCreatingFirstProject = true;
+    this.openProjectForm();
   }
   
   openProjectForm(stage: ProjectStage = ProjectStage.IDEE): void {

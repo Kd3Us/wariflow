@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import { BehaviorSubject, Observable, map, tap, finalize } from 'rxjs';
 import { Project, ProjectStage } from '../models/project.model';
 import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
+import { LoaderService } from './loader.service';
 
 
 @Injectable({
@@ -16,7 +17,8 @@ export class ProjectService {
 
   constructor(
     private http: HttpClient,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private loaderService: LoaderService
   ) {
     this.loadProjects();
   }
@@ -30,6 +32,7 @@ export class ProjectService {
   }
 
   private loadProjects(): void {
+    this.loaderService.startLoading();
     this.http.get<Project[]>(this.apiUrl, { headers: this.getAuthHeaders() })
       .pipe(
         map(projects => projects.map(project => ({
@@ -38,7 +41,8 @@ export class ProjectService {
           reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
           createdAt: new Date(project.createdAt),
           updatedAt: new Date(project.updatedAt)
-        })))
+        }))),
+        finalize(() => this.loaderService.stopLoading())
       )
       .subscribe(projects => this.projectsSubject.next(projects));
   }
@@ -54,6 +58,7 @@ export class ProjectService {
   }
 
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): void {
+    this.loaderService.startLoading();
     this.http.post<Project>(this.apiUrl, project, { headers: this.getAuthHeaders() })
       .pipe(
         map(newProject => ({
@@ -66,12 +71,14 @@ export class ProjectService {
         tap(newProject => {
           const currentProjects = this.projectsSubject.value;
           this.projectsSubject.next([...currentProjects, newProject]);
-        })
+        }),
+        finalize(() => this.loaderService.stopLoading())
       )
       .subscribe();
   }
 
   updateProject(project: Project): void {
+    this.loaderService.startLoading();
     this.http.put<Project>(`${this.apiUrl}/${project.id}`, project, { headers: this.getAuthHeaders() })
       .pipe(
         map(updatedProject => ({
@@ -88,7 +95,8 @@ export class ProjectService {
             currentProjects[index] = updatedProject;
             this.projectsSubject.next([...currentProjects]);
           }
-        })
+        }),
+        finalize(() => this.loaderService.stopLoading())
       )
       .subscribe();
   }
@@ -97,6 +105,7 @@ export class ProjectService {
     const currentProjects = this.projectsSubject.value;
     const project = currentProjects.find(p => p.id === projectId);
     if (project) {
+      this.loaderService.startLoading();
       const updateData = {
         title: project.title,
         description: project.description,
@@ -123,19 +132,22 @@ export class ProjectService {
               currentProjects[index] = updatedProject;
               this.projectsSubject.next([...currentProjects]);
             }
-          })
+          }),
+          finalize(() => this.loaderService.stopLoading())
         );
     }
     return new Observable<Project>();
   }
 
   deleteProject(id: string): void {
+    this.loaderService.startLoading();
     this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() })
       .pipe(
         tap(() => {
           const currentProjects = this.projectsSubject.value;
           this.projectsSubject.next(currentProjects.filter(p => p.id !== id));
-        })
+        }),
+        finalize(() => this.loaderService.stopLoading())
       )
       .subscribe();
   }
