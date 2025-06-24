@@ -38,7 +38,7 @@ export interface ChatbotResponse {
   providedIn: 'root'
 })
 export class ChatbotService {
-  private apiUrl = 'http://localhost:3009/chatbot';
+  private apiUrl = 'http://18.169.1.118:3009/chatbot';
 
   constructor(
     private http: HttpClient,
@@ -54,6 +54,8 @@ export class ChatbotService {
   }
 
   generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
+    console.log('🚀 Appel API réel pour génération de projet:', request);
+    
     return this.http.post<ChatbotResponse>(
       `${this.apiUrl}/generate-project`,
       request,
@@ -62,6 +64,8 @@ export class ChatbotService {
   }
 
   analyzeProject(request: GenerateProjectRequest): Observable<ProjectAnalysis> {
+    console.log('🔍 Appel API réel pour analyse de projet:', request);
+    
     return this.http.post<ProjectAnalysis>(
       `${this.apiUrl}/analyze-only`,
       request,

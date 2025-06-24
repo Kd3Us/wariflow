@@ -1,20 +1,15 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map, tap, BehaviorSubject } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
+import { environment } from '../../environments/environment';
 
-interface VerifyTokenResponse {
-  success: boolean;
-  message: string;
-  token: string;
-}
-
-interface DecodedToken {
+export interface DecodedToken {
+  exp: number;
+  iat: number;
   sub: string;
   name: string;
-  iat: number;
-  exp: number;
   apikey: string;
   [key: string]: any;
 }
@@ -25,95 +20,85 @@ interface DecodedToken {
 export class JwtService {
   private readonly EXTERNAL_AUTH_URL = environment.externaleAuthUrl;
   private readonly VERIFY_TOKEN_URL = environment.verifyTokenUrl;
-  
-  // BehaviorSubject pour observer les changements du token
-  private tokenSubject = new BehaviorSubject<DecodedToken | null>(this.decodeToken());
-  
-  // Observable public pour que les composants puissent s'abonner
+  private readonly SPEEDPRESTA_TOKEN = environment.speedPrestaToken;
+
+  private tokenSubject = new BehaviorSubject<DecodedToken | null>(null);
   public token$ = this.tokenSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    console.log('JwtService initialized with URLs:', {
-      verifyTokenUrl: this.VERIFY_TOKEN_URL,
-      externalAuthUrl: this.EXTERNAL_AUTH_URL
-    });
+    console.log('JwtService initialized with SpeedPresta token');
+    this.updateTokenObservable();
   }
 
-  /**
-   * Vérifie si le token JWT est valide en appelant l'API externe
-   * @returns Observable<boolean>
-   */
   public verifyTokenWithApi(): Observable<boolean> {
+    console.log('verifyTokenWithApi called');
     const token = this.getToken();
-    console.log('verifyTokenWithApi called, token present:', !!token);
     
     if (!token) {
-      console.log('No token found in sessionStorage');
-      return new Observable<boolean>(observer => {
-        observer.next(false);
-        observer.complete();
-      });
+      console.log('No token available for verification');
+      return of(false);
     }
 
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
     console.log('Sending token verification request to:', this.VERIFY_TOKEN_URL);
-    return this.http.post<VerifyTokenResponse>(this.VERIFY_TOKEN_URL, { token },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    )
-      .pipe(
-        tap(response => console.log('API verification response:', response)),
-        map(response => {
-          const isValid = response.success === true;
-          console.log('Token verification result:', isValid, 'Message:', response.success);
-          return isValid;
-        })
-      );
+    
+    return this.http.post<any>(this.VERIFY_TOKEN_URL, {}, { headers }).pipe(
+      tap(response => console.log('Token verification response:', response)),
+      map(response => {
+        const isValid = response && response.success === true;
+        console.log('Token verification result:', isValid);
+        return isValid;
+      }),
+      catchError(error => {
+        console.error('Token verification failed:', error);
+        return of(false);
+      })
+    );
   }
 
-  /**
-   * Récupère le token depuis le sessionStorage
-   * @returns string | null
-   */
   public getToken(): string | null {
-    const token = sessionStorage.getItem('startupkit_SESSION');
-    console.log('getToken called, token exists:', !!token);
-    return token;
+    const tokenFromUrl = this.getTokenFromUrl();
+    if (tokenFromUrl) {
+      console.log('Using token from URL');
+      return tokenFromUrl;
+    }
+
+    const sessionToken = sessionStorage.getItem('startupkit_SESSION');
+    if (sessionToken) {
+      console.log('Using token from sessionStorage');
+      return sessionToken;
+    }
+
+    if (this.SPEEDPRESTA_TOKEN) {
+      console.log('Using SpeedPresta token from environment');
+      return this.SPEEDPRESTA_TOKEN;
+    }
+
+    console.log('No token available');
+    return null;
   }
 
-  /**
-   * Sauvegarde le token dans le sessionStorage
-   * @param token string
-   */
   public setToken(token: string): void {
     console.log('Setting token in sessionStorage');
     sessionStorage.setItem('startupkit_SESSION', token);
-    // Émettre le nouveau token décodé
     const decodedToken = this.decodeToken();
     this.tokenSubject.next(decodedToken);
   }
 
-  /**
-   * Supprime le token du sessionStorage
-   */
   public removeToken(): void {
     console.log('Removing token from sessionStorage');
     sessionStorage.removeItem('startupkit_SESSION');
-    // Émettre null pour indiquer qu'il n'y a plus de token
     this.tokenSubject.next(null);
   }
 
-  /**
-   * Vérifie le token avec l'API et redirige si nécessaire
-   * @returns Observable<boolean>
-   */
   public checkTokenAndRedirect(): Observable<boolean> {
     console.log('checkTokenAndRedirect called');
     const tokenFromUrl = this.getTokenFromUrl();
-    console.log('Token from URL:', !!tokenFromUrl);
-
+    
     if (tokenFromUrl) {
       console.log('Token found in URL, setting it in sessionStorage');
       this.setToken(tokenFromUrl);
@@ -139,21 +124,12 @@ export class JwtService {
     window.location.href = this.EXTERNAL_AUTH_URL;
   }
 
-  /**
-   * Récupère le token depuis les paramètres de l'URL
-   * @returns string | null
-   */
   public getTokenFromUrl(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    console.log('getTokenFromUrl called, token found:', !!token);
     return token;
   }
 
-  /**
-   * Décode le token JWT
-   * @returns DecodedToken | null
-   */
   public decodeToken(): DecodedToken | null {
     const token = this.getToken();
     if (!token) {
@@ -163,7 +139,12 @@ export class JwtService {
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Token decoded successfully:', decoded);
+      console.log('Token decoded successfully:', {
+        sub: decoded.sub,
+        name: decoded.name,
+        exp: new Date(decoded.exp * 1000),
+        apikey: decoded.apikey
+      });
       return decoded;
     } catch (error) {
       console.error('Error decoding token:', error);
@@ -171,12 +152,22 @@ export class JwtService {
     }
   }
 
-  /**
-   * Met à jour l'observable avec le token actuel
-   * Utile pour forcer une mise à jour
-   */
   public updateTokenObservable(): void {
     const decodedToken = this.decodeToken();
     this.tokenSubject.next(decodedToken);
   }
-} 
+
+  public isTokenExpired(): boolean {
+    const decoded = this.decodeToken();
+    if (!decoded) return true;
+    
+    const now = Math.floor(Date.now() / 1000);
+    const isExpired = decoded.exp < now;
+    
+    if (isExpired) {
+      console.log('Token is expired');
+    }
+    
+    return isExpired;
+  }
+}
