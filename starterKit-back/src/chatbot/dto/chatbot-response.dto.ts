@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Project } from '../../projects/entities/project.entity';
 
+export class ProjectTask {
+  @ApiProperty({ description: 'Titre de la tâche' })
+  title: string;
+
+  @ApiProperty({ description: 'Description de la tâche' })
+  description: string;
+
+  @ApiProperty({ description: 'Étape du projet' })
+  stage: string;
+
+  @ApiProperty({ description: 'Nombre de jours estimés' })
+  estimatedDays: number;
+}
+
 export class ProjectAnalysis {
   @ApiProperty({ description: 'Type de projet identifié' })
   projectType: string;
@@ -22,20 +36,6 @@ export class ProjectAnalysis {
 
   @ApiProperty({ description: 'Décomposition du projet en tâches' })
   breakdown: ProjectTask[];
-}
-
-export class ProjectTask {
-  @ApiProperty({ description: 'Titre de la tâche' })
-  title: string;
-
-  @ApiProperty({ description: 'Description de la tâche' })
-  description: string;
-
-  @ApiProperty({ description: 'Étape du projet' })
-  stage: string;
-
-  @ApiProperty({ description: 'Nombre de jours estimés' })
-  estimatedDays: number;
 }
 
 export class ChatbotResponseDto {

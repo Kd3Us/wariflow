@@ -54,7 +54,8 @@ export class ChatbotService {
   }
 
   generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
-    console.log('🚀 Appel API réel pour génération de projet:', request);
+    console.log('🚀 Appel API pour génération de projet:', request);
+    console.log('📡 URL API:', `${this.apiUrl}/generate-project`);
     
     return this.http.post<ChatbotResponse>(
       `${this.apiUrl}/generate-project`,
@@ -64,7 +65,7 @@ export class ChatbotService {
   }
 
   analyzeProject(request: GenerateProjectRequest): Observable<ProjectAnalysis> {
-    console.log('🔍 Appel API réel pour analyse de projet:', request);
+    console.log('🔍 Appel API pour analyse de projet:', request);
     
     return this.http.post<ProjectAnalysis>(
       `${this.apiUrl}/analyze-only`,

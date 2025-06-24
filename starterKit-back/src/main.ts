@@ -6,14 +6,22 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for frontend integration
   app.enableCors({
-    origin: ['http://localhost:3009', 'http://localhost:4200','http://localhost', 'http://18.169.1.118'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    origin: [
+      'http://localhost:3009', 
+      'http://localhost:4200',
+      'http://localhost', 
+      'http://18.169.1.118',
+      'http://18.169.1.118:4200',
+      'http://18.169.1.118:3009',
+      'http://18.169.1.118:80',
+      '*'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,13 +30,13 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Project Lifecycle Management API')
     .setDescription('API pour la gestion du cycle de vie des projets')
     .setVersion('1.0')
     .addTag('projects')
     .addTag('teams')
+    .addTag('chatbot')
     .addBearerAuth()
     .build();
   
@@ -40,6 +48,7 @@ async function bootstrap() {
   
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  console.log(`🤖 Chatbot endpoint: http://localhost:${port}/chatbot`);
 }
 
 bootstrap();

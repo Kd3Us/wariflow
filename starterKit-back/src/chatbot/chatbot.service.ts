@@ -28,6 +28,8 @@ export class ChatbotService {
   constructor(private readonly projectsService: ProjectsService) {}
 
   async generateProject(generateProjectDto: GenerateProjectDto): Promise<ChatbotResponseDto> {
+    console.log('🤖 [ChatbotService] Début de génération de projet');
+    
     const analysis = this.analyzeProjectDescription(generateProjectDto);
     
     if (!this.isValidProject(generateProjectDto.description)) {
@@ -39,18 +41,28 @@ export class ChatbotService {
     const projectsToCreate = this.createProjectCards(analysis, generateProjectDto);
     const createdProjects = [];
 
+    console.log(`🔄 [ChatbotService] Création de ${projectsToCreate.length} projets`);
+
     for (const projectData of projectsToCreate) {
-      const createdProject = this.projectsService.create(projectData);
-      createdProjects.push(createdProject);
+      try {
+        const createdProject = this.projectsService.create(projectData);
+        createdProjects.push(createdProject);
+        console.log(`✅ [ChatbotService] Projet créé: ${createdProject.title}`);
+      } catch (error) {
+        console.error(`❌ [ChatbotService] Erreur création projet:`, error);
+      }
     }
 
-    return {
+    const response = {
       success: true,
       message: `${createdProjects.length} projet(s) généré(s) avec succès à partir de votre description`,
       projects: createdProjects,
       analysis: analysis,
       suggestions: this.generateOptimizationSuggestions(analysis)
     };
+
+    console.log('✅ [ChatbotService] Génération terminée avec succès');
+    return response;
   }
 
   analyzeProjectDescription(generateProjectDto: GenerateProjectDto): ProjectAnalysis {
@@ -100,217 +112,192 @@ export class ChatbotService {
   }
 
   private extractContextualKeywords(text: string): string[] {
-    const keywords = [];
+    const contextualKeywords = [];
     
-    if (text.includes('géolocalisation') || text.includes('gps') || text.includes('carte')) {
-      keywords.push('géolocalisation');
-    }
-    if (text.includes('temps réel') || text.includes('live') || text.includes('instantané')) {
-      keywords.push('temps-réel');
-    }
-    if (text.includes('multilingue') || text.includes('langue')) {
-      keywords.push('multilingue');
-    }
-    if (text.includes('responsive') || text.includes('adaptatif')) {
-      keywords.push('responsive');
+    if (text.includes('boutique') || text.includes('magasin') || text.includes('e-commerce')) {
+      contextualKeywords.push('commerce');
     }
     
-    return keywords;
+    if (text.includes('réservation') || text.includes('booking')) {
+      contextualKeywords.push('réservation');
+    }
+    
+    if (text.includes('social') || text.includes('communauté')) {
+      contextualKeywords.push('social');
+    }
+    
+    if (text.includes('formation') || text.includes('éducation')) {
+      contextualKeywords.push('éducation');
+    }
+    
+    return contextualKeywords;
   }
 
   private identifyProjectType(text: string, keywords: string[]): string {
-    const mobileIndicators = ['mobile', 'app', 'android', 'ios', 'smartphone', 'tablette'];
-    const webIndicators = ['web', 'site', 'landing', 'page', 'frontend', 'navigateur'];
-    const backendIndicators = ['api', 'backend', 'serveur', 'database', 'base de données'];
-    const designIndicators = ['design', 'ui', 'ux', 'maquette', 'prototype', 'interface'];
-    const ecommerceIndicators = ['boutique', 'ecommerce', 'vente', 'panier', 'commande'];
-
-    if (this.hasIndicators(text, keywords, mobileIndicators)) return 'Application Mobile';
-    if (this.hasIndicators(text, keywords, ecommerceIndicators)) return 'E-commerce';
-    if (this.hasIndicators(text, keywords, webIndicators)) return 'Application Web';
-    if (this.hasIndicators(text, keywords, backendIndicators)) return 'API/Backend';
-    if (this.hasIndicators(text, keywords, designIndicators)) return 'Design/UX';
+    const techCount = keywords.filter(k => this.techKeywords.includes(k)).length;
+    const businessCount = keywords.filter(k => this.businessKeywords.includes(k)).length;
     
-    return 'Projet Général';
-  }
-
-  private hasIndicators(text: string, keywords: string[], indicators: string[]): boolean {
-    const textLower = text.toLowerCase();
-    return indicators.some(indicator => 
-      textLower.includes(indicator) || keywords.includes(indicator)
-    );
+    if (text.includes('mobile') || text.includes('app') || text.includes('android') || text.includes('ios')) {
+      return 'Application Mobile';
+    }
+    
+    if (text.includes('web') || text.includes('site') || text.includes('frontend')) {
+      return 'Application Web';
+    }
+    
+    if (text.includes('api') || text.includes('backend') || text.includes('serveur')) {
+      return 'API/Backend';
+    }
+    
+    if (businessCount > techCount) {
+      return 'Projet Business';
+    }
+    
+    return 'Projet Technique';
   }
 
   private estimateComplexity(text: string, keywords: string[]): 'simple' | 'moyen' | 'complexe' {
     let complexityScore = 0;
     
-    complexityScore += keywords.length;
-    complexityScore += Math.floor(text.split(' ').length / 20);
+    if (keywords.length > 5) complexityScore += 2;
+    if (keywords.length > 10) complexityScore += 2;
     
-    const complexFeatures = [
-      'paiement', 'authentification', 'notification', 'analytics', 'chat',
-      'géolocalisation', 'temps-réel', 'multilingue', 'admin', 'dashboard'
-    ];
+    if (text.includes('authentification') || text.includes('paiement')) complexityScore += 3;
+    if (text.includes('admin') || text.includes('dashboard')) complexityScore += 2;
+    if (text.includes('notification') || text.includes('temps réel')) complexityScore += 2;
+    if (text.includes('analytics') || text.includes('reporting')) complexityScore += 2;
     
-    const foundComplexFeatures = keywords.filter(k => complexFeatures.includes(k));
-    complexityScore += foundComplexFeatures.length * 3;
-    
-    if (text.includes('intégration') || text.includes('api externe')) {
-      complexityScore += 2;
-    }
-    
-    if (complexityScore < 6) return 'simple';
-    if (complexityScore < 12) return 'moyen';
+    if (complexityScore <= 3) return 'simple';
+    if (complexityScore <= 7) return 'moyen';
     return 'complexe';
   }
 
   private calculateDuration(complexity: 'simple' | 'moyen' | 'complexe', keywordCount: number): number {
-    const baseDuration = {
-      'simple': 10,
-      'moyen': 25,
-      'complexe': 45
-    };
+    let baseDuration = 0;
     
-    const adjustedDuration = baseDuration[complexity] + (keywordCount * 2);
-    return Math.min(adjustedDuration, 90);
+    switch (complexity) {
+      case 'simple': baseDuration = 15; break;
+      case 'moyen': baseDuration = 30; break;
+      case 'complexe': baseDuration = 60; break;
+    }
+    
+    return baseDuration + Math.floor(keywordCount / 2) * 5;
   }
 
   private generateTags(keywords: string[], projectType: string): string[] {
-    const tags = new Set([
-      projectType.toLowerCase().replace(/\s+/g, '-'),
-      ...keywords.slice(0, 5)
-    ]);
+    const tags = [...keywords];
     
-    return Array.from(tags);
+    if (projectType.includes('Mobile')) tags.push('mobile');
+    if (projectType.includes('Web')) tags.push('web');
+    if (projectType.includes('API')) tags.push('api');
+    if (projectType.includes('Business')) tags.push('business');
+    
+    return Array.from(new Set(tags)).slice(0, 6);
   }
 
   private determinePriority(text: string): 'LOW' | 'MEDIUM' | 'HIGH' {
-    const textLower = text.toLowerCase();
-    
-    const hasUrgencyKeywords = this.urgencyKeywords.some(keyword => 
-      textLower.includes(keyword)
-    );
-    
-    if (hasUrgencyKeywords) return 'HIGH';
-    
-    const businessKeywordCount = this.businessKeywords.filter(keyword => 
-      textLower.includes(keyword)
+    const urgentCount = this.urgencyKeywords.filter(keyword => 
+      text.toLowerCase().includes(keyword)
     ).length;
     
-    if (businessKeywordCount >= 3) return 'MEDIUM';
-    
+    if (urgentCount >= 2) return 'HIGH';
+    if (urgentCount >= 1) return 'MEDIUM';
     return 'LOW';
   }
 
-  private generateTaskBreakdown(projectType: string, complexity: string, keywords: string[]): ProjectTask[] {
+  private generateTaskBreakdown(projectType: string, complexity: 'simple' | 'moyen' | 'complexe', keywords: string[]): ProjectTask[] {
     const tasks: ProjectTask[] = [];
-    const multiplier = complexity === 'simple' ? 1 : complexity === 'moyen' ? 1.5 : 2.5;
-
+    
     tasks.push({
-      title: 'Analyse et Conception',
-      description: 'Définition des besoins, architecture et spécifications techniques',
-      stage: ProjectStage.IDEE,
-      estimatedDays: Math.ceil(3 * multiplier)
+      title: 'Recherche et analyse',
+      description: 'Analyser le marché et définir les besoins',
+      stage: 'IDEE',
+      estimatedDays: complexity === 'simple' ? 3 : complexity === 'moyen' ? 5 : 7
     });
-
-    if (keywords.includes('design') || keywords.includes('ui') || keywords.includes('ux')) {
-      tasks.push({
-        title: 'Design et Maquettes',
-        description: 'Création des maquettes, design system et prototypes',
-        stage: ProjectStage.IDEE,
-        estimatedDays: Math.ceil(5 * multiplier)
-      });
-    }
-
+    
     if (projectType.includes('Mobile') || projectType.includes('Web')) {
       tasks.push({
-        title: 'Développement Frontend',
-        description: 'Implémentation de l\'interface utilisateur et interactions',
-        stage: ProjectStage.MVP,
-        estimatedDays: Math.ceil(8 * multiplier)
+        title: 'Design UI/UX',
+        description: 'Créer les maquettes et l\'expérience utilisateur',
+        stage: 'IDEE',
+        estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
       });
     }
-
-    if (keywords.includes('api') || keywords.includes('backend') || keywords.includes('database')) {
+    
+    tasks.push({
+      title: 'Développement MVP',
+      description: 'Créer la version minimale viable',
+      stage: 'MVP',
+      estimatedDays: complexity === 'simple' ? 10 : complexity === 'moyen' ? 20 : 35
+    });
+    
+    if (keywords.includes('authentification') || keywords.includes('paiement')) {
       tasks.push({
-        title: 'Développement Backend',
-        description: 'Création de l\'API, base de données et logique métier',
-        stage: ProjectStage.MVP,
-        estimatedDays: Math.ceil(6 * multiplier)
+        title: 'Intégrations critiques',
+        description: 'Intégrer l\'authentification et les paiements',
+        stage: 'MVP',
+        estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
       });
     }
-
+    
     tasks.push({
-      title: 'Tests et Intégration',
-      description: 'Tests unitaires, tests d\'intégration et corrections',
-      stage: ProjectStage.TRACTION,
-      estimatedDays: Math.ceil(4 * multiplier)
+      title: 'Tests et optimisation',
+      description: 'Tester et optimiser les performances',
+      stage: 'TRACTION',
+      estimatedDays: complexity === 'simple' ? 3 : complexity === 'moyen' ? 5 : 8
     });
-
+    
     tasks.push({
-      title: 'Déploiement et Go-Live',
-      description: 'Mise en production, configuration serveur et monitoring',
-      stage: ProjectStage.TRACTION,
-      estimatedDays: Math.ceil(2 * multiplier)
+      title: 'Marketing et lancement',
+      description: 'Préparer le lancement et la stratégie marketing',
+      stage: 'TRACTION',
+      estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
     });
-
+    
     return tasks;
   }
 
   private createProjectCards(analysis: ProjectAnalysis, generateProjectDto: GenerateProjectDto): CreateProjectDto[] {
     const projects: CreateProjectDto[] = [];
-    const baseDate = new Date();
-    let cumulativeDays = 0;
-
+    
     analysis.breakdown.forEach((task, index) => {
-      const deadline = new Date(baseDate);
-      deadline.setDate(deadline.getDate() + cumulativeDays + task.estimatedDays);
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + task.estimatedDays + (index * 7));
       
-      const reminderDate = new Date(deadline);
-      reminderDate.setDate(reminderDate.getDate() - 2);
-
       projects.push({
         title: task.title,
-        description: `${task.description}\n\nProjet original: ${generateProjectDto.description}`,
+        description: task.description,
         stage: task.stage as ProjectStage,
-        progress: 0,
+        priority: index === 0 ? 'HIGH' : analysis.suggestedPriority,
         deadline: deadline,
-        teamIds: [],
-        priority: index === 0 ? analysis.suggestedPriority : 'MEDIUM',
         tags: analysis.suggestedTags,
-        reminderDate: reminderDate
+        progress: 0,
+        teamIds: []
       });
-
-      cumulativeDays += task.estimatedDays;
     });
-
+    
     return projects;
   }
 
   private generateOptimizationSuggestions(analysis: ProjectAnalysis): string[] {
     const suggestions = [];
-
+    
     if (analysis.complexity === 'complexe') {
-      suggestions.push('Considérez une approche MVP pour livrer une première version plus rapidement');
-      suggestions.push('Divisez le projet en phases pour réduire les risques');
+      suggestions.push('Considérez diviser ce projet en plusieurs phases pour réduire les risques');
     }
-
+    
     if (analysis.keywords.includes('mobile') && analysis.keywords.includes('web')) {
-      suggestions.push('Évaluez l\'opportunité d\'utiliser un framework cross-platform comme React Native');
+      suggestions.push('Envisagez une approche Progressive Web App (PWA) pour unifier mobile et web');
     }
-
-    if (analysis.keywords.includes('paiement')) {
-      suggestions.push('Intégrez une solution de paiement éprouvée comme Stripe ou PayPal');
+    
+    if (analysis.keywords.includes('authentification')) {
+      suggestions.push('Utilisez des solutions d\'authentification externes (OAuth, Auth0) pour accélérer le développement');
     }
-
-    if (analysis.estimatedDuration > 60) {
-      suggestions.push('Le projet est ambitieux, prévoyez des points de contrôle réguliers');
+    
+    if (analysis.estimatedDuration > 45) {
+      suggestions.push('Ce projet nécessite une équipe expérimentée. Prévoyez du temps supplémentaire pour les imprévus');
     }
-
-    if (analysis.suggestedPriority === 'HIGH') {
-      suggestions.push('Priorité élevée détectée, assurez-vous d\'avoir les ressources nécessaires');
-    }
-
+    
     return suggestions;
   }
 }
