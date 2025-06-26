@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CdkDragDrop, transferArrayItem, DragDropModule } from '@angular/cdk/drag-drop';
-import { ProjectCardComponent } from '../project-card/project-card.component';
-import { ProjectFormComponent } from '../project-form/project-form.component';
-import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
-import { OnboardingComponent } from '../onboarding/onboarding.component';
-import { LoaderComponent } from '../loader/loader.component';
-import { Project, ProjectStage } from '../../models/project.model';
+import { Observable } from 'rxjs';
+
 import { ProjectService } from '../../services/project.service';
 import { LoaderService } from '../../services/loader.service';
 import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service';
-import { Observable } from 'rxjs';
+import { Project, ProjectStage } from '../../models/project.model';
+import { ProjectCardComponent } from '../project-card/project-card.component';
+import { ProjectFormComponent } from '../project-form/project-form.component';
+import { AiProjectModalComponent } from '../ai-project-modal/ai-project-modal.component';
+import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
 
 @Component({
   selector: 'app-kanban-board',
@@ -21,65 +21,44 @@ import { Observable } from 'rxjs';
     DragDropModule, 
     ReactiveFormsModule,
     ProjectCardComponent, 
-    ProjectFormComponent,
-    AddUserModalComponent,
-    OnboardingComponent,
-    LoaderComponent
+    ProjectFormComponent, 
+    AiProjectModalComponent,
+    AddUserModalComponent
   ],
   template: `
-    <app-loader *ngIf="isLoading$ | async"></app-loader>
-
-    <ng-container
-      *ngIf="ideeProjects.length === 0 && mvpProjects.length === 0 && tractionProjects.length === 0 && leveeProjects.length === 0 
-      && !isCreatingFirstProject
-      ; else elseBlock">
-      <div class="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700">
-        <app-onboarding (createProject)="creatingFirstProject()"></app-onboarding>
-      </div>
-    </ng-container>
-
-    <ng-template #elseBlock>
-      <div class="p-6 h-[calc(100vh-64px)] overflow-hidden flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-          <h1 class="text-2xl font-semibold text-gray-800">Tableau de project</h1>
-          
-          <div class="flex items-center gap-3">
-            <button
-              (click)="openAIProjectForm()"
-              class="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-all hover:from-purple-600 hover:to-blue-600 shadow-lg hover:shadow-xl"
-            >
-              Générer par IA
-            </button>
-            
-            <button
-              (click)="openProjectForm()"
-              class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
-            >
-              <span class="material-icons text-lg">add</span>
+    <ng-container *ngIf="(isLoading$ | async) === false; else loadingTemplate">
+      <div class="kanban-container" *ngIf="hasProjects; else emptyState">
+        <div class="kanban-header">
+          <h1 class="text-2xl font-bold text-gray-800">Tableau de projet</h1>
+          <div class="kanban-actions">
+            <button class="btn-secondary" (click)="openProjectForm()">
+              <span class="material-icons">add</span>
               Créer projet
+            </button>
+            <button class="btn-ai-primary" (click)="openAIProjectForm()">
+              <span class="material-icons">auto_awesome</span>
+              Générer par IA
             </button>
           </div>
         </div>
-      
-        <div class="flex gap-5 overflow-x-auto pb-4 h-full">
-          <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-            <div class="flex items-center mb-4">
-              <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.IDEE }}</h2>
-              <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ ideeProjects.length }}</span>
-              <button
-                (click)="openProjectForm(ProjectStage.IDEE)"
-                class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-              >
-                <span class="material-icons text-lg">add</span>
+
+        <div class="kanban-board">
+          <!-- Colonne IDEE -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <h2 class="column-title">{{ ProjectStage.IDEE }}</h2>
+              <span class="project-count">{{ ideeProjects.length }}</span>
+              <button class="add-project-btn" (click)="openProjectForm(ProjectStage.IDEE)">
+                <span class="material-icons">add</span>
               </button>
             </div>
-      
+            
             <div
               cdkDropList
               #ideeList="cdkDropList"
               [cdkDropListData]="ideeProjects"
               [cdkDropListConnectedTo]="[mvpList, tractionList, leveeList]"
-              class="flex-grow overflow-y-auto min-h-[100px] p-1"
+              class="projects-list"
               (cdkDropListDropped)="drop($event)"
             >
               <app-project-card
@@ -87,7 +66,6 @@ import { Observable } from 'rxjs';
                 [project]="project"
                 cdkDrag
                 [cdkDragData]="project"
-                class="mb-4"
                 (edit)="editProject($event)"
                 (delete)="deleteProject($event)"
                 (addUsers)="onAddUsersClick($event)"
@@ -96,24 +74,22 @@ import { Observable } from 'rxjs';
             </div>
           </div>
 
-          <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-            <div class="flex items-center mb-4">
-              <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.MVP }}</h2>
-              <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ mvpProjects.length }}</span>
-              <button
-                (click)="openProjectForm(ProjectStage.MVP)"
-                class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-              >
-                <span class="material-icons text-lg">add</span>
+          <!-- Colonne MVP -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <h2 class="column-title">{{ ProjectStage.MVP }}</h2>
+              <span class="project-count">{{ mvpProjects.length }}</span>
+              <button class="add-project-btn" (click)="openProjectForm(ProjectStage.MVP)">
+                <span class="material-icons">add</span>
               </button>
             </div>
-      
+            
             <div
               cdkDropList
               #mvpList="cdkDropList"
               [cdkDropListData]="mvpProjects"
               [cdkDropListConnectedTo]="[ideeList, tractionList, leveeList]"
-              class="flex-grow overflow-y-auto min-h-[100px] p-1"
+              class="projects-list"
               (cdkDropListDropped)="drop($event)"
             >
               <app-project-card
@@ -121,7 +97,6 @@ import { Observable } from 'rxjs';
                 [project]="project"
                 cdkDrag
                 [cdkDragData]="project"
-                class="mb-4"
                 (edit)="editProject($event)"
                 (delete)="deleteProject($event)"
                 (addUsers)="onAddUsersClick($event)"
@@ -130,24 +105,22 @@ import { Observable } from 'rxjs';
             </div>
           </div>
 
-          <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-            <div class="flex items-center mb-4">
-              <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.TRACTION }}</h2>
-              <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ tractionProjects.length }}</span>
-              <button
-                (click)="openProjectForm(ProjectStage.TRACTION)"
-                class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-              >
-                <span class="material-icons text-lg">add</span>
+          <!-- Colonne TRACTION -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <h2 class="column-title">{{ ProjectStage.TRACTION }}</h2>
+              <span class="project-count">{{ tractionProjects.length }}</span>
+              <button class="add-project-btn" (click)="openProjectForm(ProjectStage.TRACTION)">
+                <span class="material-icons">add</span>
               </button>
             </div>
-      
+            
             <div
               cdkDropList
               #tractionList="cdkDropList"
               [cdkDropListData]="tractionProjects"
               [cdkDropListConnectedTo]="[ideeList, mvpList, leveeList]"
-              class="flex-grow overflow-y-auto min-h-[100px] p-1"
+              class="projects-list"
               (cdkDropListDropped)="drop($event)"
             >
               <app-project-card
@@ -155,7 +128,6 @@ import { Observable } from 'rxjs';
                 [project]="project"
                 cdkDrag
                 [cdkDragData]="project"
-                class="mb-4"
                 (edit)="editProject($event)"
                 (delete)="deleteProject($event)"
                 (addUsers)="onAddUsersClick($event)"
@@ -164,24 +136,22 @@ import { Observable } from 'rxjs';
             </div>
           </div>
 
-          <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-            <div class="flex items-center mb-4">
-              <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectStage.LEVEE }}</h2>
-              <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ leveeProjects.length }}</span>
-              <button
-                (click)="openProjectForm(ProjectStage.LEVEE)"
-                class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-              >
-                <span class="material-icons text-lg">add</span>
+          <!-- Colonne LEVEE -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <h2 class="column-title">{{ ProjectStage.LEVEE }}</h2>
+              <span class="project-count">{{ leveeProjects.length }}</span>
+              <button class="add-project-btn" (click)="openProjectForm(ProjectStage.LEVEE)">
+                <span class="material-icons">add</span>
               </button>
             </div>
-      
+            
             <div
               cdkDropList
               #leveeList="cdkDropList"
               [cdkDropListData]="leveeProjects"
               [cdkDropListConnectedTo]="[ideeList, mvpList, tractionList]"
-              class="flex-grow overflow-y-auto min-h-[100px] p-1"
+              class="projects-list"
               (cdkDropListDropped)="drop($event)"
             >
               <app-project-card
@@ -189,7 +159,6 @@ import { Observable } from 'rxjs';
                 [project]="project"
                 cdkDrag
                 [cdkDragData]="project"
-                class="mb-4"
                 (edit)="editProject($event)"
                 (delete)="deleteProject($event)"
                 (addUsers)="onAddUsersClick($event)"
@@ -199,133 +168,147 @@ import { Observable } from 'rxjs';
           </div>
         </div>
       </div>
-      
-      <app-project-form
-        *ngIf="showProjectForm"
-        [project]="selectedProject"
-        (save)="saveProject($event)"
-        (cancel)="closeProjectForm()"
-      ></app-project-form>
 
-      <div *ngIf="showAiProjectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50" (click)="closeAIProjectModal()">
-        <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-50 w-full max-w-2xl max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-            <h2 class="text-xl font-semibold text-gray-800 m-0">Générer un projet avec l'IA</h2>
-            <button class="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors" (click)="closeAIProjectModal()">
-              <span class="material-icons">close</span>
-            </button>
-          </div>
-
-          <form [formGroup]="aiForm" (ngSubmit)="onGenerate()" *ngIf="!isGenerating && !generationResult" class="p-6 space-y-6">
-            <div class="space-y-2">
-              <label for="description" class="block text-sm font-medium text-gray-700">Décrivez votre projet *</label>
-              <textarea
-                id="description"
-                formControlName="description"
-                placeholder="Ex: Je veux créer une application mobile de livraison de nourriture avec géolocalisation et paiement en ligne pour les étudiants universitaires..."
-                rows="4"
-                class="w-full p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              ></textarea>
-              <div class="mt-1">
-                <span class="text-xs" 
-                      [class.text-red-500]="(aiForm.get('description')?.value?.length || 0) < 20"
-                      [class.text-green-500]="(aiForm.get('description')?.value?.length || 0) >= 20">
-                  {{ aiForm.get('description')?.value?.length || 0 }}/20 caractères minimum
-                </span>
-              </div>
-              <div class="text-sm text-red-600 mt-1" *ngIf="aiForm.get('description')?.invalid && aiForm.get('description')?.touched">
-                Description trop courte (minimum 20 caractères)
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label for="context" class="block text-sm font-medium text-gray-700">Contexte ou contraintes (optionnel)</label>
-              <input
-                id="context"
-                type="text"
-                formControlName="context"
-                placeholder="Ex: Budget 50k€, deadline 3 mois, équipe de 4 personnes..."
-                class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-            </div>
-
-            <div class="space-y-2">
-              <label for="targetAudience" class="block text-sm font-medium text-gray-700">Public cible (optionnel)</label>
-              <input
-                id="targetAudience"
-                type="text"
-                formControlName="targetAudience"
-                placeholder="Ex: Jeunes urbains 18-35 ans, entreprises B2B..."
-                class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-            </div>
-
-            <div class="flex justify-end gap-4 mt-8">
-              <button type="button" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 transition-colors" (click)="closeAIProjectModal()">
-                Annuler
+      <!-- État vide -->
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <div class="empty-content">
+            <div class="empty-icon">📋</div>
+            <h2>Aucun projet pour le moment</h2>
+            <p>Commencez par créer votre premier projet ou utilisez l'IA pour en générer automatiquement.</p>
+            <div class="empty-actions">
+              <button class="btn-primary" (click)="openProjectForm()">
+                <span class="material-icons">add</span>
+                Créer un projet
               </button>
-              <button 
-                type="submit" 
-                class="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-md font-medium hover:from-purple-600 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                [disabled]="aiForm.invalid"
-              >
-                Générer le projet
-              </button>
-            </div>
-          </form>
-
-          <div *ngIf="isGenerating" class="p-8 text-center">
-            <div class="flex items-center justify-center space-x-4 mb-6">
-              <div class="text-4xl animate-pulse">IA</div>
-              <div class="flex space-x-1">
-                <span class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
-                <span class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
-                <span class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.6s;"></span>
-              </div>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">L'IA analyse votre projet...</h3>
-            <p class="text-gray-600">Génération des cartes en cours, veuillez patienter.</p>
-          </div>
-
-          <div *ngIf="generationResult && !isGenerating" class="p-6">
-            <div class="flex items-center space-x-3 mb-6">
-              <h3 class="text-lg font-semibold text-gray-800 m-0">Projet généré avec succès !</h3>
-            </div>
-
-            <div class="mb-6">
-              <p class="text-gray-600 mb-4"><strong>{{ generationResult.projects.length }} cartes</strong> ont été créées automatiquement</p>
-            </div>
-
-            <div class="flex justify-end gap-4 mt-8">
-              <button class="px-6 py-2 bg-secondary text-white rounded-md font-medium hover:bg-primary-light transition-colors" (click)="onProjectsGenerated()">
-                Parfait ! Voir les projets
-              </button>
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="p-8 text-center">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Erreur lors de la génération</h3>
-            <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
-            <div class="flex justify-end gap-4 mt-8">
-              <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 transition-colors" (click)="resetAIForm()">
-                Réessayer
-              </button>
-              <button class="px-6 py-2 bg-secondary text-white rounded-md font-medium hover:bg-primary-light transition-colors" (click)="closeAIProjectModal()">
-                Fermer
+              <button class="btn-ai-primary" (click)="openAIProjectForm()">
+                <span class="material-icons">auto_awesome</span>
+                Générer avec l'IA
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </ng-template>
+    </ng-container>
 
-      <app-add-user-modal
-        [isOpen]="isAddUserModalOpen"
-        [currentTeamIds]="selectedProjectTeamIds"
-        (close)="onCloseAddUserModal()"
-        (userAdded)="onUsersAdded($event)"
-      ></app-add-user-modal>
+    <!-- Template de chargement -->
+    <ng-template #loadingTemplate>
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Chargement des projets...</p>
+      </div>
     </ng-template>
-  `
+
+    <!-- Modals -->
+    <app-project-form
+      *ngIf="showProjectForm"
+      [project]="selectedProject"
+      (save)="saveProject($event)"
+      (cancel)="closeProjectForm()"
+    ></app-project-form>
+
+    <app-ai-project-modal
+      [isOpen]="showAiProjectModal"
+      (close)="closeAIProjectModal()"
+      (projectsGenerated)="onProjectsGenerated($event)"
+    ></app-ai-project-modal>
+
+    <app-add-user-modal
+      [isOpen]="isAddUserModalOpen"
+      [currentTeamIds]="selectedProjectTeamIds"
+      (close)="onCloseAddUserModal()"
+      (userAdded)="onUsersAdded($event)"
+    ></app-add-user-modal>
+  `,
+  styles: [`
+    .kanban-container {
+      @apply h-full flex flex-col;
+    }
+
+    .kanban-header {
+      @apply flex justify-between items-center p-6 bg-white border-b border-gray-200;
+    }
+
+    .kanban-actions {
+      @apply flex gap-3;
+    }
+
+    .btn-primary {
+      @apply px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors flex items-center gap-2;
+    }
+
+    .btn-secondary {
+      @apply px-4 py-2 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 transition-colors flex items-center gap-2;
+    }
+
+    .btn-ai-primary {
+      @apply px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-md font-medium hover:from-purple-600 hover:to-blue-600 transition-all flex items-center gap-2 shadow-lg;
+    }
+
+    .kanban-board {
+      @apply flex-1 flex gap-6 p-6 overflow-x-auto min-h-0;
+    }
+
+    .kanban-column {
+      @apply flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full;
+    }
+
+    .column-header {
+      @apply flex items-center mb-4;
+    }
+
+    .column-title {
+      @apply text-base font-semibold text-gray-700 m-0;
+    }
+
+    .project-count {
+      @apply ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600;
+    }
+
+    .add-project-btn {
+      @apply ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-blue-500 hover:text-white;
+    }
+
+    .projects-list {
+      @apply flex-grow overflow-y-auto min-h-[100px] p-1;
+    }
+
+    .empty-state {
+      @apply h-full flex items-center justify-center p-8;
+    }
+
+    .empty-content {
+      @apply text-center max-w-md;
+    }
+
+    .empty-icon {
+      @apply text-6xl mb-4;
+    }
+
+    .empty-content h2 {
+      @apply text-xl font-semibold text-gray-800 mb-2;
+    }
+
+    .empty-content p {
+      @apply text-gray-600 mb-6;
+    }
+
+    .empty-actions {
+      @apply flex justify-center gap-4;
+    }
+
+    .loading-container {
+      @apply h-full flex flex-col items-center justify-center;
+    }
+
+    .loading-spinner {
+      @apply w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4;
+    }
+
+    .loading-container p {
+      @apply text-gray-600;
+    }
+  `]
 })
 export class KanbanBoardComponent implements OnInit {
   ProjectStage = ProjectStage;
@@ -339,17 +322,11 @@ export class KanbanBoardComponent implements OnInit {
   showAiProjectModal = false;
   selectedProject: Project | null = null;
   isNewProject = false;
-  isCreatingFirstProject = false;
   
   isAddUserModalOpen = false;
   selectedProjectId: string | null = null;
   
   isLoading$: Observable<boolean>;
-  
-  aiForm: FormGroup;
-  isGenerating = false;
-  generationResult: ChatbotResponse | null = null;
-  errorMessage = '';
 
   constructor(
     private projectService: ProjectService,
@@ -358,16 +335,17 @@ export class KanbanBoardComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.isLoading$ = this.loaderService.isLoading$;
-    
-    this.aiForm = this.fb.group({
-      description: ['', [Validators.required, Validators.minLength(20)]],
-      context: [''],
-      targetAudience: ['']
-    });
   }
 
   ngOnInit(): void {
     this.loadProjects();
+  }
+
+  get hasProjects(): boolean {
+    return this.ideeProjects.length > 0 || 
+           this.mvpProjects.length > 0 || 
+           this.tractionProjects.length > 0 || 
+           this.leveeProjects.length > 0;
   }
 
   private loadProjects(): void {
@@ -379,13 +357,9 @@ export class KanbanBoardComponent implements OnInit {
     });
   }
 
-  creatingFirstProject(): void {
-    this.isCreatingFirstProject = true;
-    this.openProjectForm();
-  }
-
   drop(event: CdkDragDrop<Project[]>): void {
     if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       return;
     }
 
@@ -443,58 +417,52 @@ export class KanbanBoardComponent implements OnInit {
 
   closeAIProjectModal(): void {
     this.showAiProjectModal = false;
-    this.resetAIForm();
   }
 
-  onGenerate(): void {
-    console.log('🔄 onGenerate appelé');
-    console.log('Form valid:', this.aiForm.valid);
-    console.log('Form value:', this.aiForm.value);
+  onProjectsGenerated(result: ChatbotResponse): void {
+    console.log('🔄 Projets générés par IA - Mise à jour immédiate');
     
-    if (this.aiForm.invalid) {
-      console.log('❌ Formulaire invalide');
-      return;
-    }
-
-    this.isGenerating = true;
-    this.errorMessage = '';
-
-    const formData = {
-      description: this.aiForm.get('description')?.value || '',
-      context: this.aiForm.get('context')?.value || '',
-      targetAudience: this.aiForm.get('targetAudience')?.value || ''
-    };
-
-    console.log('📤 Envoi des données à l\'API:', formData);
-
-    this.chatbotService.generateProject(formData).subscribe({
-      next: (result) => {
-        console.log('✅ Réponse API reçue:', result);
-        this.isGenerating = false;
-        this.generationResult = result;
-      },
-      error: (error) => {
-        console.error('❌ Erreur API:', error);
-        this.isGenerating = false;
-        this.errorMessage = error.error?.message || 'Une erreur est survenue lors de la génération';
-      }
-    });
-  }
-
-  onProjectsGenerated(): void {
-    console.log('🔄 Rechargement des projets après génération IA');
-    this.loadProjects();
+    // Fermer le modal
     this.closeAIProjectModal();
-    setTimeout(() => {
-      console.log('✅ Projets rechargés depuis l\'API');
-    }, 500);
-  }
-
-  resetAIForm(): void {
-    this.aiForm.reset();
-    this.isGenerating = false;
-    this.generationResult = null;
-    this.errorMessage = '';
+    
+    // Si on a des projets dans le résultat, les ajouter directement
+    if (result && result.projects) {
+      console.log('📥 Ajout direct de', result.projects.length, 'projets');
+      
+      result.projects.forEach(project => {
+        // Convertir les dates si nécessaire
+        const formattedProject = {
+          ...project,
+          createdAt: new Date(project.createdAt),
+          updatedAt: new Date(project.updatedAt),
+          deadline: new Date(project.deadline),
+          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined
+        };
+        
+        // Ajouter directement dans la bonne liste selon le stage
+        switch (formattedProject.stage) {
+          case ProjectStage.IDEE:
+            this.ideeProjects.push(formattedProject);
+            break;
+          case ProjectStage.MVP:
+            this.mvpProjects.push(formattedProject);
+            break;
+          case ProjectStage.TRACTION:
+            this.tractionProjects.push(formattedProject);
+            break;
+          case ProjectStage.LEVEE:
+            this.leveeProjects.push(formattedProject);
+            break;
+        }
+        
+        console.log('✅ Projet ajouté:', formattedProject.title, 'dans', formattedProject.stage);
+      });
+      
+      console.log('🎉 Mise à jour terminée - Projets visibles immédiatement');
+    } else {
+      console.log('⚠️ Pas de projets dans le résultat, rechargement classique');
+      this.loadProjects();
+    }
   }
 
   editProject(project: Project): void {

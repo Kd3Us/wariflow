@@ -205,4 +205,26 @@ export class ProjectService {
         finalize(() => this.loaderService.stopLoading())
       );
   }
+  refreshProjects(): void {
+    console.log('🔄 [ProjectService] Actualisation des projets depuis l\'API');
+    this.http.get<Project[]>(this.apiUrl, { headers: this.getAuthHeaders() })
+      .pipe(
+        map(projects => projects.map(project => ({
+          ...project,
+          deadline: project.deadline ? new Date(project.deadline) : undefined,
+          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
+          createdAt: new Date(project.createdAt),
+          updatedAt: new Date(project.updatedAt)
+        })))
+      )
+      .subscribe({
+        next: (projects) => {
+          this.projectsSubject.next(projects);
+          console.log('✅ [ProjectService] Projets actualisés:', projects.length);
+        },
+        error: (error) => {
+          console.error('❌ [ProjectService] Erreur lors de l\'actualisation:', error);
+        }
+      });
+  }
 }

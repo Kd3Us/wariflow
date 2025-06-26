@@ -11,7 +11,7 @@ import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service'
     <div class="overlay" *ngIf="isOpen" (click)="onCancel()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2> Générer un projet avec l'IA</h2>
+          <h2>🧠 Générer un projet avec l'IA</h2>
           <button class="close-button" (click)="onCancel()">
             <span class="material-icons">close</span>
           </button>
@@ -28,26 +28,24 @@ import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service'
               class="w-full p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             ></textarea>
             <div class="character-info">
-              <span class="text-xs" 
-                    [class.text-red-500]="(aiForm.get('description')?.value?.length || 0) < 20"
-                    [class.text-green-500]="(aiForm.get('description')?.value?.length || 0) >= 20">
-                {{ aiForm.get('description')?.value?.length || 0 }}/20 caractères minimum
+              <span class="text-xs text-gray-500">
+                {{ aiForm.get('description')?.value?.length || 0 }} caractères (minimum 20)
               </span>
             </div>
-            <div class="error-message" *ngIf="aiForm.get('description')?.invalid && aiForm.get('description')?.touched">
-              Description trop courte (minimum 20 caractères)
+            <div *ngIf="aiForm.get('description')?.invalid && aiForm.get('description')?.touched" class="error-message">
+              La description doit contenir au moins 20 caractères
             </div>
           </div>
 
           <div class="form-group">
-            <label for="context">Contexte ou contraintes (optionnel)</label>
-            <input
+            <label for="context">Contexte du contraintes (optionnel)</label>
+            <textarea
               id="context"
-              type="text"
               formControlName="context"
-              placeholder="Ex: Budget 50k€, deadline 3 mois, équipe de 4 personnes..."
-              class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
+              placeholder="Ex: Budget limité, deadline à 3 mois, équipe de 4 personnes..."
+              rows="2"
+              class="w-full p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            ></textarea>
           </div>
 
           <div class="form-group">
@@ -56,9 +54,9 @@ import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service'
               id="targetAudience"
               type="text"
               formControlName="targetAudience"
-              placeholder="Ex: Jeunes urbains 18-35 ans, entreprises B2B..."
+              placeholder="Ex: Jeunes adultes de 18-35 ans, entreprises B2B..."
               class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
+            />
           </div>
 
           <div class="form-actions">
@@ -70,7 +68,7 @@ import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service'
               class="btn-ai-primary"
               [disabled]="aiForm.invalid"
             >
-               Générer le projet
+              ✨ Générer le projet
             </button>
           </div>
         </form>
@@ -164,7 +162,7 @@ import { ChatbotService, ChatbotResponse } from '../../services/chatbot.service'
 export class AiProjectModalComponent implements OnInit {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
-  @Output() projectsGenerated = new EventEmitter<void>();
+  @Output() projectsGenerated = new EventEmitter<ChatbotResponse>();
 
   aiForm: FormGroup;
   isGenerating = false;
@@ -198,6 +196,7 @@ export class AiProjectModalComponent implements OnInit {
       next: (result: ChatbotResponse) => {
         this.isGenerating = false;
         this.generationResult = result;
+        console.log('✅ [AiModal] Projets générés:', result.projects.length);
       },
       error: (error) => {
         this.isGenerating = false;
@@ -207,7 +206,10 @@ export class AiProjectModalComponent implements OnInit {
   }
 
   onComplete() {
-    this.projectsGenerated.emit();
+    if (this.generationResult) {
+      console.log('📤 [AiModal] Émission des projets vers le parent');
+      this.projectsGenerated.emit(this.generationResult);
+    }
     this.onCancel();
   }
 

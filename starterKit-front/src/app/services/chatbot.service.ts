@@ -38,7 +38,7 @@ export interface ChatbotResponse {
   providedIn: 'root'
 })
 export class ChatbotService {
-  private apiUrl = 'http://18.169.1.118:3009/chatbot';
+  private apiUrl = 'http://localhost:3009/chatbot';
 
   constructor(
     private http: HttpClient,

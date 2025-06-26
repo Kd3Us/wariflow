@@ -4,6 +4,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ChatbotService } from './chatbot.service';
@@ -13,7 +14,20 @@ import { ChatbotResponseDto, ProjectAnalysis } from './dto/chatbot-response.dto'
 @ApiTags('chatbot')
 @Controller('chatbot')
 export class ChatbotController {
-  constructor(private readonly chatbotService: ChatbotService) {}
+  constructor(private readonly chatbotService: ChatbotService) {
+    console.log('🤖 ChatbotController initialized');
+  }
+
+  @Get('test')
+  @ApiOperation({ summary: 'Test endpoint pour vérifier que le chatbot fonctionne' })
+  @ApiResponse({ status: 200, description: 'Chatbot is working' })
+  test(): { message: string; timestamp: string } {
+    console.log('🔍 [ChatbotController] Test endpoint called');
+    return { 
+      message: 'Chatbot is working!', 
+      timestamp: new Date().toISOString() 
+    };
+  }
 
   @Post('generate-project')
   @HttpCode(HttpStatus.CREATED)
@@ -34,14 +48,15 @@ export class ChatbotController {
     @Body() generateProjectDto: GenerateProjectDto
   ): Promise<ChatbotResponseDto> {
     console.log('🤖 [ChatbotController] generateProject appelé');
-    console.log('📝 [ChatbotController] Données reçues:', generateProjectDto);
+    console.log('📝 [ChatbotController] Données reçues:', JSON.stringify(generateProjectDto, null, 2));
     
     try {
       const result = await this.chatbotService.generateProject(generateProjectDto);
-      console.log('✅ [ChatbotController] Projets générés avec succès');
+      console.log('✅ [ChatbotController] Projets générés avec succès:', result.projects.length, 'projets');
       return result;
     } catch (error) {
-      console.error('❌ [ChatbotController] Erreur lors de la génération:', error);
+      console.error('❌ [ChatbotController] Erreur lors de la génération:', error.message);
+      console.error('❌ [ChatbotController] Stack trace:', error.stack);
       throw error;
     }
   }
@@ -61,13 +76,15 @@ export class ChatbotController {
     @Body() generateProjectDto: GenerateProjectDto
   ): Promise<ProjectAnalysis> {
     console.log('🔍 [ChatbotController] analyzeProject appelé');
+    console.log('📝 [ChatbotController] Données reçues:', JSON.stringify(generateProjectDto, null, 2));
     
     try {
       const result = this.chatbotService.analyzeProjectDescription(generateProjectDto);
       console.log('✅ [ChatbotController] Analyse terminée avec succès');
       return result;
     } catch (error) {
-      console.error('❌ [ChatbotController] Erreur lors de l\'analyse:', error);
+      console.error('❌ [ChatbotController] Erreur lors de l\'analyse:', error.message);
+      console.error('❌ [ChatbotController] Stack trace:', error.stack);
       throw error;
     }
   }

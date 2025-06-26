@@ -25,57 +25,71 @@ export class ChatbotService {
     'rapidement', 'vite', 'deadline', 'échéance', 'délai'
   ];
 
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) {
+    console.log('🤖 ChatbotService initialized');
+  }
 
   async generateProject(generateProjectDto: GenerateProjectDto): Promise<ChatbotResponseDto> {
     console.log('🤖 [ChatbotService] Début de génération de projet');
+    console.log('📝 [ChatbotService] Description reçue:', generateProjectDto.description);
     
-    const analysis = this.analyzeProjectDescription(generateProjectDto);
-    
-    if (!this.isValidProject(generateProjectDto.description)) {
-      throw new BadRequestException(
-        'La description fournie est trop courte ou ne contient pas assez d\'informations pour générer un projet'
-      );
-    }
-
-    const projectsToCreate = this.createProjectCards(analysis, generateProjectDto);
-    const createdProjects = [];
-
-    console.log(`🔄 [ChatbotService] Création de ${projectsToCreate.length} projets`);
-
-    for (const projectData of projectsToCreate) {
-      try {
-        const createdProject = this.projectsService.create(projectData);
-        createdProjects.push(createdProject);
-        console.log(`✅ [ChatbotService] Projet créé: ${createdProject.title}`);
-      } catch (error) {
-        console.error(`❌ [ChatbotService] Erreur création projet:`, error);
+    try {
+      const analysis = this.analyzeProjectDescription(generateProjectDto);
+      
+      if (!this.isValidProject(generateProjectDto.description)) {
+        throw new BadRequestException(
+          'La description fournie est trop courte ou ne contient pas assez d\'informations pour générer un projet'
+        );
       }
+
+      const projectsToCreate = this.createProjectCards(analysis, generateProjectDto);
+      const createdProjects = [];
+
+      console.log(`🔄 [ChatbotService] Création de ${projectsToCreate.length} projets`);
+
+      for (const projectData of projectsToCreate) {
+        try {
+          const createdProject = this.projectsService.create(projectData);
+          createdProjects.push(createdProject);
+          console.log(`✅ [ChatbotService] Projet créé: ${createdProject.title}`);
+        } catch (error) {
+          console.error(`❌ [ChatbotService] Erreur création projet:`, error);
+          throw new BadRequestException(`Erreur lors de la création du projet: ${error.message}`);
+        }
+      }
+
+      const suggestions = this.generateSuggestions(analysis);
+
+      console.log('🎉 [ChatbotService] Génération terminée avec succès');
+
+      return {
+        success: true,
+        message: `${createdProjects.length} projet(s) généré(s) avec succès`,
+        projects: createdProjects,
+        analysis,
+        suggestions
+      };
+    } catch (error) {
+      console.error('❌ [ChatbotService] Erreur globale:', error);
+      throw error;
     }
-
-    const response = {
-      success: true,
-      message: `${createdProjects.length} projet(s) généré(s) avec succès à partir de votre description`,
-      projects: createdProjects,
-      analysis: analysis,
-      suggestions: this.generateOptimizationSuggestions(analysis)
-    };
-
-    console.log('✅ [ChatbotService] Génération terminée avec succès');
-    return response;
   }
 
   analyzeProjectDescription(generateProjectDto: GenerateProjectDto): ProjectAnalysis {
+    console.log('🔍 [ChatbotService] Analyse de la description du projet');
+    
     const { description, context, targetAudience } = generateProjectDto;
     const fullText = `${description} ${context || ''} ${targetAudience || ''}`;
     
     const keywords = this.extractKeywords(fullText);
-    const projectType = this.identifyProjectType(fullText, keywords);
-    const complexity = this.estimateComplexity(fullText, keywords);
+    const projectType = this.determineProjectType(keywords, fullText);
+    const complexity = this.assessComplexity(fullText, keywords);
     const estimatedDuration = this.calculateDuration(complexity, keywords.length);
     const suggestedTags = this.generateTags(keywords, projectType);
     const suggestedPriority = this.determinePriority(fullText);
     const breakdown = this.generateTaskBreakdown(projectType, complexity, keywords);
+
+    console.log(`📊 [ChatbotService] Analyse terminée - Type: ${projectType}, Complexité: ${complexity}`);
 
     return {
       projectType,
@@ -89,74 +103,57 @@ export class ChatbotService {
   }
 
   private isValidProject(description: string): boolean {
-    const wordCount = description.trim().split(/\s+/).length;
-    const hasRelevantKeywords = this.extractKeywords(description).length > 0;
+    if (!description || description.length < 20) return false;
     
-    return description.length >= 20 && wordCount >= 5 && hasRelevantKeywords;
+    const wordCount = description.trim().split(/\s+/).length;
+    if (wordCount < 5) return false;
+    
+    const keywords = this.extractKeywords(description);
+    return keywords.length > 0 || wordCount >= 10;
   }
 
   private extractKeywords(text: string): string[] {
-    const normalizedText = text.toLowerCase();
+    if (!text) return [];
+    
+    const lowerText = text.toLowerCase();
     const foundKeywords = new Set<string>();
-
+    
     [...this.techKeywords, ...this.businessKeywords].forEach(keyword => {
-      if (normalizedText.includes(keyword)) {
+      if (lowerText.includes(keyword)) {
         foundKeywords.add(keyword);
       }
     });
-
-    const additionalKeywords = this.extractContextualKeywords(normalizedText);
-    additionalKeywords.forEach(keyword => foundKeywords.add(keyword));
-
+    
     return Array.from(foundKeywords);
   }
 
-  private extractContextualKeywords(text: string): string[] {
-    const contextualKeywords = [];
+  private determineProjectType(keywords: string[], text: string): string {
+    const lowerText = text.toLowerCase();
     
-    if (text.includes('boutique') || text.includes('magasin') || text.includes('e-commerce')) {
-      contextualKeywords.push('commerce');
-    }
-    
-    if (text.includes('réservation') || text.includes('booking')) {
-      contextualKeywords.push('réservation');
-    }
-    
-    if (text.includes('social') || text.includes('communauté')) {
-      contextualKeywords.push('social');
-    }
-    
-    if (text.includes('formation') || text.includes('éducation')) {
-      contextualKeywords.push('éducation');
-    }
-    
-    return contextualKeywords;
-  }
-
-  private identifyProjectType(text: string, keywords: string[]): string {
-    const techCount = keywords.filter(k => this.techKeywords.includes(k)).length;
-    const businessCount = keywords.filter(k => this.businessKeywords.includes(k)).length;
-    
-    if (text.includes('mobile') || text.includes('app') || text.includes('android') || text.includes('ios')) {
+    if (keywords.some(k => ['android', 'ios', 'mobile'].includes(k)) || lowerText.includes('application mobile')) {
       return 'Application Mobile';
     }
     
-    if (text.includes('web') || text.includes('site') || text.includes('frontend')) {
+    if (keywords.some(k => ['web', 'frontend', 'backend', 'react', 'angular', 'vue'].includes(k)) || lowerText.includes('site web')) {
       return 'Application Web';
     }
     
-    if (text.includes('api') || text.includes('backend') || text.includes('serveur')) {
+    if (keywords.some(k => ['api', 'backend', 'database'].includes(k))) {
       return 'API/Backend';
     }
     
-    if (businessCount > techCount) {
-      return 'Projet Business';
+    if (keywords.some(k => ['ecommerce', 'boutique', 'magasin', 'vente'].includes(k))) {
+      return 'E-commerce';
     }
     
-    return 'Projet Technique';
+    if (keywords.some(k => ['crm', 'erp', 'gestion'].includes(k))) {
+      return 'Système de Gestion';
+    }
+    
+    return 'Projet Business';
   }
 
-  private estimateComplexity(text: string, keywords: string[]): 'simple' | 'moyen' | 'complexe' {
+  private assessComplexity(text: string, keywords: string[]): 'simple' | 'moyen' | 'complexe' {
     let complexityScore = 0;
     
     if (keywords.length > 5) complexityScore += 2;
@@ -240,18 +237,20 @@ export class ChatbotService {
       });
     }
     
-    tasks.push({
-      title: 'Tests et optimisation',
-      description: 'Tester et optimiser les performances',
-      stage: 'TRACTION',
-      estimatedDays: complexity === 'simple' ? 3 : complexity === 'moyen' ? 5 : 8
-    });
+    if (keywords.includes('analytics') || keywords.includes('dashboard')) {
+      tasks.push({
+        title: 'Analytics et reporting',
+        description: 'Mettre en place les outils d\'analyse',
+        stage: 'TRACTION',
+        estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 10 : 15
+      });
+    }
     
     tasks.push({
-      title: 'Marketing et lancement',
-      description: 'Préparer le lancement et la stratégie marketing',
+      title: 'Tests et optimisation',
+      description: 'Tests utilisateurs et optimisation des performances',
       stage: 'TRACTION',
-      estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
+      estimatedDays: complexity === 'simple' ? 7 : complexity === 'moyen' ? 12 : 20
     });
     
     return tasks;
@@ -259,44 +258,59 @@ export class ChatbotService {
 
   private createProjectCards(analysis: ProjectAnalysis, generateProjectDto: GenerateProjectDto): CreateProjectDto[] {
     const projects: CreateProjectDto[] = [];
+    const baseDate = new Date();
     
-    analysis.breakdown.forEach((task, index) => {
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + task.estimatedDays + (index * 7));
+    let currentDate = new Date(baseDate);
+    
+    analysis.breakdown.forEach((task) => {
+      const deadline = new Date(currentDate);
+      deadline.setDate(deadline.getDate() + task.estimatedDays);
       
-      projects.push({
+      const project: CreateProjectDto = {
         title: task.title,
-        description: task.description,
+        description: `${task.description}\n\nProjet original: ${generateProjectDto.description}`,
         stage: task.stage as ProjectStage,
-        priority: index === 0 ? 'HIGH' : analysis.suggestedPriority,
-        deadline: deadline,
-        tags: analysis.suggestedTags,
         progress: 0,
-        teamIds: []
-      });
+        deadline,
+        teamIds: [],
+        priority: analysis.suggestedPriority,
+        tags: analysis.suggestedTags.slice(0, 3),
+        reminderDate: new Date(deadline.getTime() - 2 * 24 * 60 * 60 * 1000)
+      };
+      
+      projects.push(project);
+      currentDate = new Date(deadline);
     });
     
     return projects;
   }
 
-  private generateOptimizationSuggestions(analysis: ProjectAnalysis): string[] {
+  private generateSuggestions(analysis: ProjectAnalysis): string[] {
     const suggestions = [];
     
     if (analysis.complexity === 'complexe') {
-      suggestions.push('Considérez diviser ce projet en plusieurs phases pour réduire les risques');
+      suggestions.push('Considérez diviser ce projet en plusieurs phases plus petites');
+      suggestions.push('Prévoyez des tests utilisateurs fréquents pour valider les fonctionnalités');
     }
     
-    if (analysis.keywords.includes('mobile') && analysis.keywords.includes('web')) {
-      suggestions.push('Envisagez une approche Progressive Web App (PWA) pour unifier mobile et web');
+    if (analysis.keywords.includes('paiement')) {
+      suggestions.push('N\'oubliez pas de prévoir les aspects de sécurité et de conformité PCI-DSS');
     }
     
-    if (analysis.keywords.includes('authentification')) {
-      suggestions.push('Utilisez des solutions d\'authentification externes (OAuth, Auth0) pour accélérer le développement');
+    if (analysis.keywords.includes('mobile')) {
+      suggestions.push('Testez sur plusieurs appareils et versions d\'OS différents');
     }
     
-    if (analysis.estimatedDuration > 45) {
-      suggestions.push('Ce projet nécessite une équipe expérimentée. Prévoyez du temps supplémentaire pour les imprévus');
+    if (analysis.estimatedDuration > 60) {
+      suggestions.push('Pour un projet de cette ampleur, envisagez une approche agile avec des sprints courts');
     }
+    
+    if (analysis.suggestedPriority === 'HIGH') {
+      suggestions.push('Projet à haute priorité : assurez-vous d\'avoir les ressources nécessaires');
+    }
+    
+    suggestions.push('Pensez à définir des KPIs mesurables pour chaque étape');
+    suggestions.push('Documentez bien votre architecture technique dès le début');
     
     return suggestions;
   }
