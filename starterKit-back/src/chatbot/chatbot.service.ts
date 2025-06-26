@@ -49,7 +49,7 @@ export class ChatbotService {
 
       for (const projectData of projectsToCreate) {
         try {
-          const createdProject = this.projectsService.create(projectData);
+          const createdProject = await this.projectsService.create(projectData);
           createdProjects.push(createdProject);
           console.log(`✅ [ChatbotService] Projet créé: ${createdProject.title}`);
         } catch (error) {
@@ -250,67 +250,68 @@ export class ChatbotService {
       title: 'Tests et optimisation',
       description: 'Tests utilisateurs et optimisation des performances',
       stage: 'TRACTION',
-      estimatedDays: complexity === 'simple' ? 7 : complexity === 'moyen' ? 12 : 20
+      estimatedDays: complexity === 'simple' ? 7 : complexity === 'moyen' ? 14 : 21
+    });
+    
+    tasks.push({
+      title: 'Préparation levée de fonds',
+      description: 'Finaliser le pitch et les métriques pour les investisseurs',
+      stage: 'LEVEE',
+      estimatedDays: complexity === 'simple' ? 10 : complexity === 'moyen' ? 15 : 25
     });
     
     return tasks;
   }
 
   private createProjectCards(analysis: ProjectAnalysis, generateProjectDto: GenerateProjectDto): CreateProjectDto[] {
+    const { breakdown, suggestedTags, suggestedPriority } = analysis;
     const projects: CreateProjectDto[] = [];
-    const baseDate = new Date();
-    
-    let currentDate = new Date(baseDate);
-    
-    analysis.breakdown.forEach((task) => {
-      const deadline = new Date(currentDate);
+
+    breakdown.forEach((task, index) => {
+      const deadline = new Date();
       deadline.setDate(deadline.getDate() + task.estimatedDays);
-      
-      const project: CreateProjectDto = {
+
+      const reminderDate = new Date(deadline.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+      projects.push({
         title: task.title,
-        description: `${task.description}\n\nProjet original: ${generateProjectDto.description}`,
+        description: task.description,
         stage: task.stage as ProjectStage,
         progress: 0,
-        deadline,
+        deadline: deadline,
         teamIds: [],
-        priority: analysis.suggestedPriority,
-        tags: analysis.suggestedTags.slice(0, 3),
-        reminderDate: new Date(deadline.getTime() - 2 * 24 * 60 * 60 * 1000)
-      };
-      
-      projects.push(project);
-      currentDate = new Date(deadline);
+        priority: suggestedPriority,
+        tags: suggestedTags,
+        reminderDate: reminderDate
+      });
     });
-    
+
     return projects;
   }
 
   private generateSuggestions(analysis: ProjectAnalysis): string[] {
-    const suggestions = [];
+    const suggestions: string[] = [];
     
     if (analysis.complexity === 'complexe') {
-      suggestions.push('Considérez diviser ce projet en plusieurs phases plus petites');
-      suggestions.push('Prévoyez des tests utilisateurs fréquents pour valider les fonctionnalités');
+      suggestions.push('Considérez de diviser ce projet en plusieurs phases plus petites');
+      suggestions.push('Prévoyez du temps supplémentaire pour les tests et l\'intégration');
     }
     
     if (analysis.keywords.includes('paiement')) {
-      suggestions.push('N\'oubliez pas de prévoir les aspects de sécurité et de conformité PCI-DSS');
+      suggestions.push('N\'oubliez pas de prévoir la conformité PCI DSS pour les paiements');
     }
     
     if (analysis.keywords.includes('mobile')) {
-      suggestions.push('Testez sur plusieurs appareils et versions d\'OS différents');
-    }
-    
-    if (analysis.estimatedDuration > 60) {
-      suggestions.push('Pour un projet de cette ampleur, envisagez une approche agile avec des sprints courts');
+      suggestions.push('Testez sur différents appareils et versions d\'OS');
     }
     
     if (analysis.suggestedPriority === 'HIGH') {
-      suggestions.push('Projet à haute priorité : assurez-vous d\'avoir les ressources nécessaires');
+      suggestions.push('Ce projet semble urgent, assurez-vous d\'avoir les ressources nécessaires');
     }
     
-    suggestions.push('Pensez à définir des KPIs mesurables pour chaque étape');
-    suggestions.push('Documentez bien votre architecture technique dès le début');
+    if (analysis.estimatedDuration > 45) {
+      suggestions.push('Pour un projet de cette envergure, considérez une approche agile avec des livraisons régulières');
+    }
     
     return suggestions;
   }
