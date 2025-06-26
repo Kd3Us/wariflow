@@ -27,7 +27,7 @@ export class JwtService {
   private readonly VERIFY_TOKEN_URL = environment.verifyTokenUrl;
   
   // BehaviorSubject pour observer les changements du token
-  private tokenSubject = new BehaviorSubject<DecodedToken | null>(this.decodeToken());
+  private tokenSubject = new BehaviorSubject<DecodedToken | null>(null);
   
   // Observable public pour que les composants puissent s'abonner
   public token$ = this.tokenSubject.asObservable();
@@ -37,6 +37,31 @@ export class JwtService {
       verifyTokenUrl: this.VERIFY_TOKEN_URL,
       externalAuthUrl: this.EXTERNAL_AUTH_URL
     });
+    
+    // Initialiser le token au démarrage
+    this.initializeToken();
+  }
+
+  /**
+   * Initialise le token au démarrage du service
+   * Vérifie d'abord l'URL, puis le sessionStorage
+   */
+  private initializeToken(): void {
+    
+    // Vérifier d'abord s'il y a un token dans l'URL
+    const tokenFromUrl = this.getTokenFromUrl();
+    if (tokenFromUrl) {
+      this.setToken(tokenFromUrl);
+      return;
+    }
+    
+    // Sinon, vérifier le sessionStorage
+    const decodedToken = this.decodeToken();
+    if (decodedToken) {
+      this.tokenSubject.next(decodedToken);
+    } else {
+      this.tokenSubject.next(null);
+    }
   }
 
   /**
@@ -45,17 +70,14 @@ export class JwtService {
    */
   public verifyTokenWithApi(): Observable<boolean> {
     const token = this.getToken();
-    console.log('verifyTokenWithApi called, token present:', !!token);
     
     if (!token) {
-      console.log('No token found in sessionStorage');
       return new Observable<boolean>(observer => {
         observer.next(false);
         observer.complete();
       });
     }
 
-    console.log('Sending token verification request to:', this.VERIFY_TOKEN_URL);
     return this.http.post<VerifyTokenResponse>(this.VERIFY_TOKEN_URL, { token },
       {
         headers: {
@@ -67,7 +89,6 @@ export class JwtService {
         tap(response => console.log('API verification response:', response)),
         map(response => {
           const isValid = response.success === true;
-          console.log('Token verification result:', isValid, 'Message:', response.success);
           return isValid;
         })
       );
@@ -79,7 +100,6 @@ export class JwtService {
    */
   public getToken(): string | null {
     const token = sessionStorage.getItem('startupkit_SESSION');
-    console.log('getToken called, token exists:', !!token);
     return token;
   }
 
@@ -110,12 +130,9 @@ export class JwtService {
    * @returns Observable<boolean>
    */
   public checkTokenAndRedirect(): Observable<boolean> {
-    console.log('checkTokenAndRedirect called');
     const tokenFromUrl = this.getTokenFromUrl();
-    console.log('Token from URL:', !!tokenFromUrl);
 
     if (tokenFromUrl) {
-      console.log('Token found in URL, setting it in sessionStorage');
       this.setToken(tokenFromUrl);
     }
 
@@ -128,7 +145,6 @@ export class JwtService {
           this.redirectLoginPage();
           return false;
         }
-        console.log('Token valid, allowing access');
         return true;
       })
     );
@@ -157,13 +173,11 @@ export class JwtService {
   public decodeToken(): DecodedToken | null {
     const token = this.getToken();
     if (!token) {
-      console.log('No token to decode');
       return null;
     }
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Token decoded successfully:', decoded);
       return decoded;
     } catch (error) {
       console.error('Error decoding token:', error);
@@ -179,4 +193,4 @@ export class JwtService {
     const decodedToken = this.decodeToken();
     this.tokenSubject.next(decodedToken);
   }
-} 
+}

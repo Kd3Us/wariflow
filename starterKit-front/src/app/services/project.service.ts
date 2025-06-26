@@ -157,4 +157,52 @@ export class ProjectService {
       map(projects => projects.filter(project => project.stage === stage))
     );
   }
+
+  // Ajouter ces méthodes à la fin de ton ProjectService
+
+  addUsersToProject(projectId: string, userIds: string[]): Observable<Project> {
+    this.loaderService.startLoading();
+    return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds }, { headers: this.getAuthHeaders() })
+      .pipe(
+        map(updatedProject => ({
+          ...updatedProject,
+          deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
+          reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
+          createdAt: new Date(updatedProject.createdAt),
+          updatedAt: new Date(updatedProject.updatedAt)
+        })),
+        tap(updatedProject => {
+          const currentProjects = this.projectsSubject.value;
+          const index = currentProjects.findIndex(p => p.id === updatedProject.id);
+          if (index !== -1) {
+            currentProjects[index] = updatedProject;
+            this.projectsSubject.next([...currentProjects]);
+          }
+        }),
+        finalize(() => this.loaderService.stopLoading())
+      );
+  }
+
+  removeUserFromProject(projectId: string, userId: string): Observable<Project> {
+    this.loaderService.startLoading();
+    return this.http.delete<Project>(`${this.apiUrl}/${projectId}/users/${userId}`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map(updatedProject => ({
+          ...updatedProject,
+          deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
+          reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
+          createdAt: new Date(updatedProject.createdAt),
+          updatedAt: new Date(updatedProject.updatedAt)
+        })),
+        tap(updatedProject => {
+          const currentProjects = this.projectsSubject.value;
+          const index = currentProjects.findIndex(p => p.id === updatedProject.id);
+          if (index !== -1) {
+            currentProjects[index] = updatedProject;
+            this.projectsSubject.next([...currentProjects]);
+          }
+        }),
+        finalize(() => this.loaderService.stopLoading())
+      );
+  }
 }

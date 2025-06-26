@@ -88,19 +88,88 @@
       </div>
 
       <div class="flex justify-between items-center">
-        <!-- Team members -->
-        <div class="flex items-center">
+        <!-- Team members avec gestion -->
+        <div class="flex items-center relative">
           <div
-            *ngFor="let member of project.team.slice(0, 3); let i = index"
+            *ngFor="let member of displayedTeamMembers; let i = index; trackBy: trackByMemberId"
             class="w-[26px] h-[26px] rounded-full overflow-hidden border-2 border-white -ml-2 first:ml-0 relative"
+            [title]="member.name + ' - ' + member.role"
           >
-            <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" />
+            <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" *ngIf="member.avatar" />
+            <div class="w-full h-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-semibold" *ngIf="!member.avatar">
+              {{ member.name.charAt(0).toUpperCase() }}
+            </div>
           </div>
+          
           <div
-            *ngIf="project.team.length > 3"
+            *ngIf="additionalMembersCount > 0"
             class="w-[26px] h-[26px] rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-[10px] font-semibold border-2 border-white -ml-2"
+            [title]="'+' + additionalMembersCount + ' membre(s)'"
           >
-            +{{ project.team.length - 3 }}
+            +{{ additionalMembersCount }}
+          </div>
+
+          <!-- Bouton ajouter utilisateur -->
+          <button 
+            class="w-[26px] h-[26px] rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold border-2 border-white -ml-2 hover:bg-blue-600 transition-colors"
+            (click)="onAddUsersClick($event)"
+            title="Ajouter des membres"
+          >
+            +
+          </button>
+
+          <!-- Menu équipe (optionnel pour voir tous les membres) -->
+          <button 
+            class="ml-2 text-xs text-gray-500 hover:text-gray-700 underline"
+            (click)="toggleTeamMenu($event)"
+            *ngIf="project.team.length > 0"
+          >
+            {{ project.team.length }} membre(s)
+          </button>
+
+          <!-- Menu déroulant équipe -->
+          <div *ngIf="showTeamMenu" 
+               class="absolute top-8 left-0 w-64 bg-white rounded-md shadow-lg z-20 border border-gray-200">
+            <div class="p-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold text-sm">Équipe du projet</span>
+                <button class="text-gray-400 hover:text-gray-600" (click)="showTeamMenu = false">×</button>
+              </div>
+              
+              <div class="max-h-32 overflow-y-auto">
+                <div 
+                  *ngFor="let member of project.team; trackBy: trackByMemberId" 
+                  class="flex items-center justify-between py-1"
+                >
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full overflow-hidden">
+                      <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" *ngIf="member.avatar" />
+                      <div class="w-full h-full bg-blue-500 text-white flex items-center justify-center text-xs" *ngIf="!member.avatar">
+                        {{ member.name.charAt(0).toUpperCase() }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-xs font-medium">{{ member.name }}</div>
+                      <div class="text-xs text-gray-500">{{ member.role }}</div>
+                    </div>
+                  </div>
+                  <button 
+                    class="text-red-500 hover:text-red-700 text-xs"
+                    (click)="onRemoveUserClick($event, member.id)"
+                    title="Retirer du projet"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              
+              <button 
+                class="w-full mt-2 text-xs text-blue-600 hover:text-blue-800" 
+                (click)="onAddUsersClick($event)"
+              >
+                + Ajouter des membres
+              </button>
+            </div>
           </div>
         </div>
 

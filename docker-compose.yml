@@ -27,12 +27,13 @@ services:
     ports:
       - "3009:3009"
     environment:
-      - NODE_ENV=production
-      - DATABASE_HOST=postgres
-      - DATABASE_PORT=5432
-      - DATABASE_NAME=project_lifecycle
-      - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=postgres
+      - NODE_ENV=development
+      - DB_HOST=postgredb.speedpresta.com
+      - DB_PORT=5432
+      - DB_USERNAME=root
+      - DB_PASSWORD=admin4wfw
+      - DB_NAME=wfwdb
+      - PORT=3009
     depends_on:
       - postgres
     networks:
@@ -41,12 +42,12 @@ services:
   # Base de données PostgreSQL
   postgres:
     image: postgres:15
-    container_name: speedpresta-postgres
-    restart: always
+    container_name: speedpresta_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: project_lifecycle
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: wfwdb
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: admin4wfw
     ports:
       - "5432:5432"
     volumes:
@@ -74,4 +75,4 @@ volumes:
 
 networks:
   speedpresta-network:
-    driver: bridge 
+    driver: bridge

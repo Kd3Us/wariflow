@@ -4,6 +4,14 @@ import { Project } from '../../models/project.model';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+}
+
 @Component({
   selector: 'app-project-card',
   standalone: true,
@@ -14,8 +22,11 @@ export class ProjectCardComponent {
   @Input() project!: Project;
   @Output() edit = new EventEmitter<Project>();
   @Output() delete = new EventEmitter<Project>();
+  @Output() addUsers = new EventEmitter<string>();
+  @Output() removeUser = new EventEmitter<{ projectId: string, userId: string }>();
 
   menuOpen = false;
+  showTeamMenu = false;
 
   constructor(private elementRef: ElementRef) {}
 
@@ -23,6 +34,7 @@ export class ProjectCardComponent {
   onDocumentClick(event: MouseEvent): void {
     if (!this.elementRef.nativeElement.contains(event.target)) {
       this.menuOpen = false;
+      this.showTeamMenu = false;
     }
   }
 
@@ -38,6 +50,34 @@ export class ProjectCardComponent {
   onDelete(): void {
     this.delete.emit(this.project);
     this.menuOpen = false;
+  }
+
+  // Nouvelles méthodes pour la gestion des utilisateurs
+  onAddUsersClick(event: Event): void {
+    event.stopPropagation();
+    this.addUsers.emit(this.project.id);
+  }
+
+  onRemoveUserClick(event: Event, userId: string): void {
+    event.stopPropagation();
+    this.removeUser.emit({ projectId: this.project.id, userId });
+  }
+
+  toggleTeamMenu(event: Event): void {
+    event.stopPropagation();
+    this.showTeamMenu = !this.showTeamMenu;
+  }
+
+  get displayedTeamMembers(): TeamMember[] {
+    return this.project.team.slice(0, 3);
+  }
+
+  get additionalMembersCount(): number {
+    return Math.max(0, this.project.team.length - 3);
+  }
+
+  trackByMemberId(index: number, member: TeamMember): string {
+    return member.id;
   }
 
   getFormattedDueDate(): string {

@@ -1,7 +1,7 @@
 import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TeamsService } from './teams.service';
-import { TeamMember } from '../common/interfaces/team-member.interface';
+import { TeamMember } from './entities/team-member.entity';
 import { TokenAuthGuard } from '../common/guards/token-auth.guard';
 import { Request } from 'express';
 
@@ -16,7 +16,7 @@ export class TeamsController {
   @ApiOperation({ summary: 'Récupérer tous les membres de l\'équipe' })
   @ApiResponse({ status: 200, description: 'Liste des membres de l\'équipe' })
   @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
-  findAll(@Req() req: Request): TeamMember[] {
+  async findAll(@Req() req: Request): Promise<TeamMember[]> {
     const validatedToken = req['validatedToken'];
     console.log('Accessing teams with token:', validatedToken);
     
@@ -29,7 +29,7 @@ export class TeamsController {
   @ApiResponse({ status: 200, description: 'Membre de l\'équipe trouvé' })
   @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
   @ApiResponse({ status: 404, description: 'Membre de l\'équipe non trouvé' })
-  findOne(@Param('id') id: string, @Req() req: Request): TeamMember | undefined {
+  async findOne(@Param('id') id: string, @Req() req: Request): Promise<TeamMember | null> {
     const validatedToken = req['validatedToken'];
     console.log('Accessing team member with token:', validatedToken);
     

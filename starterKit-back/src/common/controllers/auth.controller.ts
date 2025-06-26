@@ -14,6 +14,7 @@ export class AuthController {
       
       return res.status(HttpStatus.OK).json({
         success: true,
+        role: '',
         message: 'Login successful',
         token: validatedToken,
         // Ajoutez d'autres données de réponse selon vos besoins

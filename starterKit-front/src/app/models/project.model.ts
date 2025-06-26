@@ -29,4 +29,5 @@ export interface Project {
   reminderDate?: Date;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   tags: string[];
+  organisation: string; // Email de l'utilisateur qui a créé le projet
 }

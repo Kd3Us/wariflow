@@ -8,13 +8,14 @@ import { ProjectCardComponent } from '../project-card/project-card.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { OnboardingComponent } from '../onboarding/onboarding.component';
 import { LoaderComponent } from '../loader/loader.component';
+import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
 import { Observable } from 'rxjs';
 
 
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent, OnboardingComponent, LoaderComponent],
+  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent, OnboardingComponent, LoaderComponent, AddUserModalComponent],
   templateUrl: './kanban-board.component.html'
 })
 
@@ -29,6 +30,10 @@ export class KanbanBoardComponent implements OnInit {
   showProjectForm = false;
   isNewProject = true;
   isCreatingFirstProject = false;
+  
+  // Ajout pour la gestion des utilisateurs
+  isAddUserModalOpen = false;
+  selectedProjectId: string | null = null;
   
   isLoading$: Observable<boolean>;
   
@@ -125,5 +130,50 @@ export class KanbanBoardComponent implements OnInit {
       });
     }
     this.closeProjectForm();
+  }
+
+  // Nouvelles méthodes pour la gestion des utilisateurs
+  onAddUsersClick(projectId: string): void {
+    this.selectedProjectId = projectId;
+    this.isAddUserModalOpen = true;
+  }
+
+  onCloseAddUserModal(): void {
+    this.isAddUserModalOpen = false;
+    this.selectedProjectId = null;
+  }
+
+  onUsersAdded(userIds: string[]): void {
+    if (this.selectedProjectId) {
+      this.projectService.addUsersToProject(this.selectedProjectId, userIds).subscribe({
+        next: () => {
+          this.loadProjects(); // Recharger les projets pour voir les changements
+          this.onCloseAddUserModal();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de l\'ajout d\'utilisateurs:', error);
+        }
+      });
+    }
+  }
+
+  onRemoveUser(data: { projectId: string, userId: string }): void {
+    this.projectService.removeUserFromProject(data.projectId, data.userId).subscribe({
+      next: () => {
+        this.loadProjects(); // Recharger les projets pour voir les changements
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+      }
+    });
+  }
+
+  get selectedProjectTeamIds(): string[] {
+    if (!this.selectedProjectId) return [];
+    
+    // Chercher le projet dans toutes les colonnes
+    const allProjects = [...this.ideeProjects, ...this.mvpProjects, ...this.tractionProjects, ...this.leveeProjects];
+    const project = allProjects.find(p => p.id === this.selectedProjectId);
+    return project ? project.team.map(member => member.id) : [];
   }
 }

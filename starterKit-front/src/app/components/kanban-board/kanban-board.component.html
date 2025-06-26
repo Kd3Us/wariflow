@@ -53,6 +53,8 @@
             class="mb-4"
             (edit)="editProject($event)"
             (delete)="deleteProject($event)"
+            (addUsers)="onAddUsersClick($event)"
+            (removeUser)="onRemoveUser($event)"
           ></app-project-card>
         </div>
       </div>
@@ -86,6 +88,8 @@
             class="mb-4"
             (edit)="editProject($event)"
             (delete)="deleteProject($event)"
+            (addUsers)="onAddUsersClick($event)"
+            (removeUser)="onRemoveUser($event)"
           ></app-project-card>
         </div>
       </div>
@@ -119,6 +123,8 @@
             class="mb-4"
             (edit)="editProject($event)"
             (delete)="deleteProject($event)"
+            (addUsers)="onAddUsersClick($event)"
+            (removeUser)="onRemoveUser($event)"
           ></app-project-card>
         </div>
       </div>
@@ -152,6 +158,8 @@
             class="mb-4"
             (edit)="editProject($event)"
             (delete)="deleteProject($event)"
+            (addUsers)="onAddUsersClick($event)"
+            (removeUser)="onRemoveUser($event)"
           ></app-project-card>
         </div>
       </div>
@@ -164,4 +172,12 @@
     (save)="saveProject($event)"
     (cancel)="closeProjectForm()"
   ></app-project-form>
+
+  <!-- Modal pour ajouter des utilisateurs -->
+  <app-add-user-modal
+    [isOpen]="isAddUserModalOpen"
+    [currentTeamIds]="selectedProjectTeamIds"
+    (close)="onCloseAddUserModal()"
+    (userAdded)="onUsersAdded($event)"
+  ></app-add-user-modal>
 </ng-template>
