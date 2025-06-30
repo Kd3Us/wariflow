@@ -1,221 +1,249 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ProjectManagementService } from '../../services/project-management.service';
+import { ProjectsService } from '../../services/project.service';
 import { LoaderService } from '../../services/loader.service';
-import { ProjectService } from '../../services/project.service';
 import { ProjectManagementTask, ProjectManagementStage } from '../../models/project-management.model';
 import { Project } from '../../models/project.model';
-import { TaskCardComponent } from './task-card/task-card.component';
-import { TaskFormComponent } from './task-form/task-form.component';
+// import { TaskCardComponent } from '../task-card/task-card.component';
+// import { TaskFormComponent } from '../task-form/task-form.component';
 import { LoaderComponent } from '../loader/loader.component';
-import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-project-management-board',
   standalone: true,
-  imports: [
-    CommonModule, 
-    DragDropModule, 
-    TaskCardComponent, 
-    TaskFormComponent, 
-    LoaderComponent,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule, DragDropModule, LoaderComponent],
   template: `
-    <!-- Loader -->
-    <app-loader *ngIf="isLoading$ | async"></app-loader>
-
-    <div class="p-6 h-[calc(100vh-64px)] overflow-hidden flex flex-col">
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-semibold text-gray-800">Gestion de Projet</h1>
-        <button
-          (click)="openTaskForm()"
-          class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
-          [disabled]="!selectedProjectId"
-        >
-          <span class="material-icons text-lg">add</span>
-          Créer tâche
-        </button>
-      </div>
-
-      <!-- Sélecteur de projet -->
-      <div class="mb-6 bg-white rounded-lg border border-gray-200 p-4">
-        <div class="flex items-center gap-4">
-          <label for="projectSelect" class="text-sm font-medium text-gray-700 whitespace-nowrap">
-            Projet actuel :
-          </label>
-          <select
-            id="projectSelect"
-            [(ngModel)]="selectedProjectId"
-            (ngModelChange)="onProjectChange($event)"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Sélectionnez un projet</option>
-            <option *ngFor="let project of projects" [value]="project.id">
-              {{ project.title }}
-            </option>
-          </select>
+    <div class="project-management-container">
+      <app-loader></app-loader>
+      
+      <div class="header mb-6">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-bold text-gray-800">Gestion de Projet</h1>
           
-          <div *ngIf="selectedProject" class="flex items-center gap-2 text-sm text-gray-600">
-            <span class="px-2 py-1 bg-gray-100 rounded-md">{{ selectedProject.stage }}</span>
-            <span>{{ selectedProject.team.length }} membre(s)</span>
+          <div class="flex items-center gap-4">
+            <div class="project-selector">
+              <label for="project-select" class="block text-sm font-medium text-gray-700 mb-1">
+                Projet sélectionné
+              </label>
+              <select 
+                id="project-select"
+                [(ngModel)]="selectedProjectId" 
+                (ngModelChange)="onProjectChange($event)"
+                class="form-select block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Sélectionner un projet</option>
+                <option *ngFor="let project of projects" [value]="project.id">
+                  {{ project.title }}
+                </option>
+              </select>
+            </div>
+            
+            <button
+              *ngIf="selectedProjectId"
+              (click)="openTaskForm()"
+              class="btn-primary flex items-center gap-2 px-4 py-2 rounded-md"
+            >
+              <span class="material-icons text-sm">add</span>
+              Nouvelle tâche
+            </button>
           </div>
-        </div>
-        
-        <div *ngIf="!selectedProjectId" class="mt-3 text-sm text-gray-500">
-          Veuillez sélectionner un projet pour voir et gérer ses tâches.
         </div>
       </div>
 
-      <div class="flex gap-5 overflow-x-auto pb-4 h-full">
-        <!-- PENDING Column -->
-        <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-          <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.PENDING }}</h2>
-            <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ pendingTasks.length }}</span>
-            <button
-              (click)="openTaskForm(ProjectManagementStage.PENDING)"
-              class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
-            >
-              <span class="material-icons text-lg">add</span>
-            </button>
-          </div>
-
-          <div
-            cdkDropList
-            #pendingList="cdkDropList"
-            [cdkDropListData]="pendingTasks"
-            [cdkDropListConnectedTo]="[inProgressList, testList, doneList]"
-            class="flex-grow overflow-y-auto min-h-[100px] p-1"
-            (cdkDropListDropped)="drop($event)"
-          >
-            <app-task-card
-              *ngFor="let task of pendingTasks"
-              [task]="task"
-              cdkDrag
-              [cdkDragData]="task"
-              class="mb-4"
-              (edit)="editTask($event)"
-              (delete)="deleteTask($event)"
-              (removeUser)="onRemoveUser($event)"
-            ></app-task-card>
-          </div>
+      <div *ngIf="!selectedProjectId" class="text-center py-12">
+        <div class="text-gray-500">
+          <span class="material-icons text-4xl mb-4 block">assignment</span>
+          <p class="text-lg">Sélectionnez un projet pour voir ses tâches</p>
         </div>
+      </div>
 
-        <!-- INPROGRESS Column -->
-        <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-          <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.INPROGRESS }}</h2>
-            <span class="ml-2 px-2 py-0.5 bg-blue-200 rounded-full text-xs text-blue-800">{{ inProgressTasks.length }}</span>
-            <button
-              (click)="openTaskForm(ProjectManagementStage.INPROGRESS)"
-              class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+      <div *ngIf="selectedProjectId" class="kanban-board">
+        <div class="flex gap-6 overflow-x-auto pb-4 h-full">
+          
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <h2 class="kanban-title">À faire</h2>
+              <span class="task-count">{{ pendingTasks.length }}</span>
+            </div>
+            <div 
+              cdkDropList 
+              #pendingList="cdkDropList"
+              [cdkDropListData]="pendingTasks"
+              [cdkDropListConnectedTo]="[inProgressList, testList, doneList]"
+              class="kanban-list"
+              (cdkDropListDropped)="drop($event)"
             >
-              <span class="material-icons text-lg">add</span>
-            </button>
+              <div
+                *ngFor="let task of pendingTasks"
+                cdkDrag
+                [cdkDragData]="task"
+                class="task-card p-4 bg-white rounded-lg shadow-sm border border-gray-200 mb-3 cursor-pointer"
+              >
+                <h3 class="font-semibold text-gray-800 mb-2">{{ task.title }}</h3>
+                <p class="text-sm text-gray-600 mb-2">{{ task.description }}</p>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [ngClass]="{'bg-green-100 text-green-800': task.priority === 'HIGH',
+                                   'bg-yellow-100 text-yellow-800': task.priority === 'MEDIUM',
+                                   'bg-gray-100 text-gray-800': task.priority === 'LOW'}">
+                    {{ task.priority }}
+                  </span>
+                  <div class="flex gap-1">
+                    <button (click)="editTask(task)" class="text-blue-600 text-sm">✏️</button>
+                    <button (click)="deleteTask(task)" class="text-red-600 text-sm">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div
-            cdkDropList
-            #inProgressList="cdkDropList"
-            [cdkDropListData]="inProgressTasks"
-            [cdkDropListConnectedTo]="[pendingList, testList, doneList]"
-            class="flex-grow overflow-y-auto min-h-[100px] p-1"
-            (cdkDropListDropped)="drop($event)"
-          >
-            <app-task-card
-              *ngFor="let task of inProgressTasks"
-              [task]="task"
-              cdkDrag
-              [cdkDragData]="task"
-              class="mb-4"
-              (edit)="editTask($event)"
-              (delete)="deleteTask($event)"
-              (removeUser)="onRemoveUser($event)"
-            ></app-task-card>
-          </div>
-        </div>
-
-        <!-- TEST Column -->
-        <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-          <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.TEST }}</h2>
-            <span class="ml-2 px-2 py-0.5 bg-yellow-200 rounded-full text-xs text-yellow-800">{{ testTasks.length }}</span>
-            <button
-              (click)="openTaskForm(ProjectManagementStage.TEST)"
-              class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <h2 class="kanban-title">En cours</h2>
+              <span class="task-count">{{ inProgressTasks.length }}</span>
+            </div>
+            <div 
+              cdkDropList 
+              #inProgressList="cdkDropList"
+              [cdkDropListData]="inProgressTasks"
+              [cdkDropListConnectedTo]="[pendingList, testList, doneList]"
+              class="kanban-list"
+              (cdkDropListDropped)="drop($event)"
             >
-              <span class="material-icons text-lg">add</span>
-            </button>
+              <div
+                *ngFor="let task of inProgressTasks"
+                cdkDrag
+                [cdkDragData]="task"
+                class="task-card p-4 bg-white rounded-lg shadow-sm border border-gray-200 mb-3 cursor-pointer"
+              >
+                <h3 class="font-semibold text-gray-800 mb-2">{{ task.title }}</h3>
+                <p class="text-sm text-gray-600 mb-2">{{ task.description }}</p>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [ngClass]="{'bg-green-100 text-green-800': task.priority === 'HIGH',
+                                   'bg-yellow-100 text-yellow-800': task.priority === 'MEDIUM',
+                                   'bg-gray-100 text-gray-800': task.priority === 'LOW'}">
+                    {{ task.priority }}
+                  </span>
+                  <div class="flex gap-1">
+                    <button (click)="editTask(task)" class="text-blue-600 text-sm">✏️</button>
+                    <button (click)="deleteTask(task)" class="text-red-600 text-sm">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div
-            cdkDropList
-            #testList="cdkDropList"
-            [cdkDropListData]="testTasks"
-            [cdkDropListConnectedTo]="[pendingList, inProgressList, doneList]"
-            class="flex-grow overflow-y-auto min-h-[100px] p-1"
-            (cdkDropListDropped)="drop($event)"
-          >
-            <app-task-card
-              *ngFor="let task of testTasks"
-              [task]="task"
-              cdkDrag
-              [cdkDragData]="task"
-              class="mb-4"
-              (edit)="editTask($event)"
-              (delete)="deleteTask($event)"
-              (removeUser)="onRemoveUser($event)"
-            ></app-task-card>
-          </div>
-        </div>
-
-        <!-- DONE Column -->
-        <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
-          <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.DONE }}</h2>
-            <span class="ml-2 px-2 py-0.5 bg-green-200 rounded-full text-xs text-green-800">{{ doneTasks.length }}</span>
-            <button
-              (click)="openTaskForm(ProjectManagementStage.DONE)"
-              class="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 border-none cursor-pointer transition-colors hover:bg-secondary hover:text-white"
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <h2 class="kanban-title">Test</h2>
+              <span class="task-count">{{ testTasks.length }}</span>
+            </div>
+            <div 
+              cdkDropList 
+              #testList="cdkDropList"
+              [cdkDropListData]="testTasks"
+              [cdkDropListConnectedTo]="[pendingList, inProgressList, doneList]"
+              class="kanban-list"
+              (cdkDropListDropped)="drop($event)"
             >
-              <span class="material-icons text-lg">add</span>
-            </button>
+              <div
+                *ngFor="let task of testTasks"
+                cdkDrag
+                [cdkDragData]="task"
+                class="task-card p-4 bg-white rounded-lg shadow-sm border border-gray-200 mb-3 cursor-pointer"
+              >
+                <h3 class="font-semibold text-gray-800 mb-2">{{ task.title }}</h3>
+                <p class="text-sm text-gray-600 mb-2">{{ task.description }}</p>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [ngClass]="{'bg-green-100 text-green-800': task.priority === 'HIGH',
+                                   'bg-yellow-100 text-yellow-800': task.priority === 'MEDIUM',
+                                   'bg-gray-100 text-gray-800': task.priority === 'LOW'}">
+                    {{ task.priority }}
+                  </span>
+                  <div class="flex gap-1">
+                    <button (click)="editTask(task)" class="text-blue-600 text-sm">✏️</button>
+                    <button (click)="deleteTask(task)" class="text-red-600 text-sm">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div
-            cdkDropList
-            #doneList="cdkDropList"
-            [cdkDropListData]="doneTasks"
-            [cdkDropListConnectedTo]="[pendingList, inProgressList, testList]"
-            class="flex-grow overflow-y-auto min-h-[100px] p-1"
-            (cdkDropListDropped)="drop($event)"
-          >
-            <app-task-card
-              *ngFor="let task of doneTasks"
-              [task]="task"
-              cdkDrag
-              [cdkDragData]="task"
-              class="mb-4"
-              (edit)="editTask($event)"
-              (delete)="deleteTask($event)"
-              (removeUser)="onRemoveUser($event)"
-            ></app-task-card>
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <h2 class="kanban-title">Terminé</h2>
+              <span class="task-count">{{ doneTasks.length }}</span>
+            </div>
+            <div 
+              cdkDropList 
+              #doneList="cdkDropList"
+              [cdkDropListData]="doneTasks"
+              [cdkDropListConnectedTo]="[pendingList, inProgressList, testList]"
+              class="kanban-list"
+              (cdkDropListDropped)="drop($event)"
+            >
+              <div
+                *ngFor="let task of doneTasks"
+                cdkDrag
+                [cdkDragData]="task"
+                class="task-card p-4 bg-white rounded-lg shadow-sm border border-gray-200 mb-3 cursor-pointer"
+              >
+                <h3 class="font-semibold text-gray-800 mb-2">{{ task.title }}</h3>
+                <p class="text-sm text-gray-600 mb-2">{{ task.description }}</p>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [ngClass]="{'bg-green-100 text-green-800': task.priority === 'HIGH',
+                                   'bg-yellow-100 text-yellow-800': task.priority === 'MEDIUM',
+                                   'bg-gray-100 text-gray-800': task.priority === 'LOW'}">
+                    {{ task.priority }}
+                  </span>
+                  <div class="flex gap-1">
+                    <button (click)="editTask(task)" class="text-blue-600 text-sm">✏️</button>
+                    <button (click)="deleteTask(task)" class="text-red-600 text-sm">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
 
-    <!-- Task Form Modal -->
-    <app-task-form
-      *ngIf="showTaskForm"
-      [task]="selectedTask"
-      [selectedProject]="selectedProject"
-      (save)="saveTask($event)"
-      (cancel)="closeTaskForm()"
-    ></app-task-form>
+    <!-- Modal simplifié pour les tâches -->
+    <div *ngIf="showTaskForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg w-96">
+        <h3 class="text-lg font-semibold mb-4">{{ isNewTask ? 'Nouvelle tâche' : 'Modifier la tâche' }}</h3>
+        <form (ngSubmit)="saveTask({ title: taskTitle.value, description: taskDescription.value })" #taskForm="ngForm">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
+            <input #taskTitle type="text" [value]="selectedTask?.title || ''" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea #taskDescription [value]="selectedTask?.description || ''" rows="3"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="closeTaskForm()" 
+                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+              Annuler
+            </button>
+            <button type="submit" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              {{ isNewTask ? 'Créer' : 'Modifier' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 })
 export class ProjectManagementBoardComponent implements OnInit {
@@ -230,7 +258,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   showTaskForm = false;
   isNewTask = true;
   
-  // Gestion des projets
   projects: Project[] = [];
   selectedProjectId: string = '';
   selectedProject: Project | null = null;
@@ -241,7 +268,7 @@ export class ProjectManagementBoardComponent implements OnInit {
   
   constructor(
     private projectManagementService: ProjectManagementService,
-    private projectService: ProjectService,
+    private projectService: ProjectsService,
     private loaderService: LoaderService
   ) {
     this.isLoading$ = this.loaderService.isLoading$;
@@ -251,7 +278,6 @@ export class ProjectManagementBoardComponent implements OnInit {
     this.loadProjects();
     this.loadTasks();
     
-    // S'abonner aux changements de tâches
     this.projectManagementService.tasks$.subscribe(tasks => {
       this.organizeTasks(tasks);
     });
@@ -259,14 +285,14 @@ export class ProjectManagementBoardComponent implements OnInit {
   
   loadTasks(): void {
     if (this.selectedProjectId) {
-      this.projectManagementService.getTasksByProject(this.selectedProjectId).subscribe(tasks => {
+      this.projectManagementService.getTasksByProject(this.selectedProjectId).subscribe((tasks: ProjectManagementTask[]) => {
         this.organizeTasks(tasks);
       });
     }
   }
   
   loadProjects(): void {
-    this.projectService.getProjects().subscribe(projects => {
+    this.projectService.getProjects().subscribe((projects: Project[]) => {
       this.projects = projects;
     });
   }
@@ -274,9 +300,8 @@ export class ProjectManagementBoardComponent implements OnInit {
   onProjectChange(projectId: string): void {
     this.selectedProject = this.projects.find(p => p.id === projectId) || null;
     
-    // Charger les tâches du projet sélectionné
     if (projectId) {
-      this.projectManagementService.getTasksByProject(projectId).subscribe(tasks => {
+      this.projectManagementService.getTasksByProject(projectId).subscribe((tasks: ProjectManagementTask[]) => {
         this.organizeTasks(tasks);
       });
     } else {
@@ -285,15 +310,14 @@ export class ProjectManagementBoardComponent implements OnInit {
   }
 
   organizeTasks(tasks: ProjectManagementTask[]): void {
-    // Filtrer par projet sélectionné si un projet est sélectionné
     const filteredTasks = this.selectedProjectId ? 
       tasks.filter(task => task.projectId === this.selectedProjectId) : 
       tasks;
 
-    this.pendingTasks = filteredTasks.filter(t => t.stage === ProjectManagementStage.PENDING);
-    this.inProgressTasks = filteredTasks.filter(t => t.stage === ProjectManagementStage.INPROGRESS);
-    this.testTasks = filteredTasks.filter(t => t.stage === ProjectManagementStage.TEST);
-    this.doneTasks = filteredTasks.filter(t => t.stage === ProjectManagementStage.DONE);
+    this.pendingTasks = filteredTasks.filter(task => task.stage === ProjectManagementStage.PENDING);
+    this.inProgressTasks = filteredTasks.filter(task => task.stage === ProjectManagementStage.INPROGRESS);
+    this.testTasks = filteredTasks.filter(task => task.stage === ProjectManagementStage.TEST);
+    this.doneTasks = filteredTasks.filter(task => task.stage === ProjectManagementStage.DONE);
   }
   
   drop(event: CdkDragDrop<ProjectManagementTask[]>): void {
@@ -307,10 +331,9 @@ export class ProjectManagementBoardComponent implements OnInit {
         event.currentIndex,
       );
       
-      // Déterminer la nouvelle étape
       const task = event.container.data[event.currentIndex];
-      let newStage: ProjectManagementStage;
       
+      let newStage: ProjectManagementStage;
       if (event.container.data === this.pendingTasks) {
         newStage = ProjectManagementStage.PENDING;
       } else if (event.container.data === this.inProgressTasks) {
@@ -323,82 +346,72 @@ export class ProjectManagementBoardComponent implements OnInit {
         return;
       }
       
-      // Mettre à jour l'étape de la tâche
-      task.stage = newStage;
-      
-      // Si la tâche passe à DONE, mettre la progression à 100%
-      if (newStage === ProjectManagementStage.DONE) {
-        task.progress = 100;
-      }
-      
-      // Mettre à jour via l'API
-      this.projectManagementService.updateTaskStage(task.id, newStage).subscribe(() => {
-        this.loadTasks();
+      this.projectManagementService.updateTaskStage(task.id, newStage).subscribe({
+        next: (updatedTask: ProjectManagementTask) => {
+          const index = event.container.data.findIndex(t => t.id === updatedTask.id);
+          if (index !== -1) {
+            event.container.data[index] = updatedTask;
+          }
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la mise à jour de l\'étape:', error);
+          transferArrayItem(
+            event.container.data,
+            event.previousContainer.data,
+            event.currentIndex,
+            event.previousIndex,
+          );
+        }
       });
     }
   }
-
-  openTaskForm(stage: ProjectManagementStage = ProjectManagementStage.PENDING): void {
-    this.isNewTask = true;
+  
+  openTaskForm(): void {
     this.selectedTask = null;
+    this.isNewTask = true;
     this.showTaskForm = true;
   }
   
   editTask(task: ProjectManagementTask): void {
-    this.isNewTask = false;
     this.selectedTask = task;
+    this.isNewTask = false;
     this.showTaskForm = true;
   }
   
   deleteTask(task: ProjectManagementTask): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la tâche "${task.title}" ?`)) {
       this.projectManagementService.deleteTask(task.id).subscribe(() => {
         this.loadTasks();
       });
     }
   }
   
+  saveTask(taskData: Partial<ProjectManagementTask>): void {
+    if (!this.selectedProjectId) {
+      return;
+    }
+
+    if (this.isNewTask) {
+      const newTask = {
+        ...taskData,
+        projectId: this.selectedProjectId,
+        stage: ProjectManagementStage.PENDING
+      } as Omit<ProjectManagementTask, 'id' | 'createdAt' | 'updatedAt'>;
+      
+      this.projectManagementService.createTask(newTask).subscribe(() => {
+        this.loadTasks();
+      });
+    } else if (this.selectedTask) {
+      const updatedTask = { ...this.selectedTask, ...taskData };
+      this.projectManagementService.updateTask(this.selectedTask.id, taskData).subscribe(() => {
+        this.loadTasks();
+      });
+    }
+    this.closeTaskForm();
+  }
+  
   closeTaskForm(): void {
     this.showTaskForm = false;
     this.selectedTask = null;
   }
-  
-  saveTask(taskData: Partial<ProjectManagementTask>): void {
-    if (this.isNewTask) {
-      // S'assurer que le projet sélectionné est assigné à la nouvelle tâche
-      const newTaskData = {
-        ...taskData,
-        projectId: this.selectedProjectId
-      };
-      this.projectManagementService.createTask(newTaskData as Omit<ProjectManagementTask, 'id' | 'createdAt' | 'updatedAt'>).subscribe(() => {
-        this.loadTasks();
-        this.closeTaskForm();
-      });
-    } else if (this.selectedTask) {
-      const tmp = taskData as any;
-      delete taskData.createdAt;
-      delete taskData.updatedAt;
-      delete taskData.id;
-      delete tmp.project;
-      this.projectManagementService.updateTask(this.selectedTask.id, taskData as ProjectManagementTask).subscribe(() => {
-        this.loadTasks();
-        this.closeTaskForm();
-      });
-    }
-  }
-
-
-  onRemoveUser(data: { taskId: string, userId: string }): void {
-    // Pour l'instant, on simule la suppression
-    console.log('Removing user', data.userId, 'from task', data.taskId);
-  }
-
-  get selectedTaskAssignedIds(): string[] {
-    if (!this.selectedTaskId) return [];
-    
-    const allTasks = [...this.pendingTasks, ...this.inProgressTasks, ...this.testTasks, ...this.doneTasks];
-    const task = allTasks.find(t => t.id === this.selectedTaskId);
-    return task ? task.assignedTo.map(member => member.id) : [];
-  }
-
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { ProjectService } from '../../services/project.service';
+import { ProjectsService } from '../../services/project.service';
 import { LoaderService } from '../../services/loader.service';
 import { Project, ProjectStage } from '../../models/project.model';
 import { ProjectCardComponent } from '../project-card/project-card.component';
@@ -11,14 +11,12 @@ import { LoaderComponent } from '../loader/loader.component';
 import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
 import { Observable } from 'rxjs';
 
-
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
   imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent, OnboardingComponent, LoaderComponent, AddUserModalComponent],
   templateUrl: './kanban-board.component.html'
 })
-
 export class KanbanBoardComponent implements OnInit {
   ProjectStage = ProjectStage;
   ideeProjects: Project[] = [];
@@ -31,14 +29,13 @@ export class KanbanBoardComponent implements OnInit {
   isNewProject = true;
   isCreatingFirstProject = false;
   
-  // Ajout pour la gestion des utilisateurs
   isAddUserModalOpen = false;
   selectedProjectId: string | null = null;
   
   isLoading$: Observable<boolean>;
   
   constructor(
-    private projectService: ProjectService,
+    private projectService: ProjectsService,
     private loaderService: LoaderService
   ) {
     this.isLoading$ = this.loaderService.isLoading$;
@@ -49,12 +46,26 @@ export class KanbanBoardComponent implements OnInit {
   }
   
   loadProjects(): void {
-    this.projectService.getProjects().subscribe(projects => {
-      this.ideeProjects = projects.filter(p => p.stage === ProjectStage.IDEE);
-      this.mvpProjects = projects.filter(p => p.stage === ProjectStage.MVP);
-      this.tractionProjects = projects.filter(p => p.stage === ProjectStage.TRACTION);
-      this.leveeProjects = projects.filter(p => p.stage === ProjectStage.LEVEE);
+    this.projectService.getProjects().subscribe((projects: Project[]) => {
+      this.ideeProjects = projects.filter((p: Project) => p.stage === ProjectStage.IDEE);
+      this.mvpProjects = projects.filter((p: Project) => p.stage === ProjectStage.MVP);
+      this.tractionProjects = projects.filter((p: Project) => p.stage === ProjectStage.TRACTION);
+      this.leveeProjects = projects.filter((p: Project) => p.stage === ProjectStage.LEVEE);
     });
+  }
+
+  onProjectUpdated(updatedProject: Project): void {
+    const updateInList = (list: Project[]) => {
+      const index = list.findIndex(p => p.id === updatedProject.id);
+      if (index !== -1) {
+        list[index] = updatedProject;
+      }
+    };
+
+    updateInList(this.ideeProjects);
+    updateInList(this.mvpProjects);
+    updateInList(this.tractionProjects);
+    updateInList(this.leveeProjects);
   }
   
   drop(event: CdkDragDrop<Project[]>): void {
@@ -68,10 +79,8 @@ export class KanbanBoardComponent implements OnInit {
         event.currentIndex,
       );
       
-      // Update project stage
       const project = event.container.data[event.currentIndex];
       
-      // Determine the new stage based on the container data
       let newStage: ProjectStage;
       if (event.container.data === this.ideeProjects) {
         newStage = ProjectStage.IDEE;
@@ -85,12 +94,22 @@ export class KanbanBoardComponent implements OnInit {
         return;
       }
       
-      // Update project stage locally
-      project.stage = newStage;
-      
-      // Update project stage in backend and reload projects
-      this.projectService.updateProjectStage(project.id, newStage).subscribe(() => {
-        this.loadProjects();
+      this.projectService.updateProjectStage(project.id, newStage).subscribe({
+        next: (updatedProject: Project) => {
+          const index = event.container.data.findIndex(p => p.id === updatedProject.id);
+          if (index !== -1) {
+            event.container.data[index] = updatedProject;
+          }
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la mise à jour de l\'étape:', error);
+          transferArrayItem(
+            event.container.data,
+            event.previousContainer.data,
+            event.currentIndex,
+            event.previousIndex,
+          );
+        }
       });
     }
   }
@@ -113,7 +132,10 @@ export class KanbanBoardComponent implements OnInit {
   }
   
   deleteProject(project: Project): void {
-    this.projectService.deleteProject(project.id);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le projet "${project.title}" ?`)) {
+      this.projectService.deleteProject(project.id);
+      this.loadProjects();
+    }
   }
   
   closeProjectForm(): void {
@@ -123,16 +145,17 @@ export class KanbanBoardComponent implements OnInit {
   
   saveProject(projectData: Partial<Project>): void {
     if (this.isNewProject) {
-      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt'>);
+      this.projectService.createProject(projectData).subscribe(() => {
+        this.loadProjects();
+      });
     } else if (this.selectedProject) {
-      this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
+      this.projectService.updateProject(this.selectedProject.id, projectData).subscribe(() => {
         this.loadProjects();
       });
     }
     this.closeProjectForm();
   }
 
-  // Nouvelles méthodes pour la gestion des utilisateurs
   onAddUsersClick(projectId: string): void {
     this.selectedProjectId = projectId;
     this.isAddUserModalOpen = true;
@@ -147,7 +170,7 @@ export class KanbanBoardComponent implements OnInit {
     if (this.selectedProjectId) {
       this.projectService.addUsersToProject(this.selectedProjectId, userIds).subscribe({
         next: () => {
-          this.loadProjects(); // Recharger les projets pour voir les changements
+          this.loadProjects();
           this.onCloseAddUserModal();
         },
         error: (error: any) => {
@@ -160,7 +183,7 @@ export class KanbanBoardComponent implements OnInit {
   onRemoveUser(data: { projectId: string, userId: string }): void {
     this.projectService.removeUserFromProject(data.projectId, data.userId).subscribe({
       next: () => {
-        this.loadProjects(); // Recharger les projets pour voir les changements
+        this.loadProjects();
       },
       error: (error: any) => {
         console.error('Erreur lors de la suppression de l\'utilisateur:', error);
@@ -171,7 +194,6 @@ export class KanbanBoardComponent implements OnInit {
   get selectedProjectTeamIds(): string[] {
     if (!this.selectedProjectId) return [];
     
-    // Chercher le projet dans toutes les colonnes
     const allProjects = [...this.ideeProjects, ...this.mvpProjects, ...this.tractionProjects, ...this.leveeProjects];
     const project = allProjects.find(p => p.id === this.selectedProjectId);
     return project ? project.team.map(member => member.id) : [];
