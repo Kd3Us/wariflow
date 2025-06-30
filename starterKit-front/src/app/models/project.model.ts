@@ -1,0 +1,43 @@
+export enum ProjectStage {
+  IDEE = 'IDEE',
+  MVP = 'MVP',
+  TRACTION = 'TRACTION',
+  LEVEE = 'LEVEE'
+}
+
+export interface SubStep {
+  id: string;
+  title: string;
+  description?: string;
+  isCompleted: boolean;
+  order: number;
+  createdAt: Date;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  stage: ProjectStage;
+  progress: number;
+  deadline?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  team: TeamMember[];
+  comments: number;
+  attachments: number;
+  isReminderActive: boolean;
+  reminderDate?: Date;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  tags: string[];
+  organisation: string;
+  subSteps: SubStep[];
+}
