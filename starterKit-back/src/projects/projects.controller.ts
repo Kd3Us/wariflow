@@ -45,14 +45,12 @@ export class ProjectsController {
     console.log('Creating project with token:', validatedToken);
     
     try {
-      // Récupérer les informations utilisateur depuis le token
       const tokenData = await this.tokenVerificationService.verifyTokenAndGetUserInfo(validatedToken);
       const userEmail = tokenData.userInfo?.email || 'unknown@example.com';
       
       return this.projectsService.create(createProjectDto, userEmail);
     } catch (error) {
       console.error('Error getting user info from token:', error);
-      // En cas d'erreur, créer le projet sans email spécifique
       return this.projectsService.create(createProjectDto);
     }
   }
@@ -178,6 +176,55 @@ export class ProjectsController {
     console.log('Removing user from project with token:', validatedToken);
     
     return this.projectsService.removeUserFromProject(projectId, userId);
+  }
+
+  @Post(':id/substeps')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Ajouter une sous-étape à un projet' })
+  @ApiResponse({ status: 201, description: 'Sous-étape ajoutée avec succès' })
+  @ApiResponse({ status: 404, description: 'Projet non trouvé' })
+  addSubStep(
+    @Param('id') projectId: string,
+    @Body() subStepData: { title: string; description?: string }
+  ) {
+    return this.projectsService.addSubStep(projectId, subStepData);
+  }
+
+  @Patch(':id/substeps/:subStepId')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mettre à jour une sous-étape' })
+  @ApiResponse({ status: 200, description: 'Sous-étape mise à jour avec succès' })
+  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
+  updateSubStep(
+    @Param('id') projectId: string,
+    @Param('subStepId') subStepId: string,
+    @Body() updateData: { title?: string; description?: string; isCompleted?: boolean; order?: number }
+  ) {
+    return this.projectsService.updateSubStep(projectId, subStepId, updateData);
+  }
+
+  @Patch(':id/substeps/:subStepId/toggle')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Basculer le statut de complétion d\'une sous-étape' })
+  @ApiResponse({ status: 200, description: 'Statut de la sous-étape basculé avec succès' })
+  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
+  toggleSubStepCompletion(
+    @Param('id') projectId: string,
+    @Param('subStepId') subStepId: string
+  ) {
+    return this.projectsService.toggleSubStepCompletion(projectId, subStepId);
+  }
+
+  @Delete(':id/substeps/:subStepId')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Supprimer une sous-étape' })
+  @ApiResponse({ status: 200, description: 'Sous-étape supprimée avec succès' })
+  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
+  deleteSubStep(
+    @Param('id') projectId: string,
+    @Param('subStepId') subStepId: string
+  ) {
+    return this.projectsService.deleteSubStep(projectId, subStepId);
   }
 
   @Delete(':id')

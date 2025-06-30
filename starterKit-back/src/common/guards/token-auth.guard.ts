@@ -27,13 +27,14 @@ export class TokenAuthGuard implements CanActivate {
         return true;
       }
 
-      // Si pas en cache, vérifier avec l'API SpeedPresta
-      const isValid = await this.tokenVerificationService.verifyToken(token);
+      // Si pas en cache, vérifier avec l'API SpeedPresta et récupérer les infos utilisateur
+      const tokenResponse = await this.tokenVerificationService.verifyTokenAndGetUserInfo(token);
       
-      if (isValid) {
+      if (tokenResponse.msg === 'Verified') {
         // Ajouter au cache
         this.tokenCacheService.addValidToken(token);
         request['validatedToken'] = token;
+        request['userInfo'] = tokenResponse.userInfo;
         return true;
       }
 
@@ -51,4 +52,4 @@ export class TokenAuthGuard implements CanActivate {
       );
     }
   }
-} 
+}

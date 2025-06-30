@@ -12,9 +12,10 @@ export class WorkspacesService {
     private workspaceRepository: Repository<Workspace>,
   ) {}
 
-  async create(createWorkspaceDto: CreateWorkspaceDto): Promise<Workspace> {
+  async create(createWorkspaceDto: CreateWorkspaceDto, userEmail: string): Promise<Workspace> {
     const workspace = this.workspaceRepository.create({
       projectId: createWorkspaceDto.projectId,
+      userEmail: userEmail,
       currentStep: createWorkspaceDto.currentStep || 1,
       personForm: {
         nom: createWorkspaceDto.personForm?.nom || '',
@@ -26,6 +27,19 @@ export class WorkspacesService {
         description: createWorkspaceDto.personForm?.description || '',
         parcoursUtilisateur: createWorkspaceDto.personForm?.parcoursUtilisateur || '',
       },
+      personFormData: createWorkspaceDto.personFormData ? {
+        personForms: createWorkspaceDto.personFormData.personForms || [],
+        currentPersonForm: createWorkspaceDto.personFormData.currentPersonForm || {
+          nom: '',
+          prenom: '',
+          sexe: '',
+          age: null,
+          nationalite: '',
+          origine: '',
+          description: '',
+          parcoursUtilisateur: ''
+        }
+      } : null,
       visualIdentityForm: {
         slogan: createWorkspaceDto.visualIdentityForm?.slogan || '',
         typography: createWorkspaceDto.visualIdentityForm?.typography || '',
@@ -67,6 +81,13 @@ export class WorkspacesService {
     });
   }
 
+  async findByUserEmail(userEmail: string): Promise<Workspace[]> {
+    return this.workspaceRepository.find({
+      where: { userEmail },
+      relations: ['project']
+    });
+  }
+
   async update(id: string, updateWorkspaceDto: UpdateWorkspaceDto): Promise<Workspace | null> {
     const workspace = await this.findOne(id);
     
@@ -84,6 +105,26 @@ export class WorkspacesService {
         ...workspace.personForm,
         ...updateWorkspaceDto.personForm,
       };
+    }
+
+    if (updateWorkspaceDto.personFormData !== undefined) {
+      if (updateWorkspaceDto.personFormData === null) {
+        workspace.personFormData = null;
+      } else {
+        workspace.personFormData = {
+          personForms: updateWorkspaceDto.personFormData.personForms || [],
+          currentPersonForm: updateWorkspaceDto.personFormData.currentPersonForm || {
+            nom: '',
+            prenom: '',
+            sexe: '',
+            age: null,
+            nationalite: '',
+            origine: '',
+            description: '',
+            parcoursUtilisateur: ''
+          }
+        };
+      }
     }
 
     if (updateWorkspaceDto.visualIdentityForm) {

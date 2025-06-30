@@ -20,6 +20,33 @@ export class UpdateWorkspaceDto {
 
   @IsOptional()
   @IsObject()
+  personFormData?: {
+    personForms?: Array<{
+      id: string;
+      nom: string;
+      prenom: string;
+      sexe: string;
+      age: number | null;
+      nationalite: string;
+      origine: string;
+      description: string;
+      parcoursUtilisateur: string;
+      dateCreation: Date;
+    }>;
+    currentPersonForm?: {
+      nom: string;
+      prenom: string;
+      sexe: string;
+      age: number | null;
+      nationalite: string;
+      origine: string;
+      description: string;
+      parcoursUtilisateur: string;
+    };
+  };
+
+  @IsOptional()
+  @IsObject()
   visualIdentityForm?: {
     logoBase64?: string;
     logoMimeType?: string;

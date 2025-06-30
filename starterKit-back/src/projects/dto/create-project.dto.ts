@@ -1,53 +1,66 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDate, IsOptional, IsArray, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsEnum, IsOptional, IsInt, Min, Max, IsArray, IsDateString, IsBoolean } from 'class-validator';
 import { ProjectStage } from '../../common/enums/project-stage.enum';
 
-export class CreateProjectDto {
-  @ApiProperty({ description: 'Titre du projet' })
+export class CreateSubStepDto {
   @IsString()
-  @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ description: 'Description du projet' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean = false;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+}
+
+export class CreateProjectDto {
+  @IsString()
+  title: string;
+
+  @IsString()
   description: string;
 
-  @ApiProperty({ enum: ProjectStage, description: 'Étape du projet' })
+  @IsOptional()
   @IsEnum(ProjectStage)
-  stage: ProjectStage;
+  stage?: ProjectStage = ProjectStage.IDEE;
 
-  @ApiProperty({ description: 'Progression du projet (0-100)', minimum: 0, maximum: 100 })
-  @IsNumber()
+  @IsOptional()
+  @IsInt()
   @Min(0)
   @Max(100)
-  progress: number;
+  progress?: number = 0;
 
-  @ApiProperty({ description: 'Date limite du projet' })
-  @IsDate()
-  @Type(() => Date)
-  deadline: Date;
+  @IsDateString()
+  deadline: string;
 
-  @ApiProperty({ description: 'IDs des membres de l\'équipe', type: [String] })
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  teamIds: string[];
+  teamIds?: string[] = [];
 
-  @ApiProperty({ description: 'Priorité du projet', enum: ['LOW', 'MEDIUM', 'HIGH'], required: false })
   @IsOptional()
   @IsEnum(['LOW', 'MEDIUM', 'HIGH'])
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH';
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM';
 
-  @ApiProperty({ description: 'Tags du projet', type: [String], required: false })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  tags?: string[];
+  tags?: string[] = [];
 
-  @ApiProperty({ description: 'Date de rappel', required: false })
+  @IsString()
+  organisation: string;
+
   @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  reminderDate?: Date;
+  @IsArray()
+  subSteps?: CreateSubStepDto[] = [];
+
+  @IsOptional()
+  @IsDateString()
+  reminderDate?: string;
 }

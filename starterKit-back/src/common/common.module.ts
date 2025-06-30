@@ -5,7 +5,6 @@ import { TokenVerificationMiddleware } from './middleware/token-verification.mid
 import { GlobalAuthMiddleware } from './middleware/global-auth.middleware';
 import { TokenAuthGuard } from './guards/token-auth.guard';
 import { AuthController } from './controllers/auth.controller';
-import { ProtectedController } from './controllers/protected.controller';
 
 @Module({
   providers: [
@@ -13,7 +12,7 @@ import { ProtectedController } from './controllers/protected.controller';
     TokenCacheService,
     TokenAuthGuard,
   ],
-  controllers: [AuthController, ProtectedController],
+  controllers: [AuthController],
   exports: [TokenVerificationService, TokenCacheService, TokenAuthGuard],
 })
 export class CommonModule {

@@ -9,6 +9,9 @@ export class Workspace {
   @Column({ nullable: true })
   projectId?: string;
 
+  @Column({ nullable: false })
+  userEmail: string;
+
   @OneToOne(() => Project, { nullable: true })
   @JoinColumn({ name: 'projectId' })
   project?: Project;
@@ -37,6 +40,35 @@ export class Workspace {
     origine: string;
     description: string;
     parcoursUtilisateur: string;
+  };
+
+  @Column('jsonb', {
+    nullable: true,
+    default: null
+  })
+  personFormData?: {
+    personForms: Array<{
+      id: string;
+      nom: string;
+      prenom: string;
+      sexe: string;
+      age: number | null;
+      nationalite: string;
+      origine: string;
+      description: string;
+      parcoursUtilisateur: string;
+      dateCreation: Date;
+    }>;
+    currentPersonForm: {
+      nom: string;
+      prenom: string;
+      sexe: string;
+      age: number | null;
+      nationalite: string;
+      origine: string;
+      description: string;
+      parcoursUtilisateur: string;
+    };
   };
 
   @Column('jsonb', {

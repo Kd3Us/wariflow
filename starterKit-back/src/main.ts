@@ -41,8 +41,8 @@ async function bootstrap() {
     .setTitle('Project Lifecycle Management API')
     .setDescription('API pour la gestion du cycle de vie des projets')
     .setVersion('1.0')
-    .addTag('projects')
-    .addTag('teams')
+    .addTag('projects', 'Gestion des projets')
+    .addTag('teams', 'Gestion des équipes')
     .addBearerAuth()
     .build();
   
