@@ -18,5 +18,5 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
   `,
 })
 export class AppComponent {
-  title = 'starter-kit';
+  title = 'angular-kanban';
 }

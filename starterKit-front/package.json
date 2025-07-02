@@ -1,5 +1,5 @@
 {
-  "name": "starter-kit",
+  "name": "angular-kanban",
   "private": true,
   "scripts": {
     "ng": "ng",

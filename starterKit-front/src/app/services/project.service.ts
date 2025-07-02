@@ -1,39 +1,23 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, tap, finalize } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { Project, ProjectStage } from '../models/project.model';
-import { environment } from '../../environments/environment';
-import { JwtService } from './jwt.service';
-import { LoaderService } from './loader.service';
-
+import { environment } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProjectService {
-  private apiUrl = environment.apiProjectURL;
+  private apiUrl = `${environment.apiProjectURL}/projects`;
   private projectsSubject = new BehaviorSubject<Project[]>([]);
   projects$ = this.projectsSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private jwtService: JwtService,
-    private loaderService: LoaderService
-  ) {
+  constructor(private http: HttpClient) {
     this.loadProjects();
   }
 
-  private getAuthHeaders(): HttpHeaders {
-    const token = this.jwtService.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
   private loadProjects(): void {
-    this.loaderService.startLoading();
-    this.http.get<Project[]>(this.apiUrl, { headers: this.getAuthHeaders() })
+    this.http.get<Project[]>(this.apiUrl)
       .pipe(
         map(projects => projects.map(project => ({
           ...project,
@@ -41,8 +25,7 @@ export class ProjectService {
           reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
           createdAt: new Date(project.createdAt),
           updatedAt: new Date(project.updatedAt)
-        }))),
-        finalize(() => this.loaderService.stopLoading())
+        })))
       )
       .subscribe(projects => this.projectsSubject.next(projects));
   }
@@ -58,8 +41,23 @@ export class ProjectService {
   }
 
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): void {
-    this.loaderService.startLoading();
-    this.http.post<Project>(this.apiUrl, project, { headers: this.getAuthHeaders() })
+    const createProjectData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline instanceof Date ? project.deadline.toISOString() : project.deadline,
+      teamIds: project.teamIds || [],
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate,
+      instructions: project.instructions || []
+    };
+
+    console.log('Données envoyées au backend:', createProjectData);
+    console.log('Instructions à sauvegarder:', createProjectData.instructions);
+
+    this.http.post<Project>(this.apiUrl, createProjectData)
       .pipe(
         map(newProject => ({
           ...newProject,
@@ -69,17 +67,40 @@ export class ProjectService {
           updatedAt: new Date(newProject.updatedAt)
         })),
         tap(newProject => {
+          console.log('Projet créé avec instructions:', newProject.instructions);
           const currentProjects = this.projectsSubject.value;
           this.projectsSubject.next([...currentProjects, newProject]);
-        }),
-        finalize(() => this.loaderService.stopLoading())
+        })
       )
-      .subscribe();
+      .subscribe({
+        next: (newProject) => {
+          console.log('Projet créé avec succès:', newProject);
+          console.log('Nombre d\'instructions sauvegardées:', newProject.instructions?.length || 0);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création du projet:', error);
+        }
+      });
   }
 
   updateProject(project: Project): void {
-    this.loaderService.startLoading();
-    this.http.put<Project>(`${this.apiUrl}/${project.id}`, project, { headers: this.getAuthHeaders() })
+    const updateData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline instanceof Date ? project.deadline.toISOString() : project.deadline,
+      teamIds: project.team?.map(member => member.id) || [],
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate instanceof Date ? project.reminderDate.toISOString() : project.reminderDate,
+      instructions: project.instructions || []
+    };
+
+    console.log('Données de mise à jour envoyées:', updateData);
+    console.log('Instructions à mettre à jour:', updateData.instructions);
+
+    this.http.put<Project>(`${this.apiUrl}/${project.id}`, updateData)
       .pipe(
         map(updatedProject => ({
           ...updatedProject,
@@ -89,23 +110,30 @@ export class ProjectService {
           updatedAt: new Date(updatedProject.updatedAt)
         })),
         tap(updatedProject => {
+          console.log('Projet mis à jour reçu:', updatedProject);
+          console.log('Instructions après mise à jour:', updatedProject.instructions);
           const currentProjects = this.projectsSubject.value;
           const index = currentProjects.findIndex(p => p.id === updatedProject.id);
           if (index !== -1) {
             currentProjects[index] = updatedProject;
             this.projectsSubject.next([...currentProjects]);
           }
-        }),
-        finalize(() => this.loaderService.stopLoading())
+        })
       )
-      .subscribe();
+      .subscribe({
+        next: (updatedProject) => {
+          console.log('Projet mis à jour avec succès:', updatedProject.title);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la mise à jour du projet:', error);
+        }
+      });
   }
 
   updateProjectStage(projectId: string, stage: ProjectStage): Observable<Project> {
     const currentProjects = this.projectsSubject.value;
     const project = currentProjects.find(p => p.id === projectId);
     if (project) {
-      this.loaderService.startLoading();
       const updateData = {
         title: project.title,
         description: project.description,
@@ -118,51 +146,30 @@ export class ProjectService {
         reminderDate: project.reminderDate?.toISOString()
       };
 
-      return this.http.put<Project>(`${this.apiUrl}/${projectId}`, updateData, { headers: this.getAuthHeaders() })
+      return this.http.put<Project>(`${this.apiUrl}/${projectId}`, updateData)
         .pipe(
           map(updatedProject => ({
             ...updatedProject,
             deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
-            reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined
+            reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
+            createdAt: new Date(updatedProject.createdAt),
+            updatedAt: new Date(updatedProject.updatedAt)
           })),
           tap(updatedProject => {
-            const currentProjects = this.projectsSubject.value;
             const index = currentProjects.findIndex(p => p.id === updatedProject.id);
             if (index !== -1) {
               currentProjects[index] = updatedProject;
               this.projectsSubject.next([...currentProjects]);
             }
-          }),
-          finalize(() => this.loaderService.stopLoading())
+          })
         );
+    } else {
+      throw new Error('Project not found');
     }
-    return new Observable<Project>();
   }
-
-  deleteProject(id: string): void {
-    this.loaderService.startLoading();
-    this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() })
-      .pipe(
-        tap(() => {
-          const currentProjects = this.projectsSubject.value;
-          this.projectsSubject.next(currentProjects.filter(p => p.id !== id));
-        }),
-        finalize(() => this.loaderService.stopLoading())
-      )
-      .subscribe();
-  }
-
-  getProjectsByStage(stage: ProjectStage): Observable<Project[]> {
-    return this.projects$.pipe(
-      map(projects => projects.filter(project => project.stage === stage))
-    );
-  }
-
-  // Ajouter ces méthodes à la fin de ton ProjectService
 
   addUsersToProject(projectId: string, userIds: string[]): Observable<Project> {
-    this.loaderService.startLoading();
-    return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds }, { headers: this.getAuthHeaders() })
+    return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds })
       .pipe(
         map(updatedProject => ({
           ...updatedProject,
@@ -178,14 +185,12 @@ export class ProjectService {
             currentProjects[index] = updatedProject;
             this.projectsSubject.next([...currentProjects]);
           }
-        }),
-        finalize(() => this.loaderService.stopLoading())
+        })
       );
   }
 
   removeUserFromProject(projectId: string, userId: string): Observable<Project> {
-    this.loaderService.startLoading();
-    return this.http.delete<Project>(`${this.apiUrl}/${projectId}/users/${userId}`, { headers: this.getAuthHeaders() })
+    return this.http.delete<Project>(`${this.apiUrl}/${projectId}/users/${userId}`)
       .pipe(
         map(updatedProject => ({
           ...updatedProject,
@@ -201,30 +206,19 @@ export class ProjectService {
             currentProjects[index] = updatedProject;
             this.projectsSubject.next([...currentProjects]);
           }
-        }),
-        finalize(() => this.loaderService.stopLoading())
+        })
       );
   }
-  refreshProjects(): void {
-    console.log('🔄 [ProjectService] Actualisation des projets depuis l\'API');
-    this.http.get<Project[]>(this.apiUrl, { headers: this.getAuthHeaders() })
+
+  deleteProject(projectId: string): void {
+    this.http.delete(`${this.apiUrl}/${projectId}`)
       .pipe(
-        map(projects => projects.map(project => ({
-          ...project,
-          deadline: project.deadline ? new Date(project.deadline) : undefined,
-          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
-          createdAt: new Date(project.createdAt),
-          updatedAt: new Date(project.updatedAt)
-        })))
+        tap(() => {
+          const currentProjects = this.projectsSubject.value;
+          const filteredProjects = currentProjects.filter(p => p.id !== projectId);
+          this.projectsSubject.next(filteredProjects);
+        })
       )
-      .subscribe({
-        next: (projects) => {
-          this.projectsSubject.next(projects);
-          console.log('✅ [ProjectService] Projets actualisés:', projects.length);
-        },
-        error: (error) => {
-          console.error('❌ [ProjectService] Erreur lors de l\'actualisation:', error);
-        }
-      });
+      .subscribe();
   }
 }
