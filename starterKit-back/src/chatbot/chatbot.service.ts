@@ -1,9 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ProjectsService } from '../projects/projects.service';
+import { ProjectManagementService } from '../project-management/project-management.service';
 import { GenerateProjectDto } from './dto/generate-project.dto';
 import { ChatbotResponseDto, ProjectAnalysis, ProjectTask } from './dto/chatbot-response.dto';
 import { CreateProjectDto } from '../projects/dto/create-project.dto';
+import { CreateTaskDto } from '../project-management/dto/create-task.dto';
 import { ProjectStage } from '../common/enums/project-stage.enum';
+import { ProjectManagementStage, TaskPriority } from '../project-management/entities/project-management-task.entity';
 
 @Injectable()
 export class ChatbotService {
@@ -25,13 +28,17 @@ export class ChatbotService {
     'rapidement', 'vite', 'deadline', 'échéance', 'délai'
   ];
 
-  constructor(private readonly projectsService: ProjectsService) {
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly projectManagementService: ProjectManagementService
+  ) {
     console.log('ChatbotService initialized');
   }
 
-  async generateProject(generateProjectDto: GenerateProjectDto): Promise<ChatbotResponseDto> {
+  async generateProject(generateProjectDto: GenerateProjectDto, organization?: string): Promise<ChatbotResponseDto> {
     console.log('[ChatbotService] Début de génération de projet');
     console.log('[ChatbotService] Description reçue:', generateProjectDto.description);
+    console.log('[ChatbotService] Organisation reçue:', organization);
     
     try {
       const analysis = this.analyzeProjectDescription(generateProjectDto);
@@ -42,19 +49,23 @@ export class ChatbotService {
         );
       }
 
-      const projectsToCreate = this.createProjectCards(analysis, generateProjectDto);
-      const createdProjects = [];
+      const projectData = this.createSingleProject(analysis, generateProjectDto);
+      console.log('[ChatbotService] Création du projet principal');
 
-      console.log(`[ChatbotService] Création de ${projectsToCreate.length} projets`);
+      const createdProject = await this.projectsService.create(projectData, organization);
+      console.log(`[ChatbotService] Projet créé: ${createdProject.title} avec organisation: ${organization}`);
 
-      for (const projectData of projectsToCreate) {
+      const tasks = this.createProjectTasks(analysis, createdProject.id);
+      console.log(`[ChatbotService] Création de ${tasks.length} tâches`);
+
+      const createdTasks = [];
+      for (const task of tasks) {
         try {
-          const createdProject = await this.projectsService.create(projectData);
-          createdProjects.push(createdProject);
-          console.log(`[ChatbotService] Projet créé: ${createdProject.title}`);
+          const createdTask = await this.projectManagementService.create(task);
+          createdTasks.push(createdTask);
+          console.log(`[ChatbotService] Tâche créée: ${createdTask.title}`);
         } catch (error) {
-          console.error(`[ChatbotService] Erreur création projet:`, error);
-          throw new BadRequestException(`Erreur lors de la création du projet: ${error.message}`);
+          console.error(`[ChatbotService] Erreur création tâche:`, error);
         }
       }
 
@@ -64,8 +75,8 @@ export class ChatbotService {
 
       return {
         success: true,
-        message: `${createdProjects.length} projet(s) généré(s) avec succès`,
-        projects: createdProjects,
+        message: `Projet "${createdProject.title}" créé avec ${createdTasks.length} tâches en attente`,
+        projects: [createdProject],
         analysis,
         suggestions
       };
@@ -100,6 +111,66 @@ export class ChatbotService {
       suggestedPriority,
       breakdown
     };
+  }
+
+  private createSingleProject(analysis: ProjectAnalysis, generateProjectDto: GenerateProjectDto): CreateProjectDto {
+    const { suggestedTags, suggestedPriority } = analysis;
+    
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + analysis.estimatedDuration);
+    
+    const reminderDate = new Date(deadline.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    return {
+      title: this.generateProjectTitle(generateProjectDto.description),
+      description: generateProjectDto.description,
+      stage: ProjectStage.IDEE,
+      progress: 0,
+      deadline: deadline,
+      teamIds: [],
+      priority: suggestedPriority,
+      tags: suggestedTags,
+      reminderDate: reminderDate
+    };
+  }
+
+  private createProjectTasks(analysis: ProjectAnalysis, projectId: string): CreateTaskDto[] {
+    const tasks: CreateTaskDto[] = [];
+    
+    analysis.breakdown.forEach((taskBreakdown) => {
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + taskBreakdown.estimatedDays);
+      
+      tasks.push({
+        title: taskBreakdown.title,
+        description: taskBreakdown.description,
+        stage: ProjectManagementStage.PENDING,
+        progress: 0,
+        deadline: deadline.toISOString(),
+        projectId: projectId,
+        priority: this.mapPriorityToTaskPriority(analysis.suggestedPriority),
+        tags: analysis.suggestedTags.slice(0, 2)
+      });
+    });
+    
+    return tasks;
+  }
+
+  private mapPriorityToTaskPriority(priority: 'LOW' | 'MEDIUM' | 'HIGH'): TaskPriority {
+    switch (priority) {
+      case 'LOW': return TaskPriority.LOW;
+      case 'MEDIUM': return TaskPriority.MEDIUM;
+      case 'HIGH': return TaskPriority.HIGH;
+      default: return TaskPriority.MEDIUM;
+    }
+  }
+
+  private generateProjectTitle(description: string): string {
+    const words = description.trim().split(/\s+/);
+    if (words.length <= 4) {
+      return description;
+    }
+    return words.slice(0, 4).join(' ') + '...';
   }
 
   private isValidProject(description: string): boolean {
@@ -217,7 +288,7 @@ export class ChatbotService {
     tasks.push({
       title: 'Analyse et conception',
       description: 'Analyse des besoins et conception de l\'architecture',
-      stage: 'IDEE',
+      stage: 'PENDING',
       estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
     });
     
@@ -225,7 +296,7 @@ export class ChatbotService {
       tasks.push({
         title: 'Design et maquettage',
         description: 'Création des maquettes et du design système',
-        stage: 'IDEE',
+        stage: 'PENDING',
         estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 10 : 15
       });
     }
@@ -233,7 +304,7 @@ export class ChatbotService {
     tasks.push({
       title: 'Développement MVP',
       description: 'Créer la version minimale viable',
-      stage: 'MVP',
+      stage: 'PENDING',
       estimatedDays: complexity === 'simple' ? 10 : complexity === 'moyen' ? 20 : 35
     });
     
@@ -241,7 +312,7 @@ export class ChatbotService {
       tasks.push({
         title: 'Intégrations critiques',
         description: 'Intégrer l\'authentification et les paiements',
-        stage: 'MVP',
+        stage: 'PENDING',
         estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 8 : 12
       });
     }
@@ -250,7 +321,7 @@ export class ChatbotService {
       tasks.push({
         title: 'Analytics et reporting',
         description: 'Mettre en place les outils d\'analyse',
-        stage: 'TRACTION',
+        stage: 'PENDING',
         estimatedDays: complexity === 'simple' ? 5 : complexity === 'moyen' ? 10 : 15
       });
     }
@@ -258,44 +329,18 @@ export class ChatbotService {
     tasks.push({
       title: 'Tests et optimisation',
       description: 'Tests utilisateurs et optimisation des performances',
-      stage: 'TRACTION',
+      stage: 'PENDING',
       estimatedDays: complexity === 'simple' ? 7 : complexity === 'moyen' ? 14 : 21
     });
     
     tasks.push({
       title: 'Préparation levée de fonds',
       description: 'Finaliser le pitch et les métriques pour les investisseurs',
-      stage: 'LEVEE',
+      stage: 'PENDING',
       estimatedDays: complexity === 'simple' ? 10 : complexity === 'moyen' ? 15 : 25
     });
     
     return tasks;
-  }
-
-  private createProjectCards(analysis: ProjectAnalysis, generateProjectDto: GenerateProjectDto): CreateProjectDto[] {
-    const { breakdown, suggestedTags, suggestedPriority } = analysis;
-    const projects: CreateProjectDto[] = [];
-
-    breakdown.forEach((task, index) => {
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + task.estimatedDays);
-
-      const reminderDate = new Date(deadline.getTime() - 2 * 24 * 60 * 60 * 1000);
-
-      projects.push({
-        title: task.title,
-        description: task.description,
-        stage: task.stage as ProjectStage,
-        progress: 0,
-        deadline: deadline,
-        teamIds: [],
-        priority: suggestedPriority,
-        tags: suggestedTags,
-        reminderDate: reminderDate
-      });
-    });
-
-    return projects;
   }
 
   private generateSuggestions(analysis: ProjectAnalysis): string[] {

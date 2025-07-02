@@ -16,10 +16,18 @@ import { ChatbotResponse } from '../../services/chatbot.service';
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, DragDropModule, ProjectCardComponent, ProjectFormComponent, AiProjectModalComponent, OnboardingComponent, LoaderComponent, AddUserModalComponent],
+  imports: [
+    CommonModule, 
+    DragDropModule, 
+    ProjectCardComponent, 
+    ProjectFormComponent, 
+    AiProjectModalComponent,
+    OnboardingComponent, 
+    LoaderComponent, 
+    AddUserModalComponent
+  ],
   templateUrl: './kanban-board.component.html'
 })
-
 export class KanbanBoardComponent implements OnInit {
   ProjectStage = ProjectStage;
   ideeProjects: Project[] = [];
@@ -33,7 +41,6 @@ export class KanbanBoardComponent implements OnInit {
   isNewProject = true;
   isCreatingFirstProject = false;
   
-  // Ajout pour la gestion des utilisateurs
   isAddUserModalOpen = false;
   selectedProjectId: string | null = null;
   
@@ -51,11 +58,21 @@ export class KanbanBoardComponent implements OnInit {
   }
   
   loadProjects(): void {
+    console.log('[DEBUG] Chargement des projets...');
     this.projectService.getProjects().subscribe(projects => {
+      console.log('[DEBUG] Projets reçus:', projects);
+      console.log('[DEBUG] Nombre de projets:', projects.length);
+      
       this.ideeProjects = projects.filter(p => p.stage === ProjectStage.IDEE);
       this.mvpProjects = projects.filter(p => p.stage === ProjectStage.MVP);
       this.tractionProjects = projects.filter(p => p.stage === ProjectStage.TRACTION);
       this.leveeProjects = projects.filter(p => p.stage === ProjectStage.LEVEE);
+      
+      console.log('[DEBUG] Répartition:');
+      console.log('- IDEE:', this.ideeProjects.length);
+      console.log('- MVP:', this.mvpProjects.length);  
+      console.log('- TRACTION:', this.tractionProjects.length);
+      console.log('- LEVEE:', this.leveeProjects.length);
     });
   }
   
@@ -70,10 +87,8 @@ export class KanbanBoardComponent implements OnInit {
         event.currentIndex,
       );
       
-      // Update project stage
       const project = event.container.data[event.currentIndex];
       
-      // Determine the new stage based on the container data
       let newStage: ProjectStage;
       if (event.container.data === this.ideeProjects) {
         newStage = ProjectStage.IDEE;
@@ -87,10 +102,8 @@ export class KanbanBoardComponent implements OnInit {
         return;
       }
       
-      // Update project stage locally
       project.stage = newStage;
       
-      // Update project stage in backend and reload projects
       this.projectService.updateProjectStage(project.id, newStage).subscribe(() => {
         this.loadProjects();
       });
@@ -109,7 +122,6 @@ export class KanbanBoardComponent implements OnInit {
   }
 
   openAIProjectForm(): void {
-    console.log('Ouverture modal IA');
     this.showAiProjectModal = true;
   }
 
@@ -118,45 +130,43 @@ export class KanbanBoardComponent implements OnInit {
   }
 
   onProjectsGenerated(result: ChatbotResponse): void {
-    console.log('Projets générés par IA - Mise à jour immédiate');
-    
+    console.log('[DEBUG] onProjectsGenerated appelé avec:', result);
     this.closeAIProjectModal();
     
-    if (result && result.projects) {
-      console.log('Ajout direct de', result.projects.length, 'projets');
+    setTimeout(() => {
+      console.log('[DEBUG] Rechargement DIRECT depuis API...');
       
-      result.projects.forEach(project => {
-        const formattedProject = {
+      // Appel API direct au lieu du BehaviorSubject
+      this.projectService['http'].get<any[]>(this.projectService['apiUrl'] + '/my-organisation', { 
+        headers: this.projectService['getAuthHeaders']() 
+      }).subscribe(projects => {
+        console.log('[DEBUG] Projets reçus directement de l\'API:', projects);
+        
+        const formattedProjects = projects.map(project => ({
           ...project,
+          deadline: project.deadline ? new Date(project.deadline) : undefined,
+          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
           createdAt: new Date(project.createdAt),
-          updatedAt: new Date(project.updatedAt),
-          deadline: new Date(project.deadline),
-          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined
-        };
+          updatedAt: new Date(project.updatedAt)
+        }));
         
-        switch (formattedProject.stage) {
-          case ProjectStage.IDEE:
-            this.ideeProjects.push(formattedProject);
-            break;
-          case ProjectStage.MVP:
-            this.mvpProjects.push(formattedProject);
-            break;
-          case ProjectStage.TRACTION:
-            this.tractionProjects.push(formattedProject);
-            break;
-          case ProjectStage.LEVEE:
-            this.leveeProjects.push(formattedProject);
-            break;
+        this.ideeProjects = formattedProjects.filter(p => p.stage === ProjectStage.IDEE);
+        this.mvpProjects = formattedProjects.filter(p => p.stage === ProjectStage.MVP);
+        this.tractionProjects = formattedProjects.filter(p => p.stage === ProjectStage.TRACTION);
+        this.leveeProjects = formattedProjects.filter(p => p.stage === ProjectStage.LEVEE);
+        
+        console.log('[DEBUG] Répartition DIRECTE:');
+        console.log('- IDEE:', this.ideeProjects.length);
+        console.log('- MVP:', this.mvpProjects.length);
+        console.log('- TRACTION:', this.tractionProjects.length);
+        console.log('- LEVEE:', this.leveeProjects.length);
+        
+        if (result && result.projects && result.projects.length > 0) {
+          alert(`${result.projects.length} projet(s) créé(s) avec succès !`);
         }
-        
-        console.log('Projet ajouté:', formattedProject.title, 'dans', formattedProject.stage);
       });
       
-      console.log('Mise à jour terminée - Projets visibles immédiatement');
-    } else {
-      console.log('Pas de projets dans le résultat, rechargement classique');
-      this.loadProjects();
-    }
+    }, 1000);
   }
   
   editProject(project: Project): void {
@@ -166,7 +176,10 @@ export class KanbanBoardComponent implements OnInit {
   }
   
   deleteProject(project: Project): void {
-    this.projectService.deleteProject(project.id);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le projet "${project.title}" ?`)) {
+      this.projectService.deleteProject(project.id);
+      this.loadProjects();
+    }
   }
   
   closeProjectForm(): void {
@@ -176,20 +189,16 @@ export class KanbanBoardComponent implements OnInit {
   
   saveProject(projectData: Partial<Project>): void {
     if (this.isNewProject) {
-      this.projectService.addProject(projectData as Omit<Project, 'id' | 'createdAt'>);
+      this.projectService.addProject(projectData as any);
     } else if (this.selectedProject) {
       this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
         this.loadProjects();
       });
     }
     this.closeProjectForm();
+    setTimeout(() => this.loadProjects(), 100);
   }
 
-  onProjectUpdated(updatedProject: Project): void {
-    this.loadProjects();
-  }
-
-  // Nouvelles méthodes pour la gestion des utilisateurs
   onAddUsersClick(projectId: string): void {
     this.selectedProjectId = projectId;
     this.isAddUserModalOpen = true;
@@ -204,7 +213,7 @@ export class KanbanBoardComponent implements OnInit {
     if (this.selectedProjectId) {
       this.projectService.addUsersToProject(this.selectedProjectId, userIds).subscribe({
         next: () => {
-          this.loadProjects(); // Recharger les projets pour voir les changements
+          this.loadProjects();
           this.onCloseAddUserModal();
         },
         error: (error: any) => {
@@ -217,7 +226,7 @@ export class KanbanBoardComponent implements OnInit {
   onRemoveUser(data: { projectId: string, userId: string }): void {
     this.projectService.removeUserFromProject(data.projectId, data.userId).subscribe({
       next: () => {
-        this.loadProjects(); // Recharger les projets pour voir les changements
+        this.loadProjects();
       },
       error: (error: any) => {
         console.error('Erreur lors de la suppression de l\'utilisateur:', error);
@@ -228,7 +237,6 @@ export class KanbanBoardComponent implements OnInit {
   get selectedProjectTeamIds(): string[] {
     if (!this.selectedProjectId) return [];
     
-    // Chercher le projet dans toutes les colonnes
     const allProjects = [...this.ideeProjects, ...this.mvpProjects, ...this.tractionProjects, ...this.leveeProjects];
     const project = allProjects.find(p => p.id === this.selectedProjectId);
     return project ? project.team.map(member => member.id) : [];

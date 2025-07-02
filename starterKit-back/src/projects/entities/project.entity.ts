@@ -63,8 +63,8 @@ export class Project {
   @Column('simple-array', { default: '' })
   tags: string[];
 
-  @Column()
-  organisation: string; // Email de l'utilisateur qui a créé le projet
+  @Column({ nullable: true })
+  organisation?: string;
 
   @OneToMany(() => ProjectManagementTask, task => task.project)
   tasks: ProjectManagementTask[];
