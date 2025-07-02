@@ -376,9 +376,9 @@ export class ProjectManagementBoardComponent implements OnInit {
   onProjectsGenerated(result: ChatbotResponse): void {
     console.log('Projets générés par IA - Rechargement des projets');
     this.closeAIProjectModal();
-    this.loadProjects();
     
     if (result && result.projects && result.projects.length > 0) {
+      this.projects = [...this.projects, ...result.projects];
       alert(`${result.projects.length} projet(s) créé(s) avec succès ! Vous pouvez maintenant les sélectionner pour créer des tâches.`);
     }
   }
