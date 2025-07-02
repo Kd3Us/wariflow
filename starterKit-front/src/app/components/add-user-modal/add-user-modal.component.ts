@@ -21,10 +21,7 @@ export class AddUserModalComponent implements OnInit {
   selectedUsers: string[] = [];
   loading = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private teamsService: TeamsService
-  ) {}
+  constructor(private fb: FormBuilder, private teamsService: TeamsService) {}
 
   ngOnInit(): void {
     this.searchForm = this.fb.group({
@@ -35,15 +32,16 @@ export class AddUserModalComponent implements OnInit {
 
   private loadAvailableUsers(): void {
     this.loading = true;
-    this.teamsService.getAllMembers().subscribe({
+    this.teamsService.getAllTeamMembers().subscribe({
       next: (users) => {
-        this.availableUsers = users.filter(user => 
-          !this.currentTeamIds.includes(user.id)
-        );
+        this.availableUsers = users.filter(user => !this.currentTeamIds.includes(user.id));
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Erreur lors du chargement des utilisateurs:', error);
         this.loading = false;
+        // En cas d'erreur, on peut garder un fallback avec des données vides ou afficher un message d'erreur
+        this.availableUsers = [];
       }
     });
   }

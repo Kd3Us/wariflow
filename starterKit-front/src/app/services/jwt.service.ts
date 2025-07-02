@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, tap, BehaviorSubject } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
 interface VerifyTokenResponse {
-  msg: string;
-  userInfo: any;
-  activation: any;
+  success: boolean;
+  message: string;
+  token: string;
 }
 
 interface DecodedToken {
@@ -25,12 +25,45 @@ interface DecodedToken {
 export class JwtService {
   private readonly EXTERNAL_AUTH_URL = environment.externaleAuthUrl;
   private readonly VERIFY_TOKEN_URL = environment.verifyTokenUrl;
+  private readonly VERSION_NUMBER = environment.versionNumber;
+  
+  // BehaviorSubject pour observer les changements du token
+  private tokenSubject = new BehaviorSubject<DecodedToken | null>(null);
+  
+  // Observable public pour que les composants puissent s'abonner
+  public token$ = this.tokenSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    console.log('JwtService initialized with URLs:', {
+    console.log('initialized with :', {
       verifyTokenUrl: this.VERIFY_TOKEN_URL,
-      externalAuthUrl: this.EXTERNAL_AUTH_URL
+      externalAuthUrl: this.EXTERNAL_AUTH_URL,
+      version: this.VERSION_NUMBER
     });
+    
+    // Initialiser le token au démarrage
+    this.initializeToken();
+  }
+
+  /**
+   * Initialise le token au démarrage du service
+   * Vérifie d'abord l'URL, puis le sessionStorage
+   */
+  private initializeToken(): void {
+    
+    // Vérifier d'abord s'il y a un token dans l'URL
+    const tokenFromUrl = this.getTokenFromUrl();
+    if (tokenFromUrl) {
+      this.setToken(tokenFromUrl);
+      return;
+    }
+    
+    // Sinon, vérifier le sessionStorage
+    const decodedToken = this.decodeToken();
+    if (decodedToken) {
+      this.tokenSubject.next(decodedToken);
+    } else {
+      this.tokenSubject.next(null);
+    }
   }
 
   /**
@@ -39,53 +72,65 @@ export class JwtService {
    */
   public verifyTokenWithApi(): Observable<boolean> {
     const token = this.getToken();
-    console.log('verifyTokenWithApi called, token present:', !!token);
     
     if (!token) {
-      console.log('No token found in localStorage');
       return new Observable<boolean>(observer => {
         observer.next(false);
         observer.complete();
       });
     }
 
-    console.log('Sending token verification request to:', this.VERIFY_TOKEN_URL);
-    return this.http.post<VerifyTokenResponse>(this.VERIFY_TOKEN_URL, { token })
+    return this.http.post<VerifyTokenResponse>(this.VERIFY_TOKEN_URL, { token },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    )
       .pipe(
         tap(response => console.log('API verification response:', response)),
         map(response => {
-          const isValid = response.msg === 'Verified';
-          console.log('Token verification result:', isValid, 'Message:', response.msg);
+          const isValid = response.success === true;
           return isValid;
+        }),
+        // Gérer les erreurs HTTP
+        tap({
+          error: (error) => {
+            console.error('Error during token verification:', error);
+          }
         })
       );
   }
 
   /**
-   * Récupère le token depuis le localStorage
+   * Récupère le token depuis le sessionStorage
    * @returns string | null
    */
   public getToken(): string | null {
-    const token = localStorage.getItem('token');
-    console.log('getToken called, token exists:', !!token);
+    const token = sessionStorage.getItem('startupkit_SESSION');
     return token;
   }
 
   /**
-   * Sauvegarde le token dans le localStorage
+   * Sauvegarde le token dans le sessionStorage
    * @param token string
    */
   public setToken(token: string): void {
-    console.log('Setting token in localStorage');
-    localStorage.setItem('token', token);
+    console.log('Setting token in sessionStorage');
+    sessionStorage.setItem('startupkit_SESSION', token);
+    // Émettre le nouveau token décodé
+    const decodedToken = this.decodeToken();
+    this.tokenSubject.next(decodedToken);
   }
 
   /**
-   * Supprime le token du localStorage
+   * Supprime le token du sessionStorage
    */
   public removeToken(): void {
-    console.log('Removing token from localStorage');
-    localStorage.removeItem('token');
+    console.log('Removing token from sessionStorage');
+    sessionStorage.removeItem('startupkit_SESSION');
+    // Émettre null pour indiquer qu'il n'y a plus de token
+    this.tokenSubject.next(null);
   }
 
   /**
@@ -93,12 +138,9 @@ export class JwtService {
    * @returns Observable<boolean>
    */
   public checkTokenAndRedirect(): Observable<boolean> {
-    console.log('checkTokenAndRedirect called');
     const tokenFromUrl = this.getTokenFromUrl();
-    console.log('Token from URL:', !!tokenFromUrl);
 
     if (tokenFromUrl) {
-      console.log('Token found in URL, setting it in localStorage');
       this.setToken(tokenFromUrl);
     }
 
@@ -106,12 +148,11 @@ export class JwtService {
       tap(isValid => console.log('Token verification result in checkTokenAndRedirect:', isValid)),
       map(isValid => {
         if (!isValid) {
-          console.log('Token invalid, removing token and redirecting to login');
+          console.log('Token invalid, removing token');
           this.removeToken();
-          this.redirectLoginPage();
+          // Ne pas rediriger ici, laisser le guard s'en charger
           return false;
         }
-        console.log('Token valid, allowing access');
         return true;
       })
     );
@@ -140,17 +181,24 @@ export class JwtService {
   public decodeToken(): DecodedToken | null {
     const token = this.getToken();
     if (!token) {
-      console.log('No token to decode');
       return null;
     }
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Token decoded successfully:', decoded);
       return decoded;
     } catch (error) {
       console.error('Error decoding token:', error);
       return null;
     }
   }
-} 
+
+  /**
+   * Met à jour l'observable avec le token actuel
+   * Utile pour forcer une mise à jour
+   */
+  public updateTokenObservable(): void {
+    const decodedToken = this.decodeToken();
+    this.tokenSubject.next(decodedToken);
+  }
+}

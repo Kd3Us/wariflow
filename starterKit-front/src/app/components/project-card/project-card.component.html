@@ -1,154 +1,184 @@
 <div
-  class="bg-white rounded-lg shadow-md p-4 transition-all duration-300 relative mb-4 hover:shadow-lg hover:-translate-y-0.5"
-  [class.border-l-3]="isNearDeadline || isPastDeadline"
-  [class.border-l-warning]="isNearDeadline"
-  [class.border-l-error]="isPastDeadline"
-  [class.border-l-4]="true"
-  [class.border-l-primary]="project.priority === 'HIGH'"
-  [class.border-l-secondary]="project.priority === 'MEDIUM'"
-  [class.border-l-gray-300]="project.priority === 'LOW'"
->
-  <div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-white"
-       [class.bg-primary]="project.priority === 'HIGH'"
-       [class.bg-secondary]="project.priority === 'MEDIUM'"
-       [class.bg-gray-500]="project.priority === 'LOW'">
-    {{ project.priority }}
-  </div>
+      class="bg-white rounded-lg shadow-md p-4 transition-all duration-300 relative mb-4 hover:shadow-lg hover:-translate-y-0.5"
+      [class.border-l-3]="isNearDeadline || isPastDeadline"
+      [class.border-l-warning]="isNearDeadline"
+      [class.border-l-error]="isPastDeadline"
+      [class.border-l-4]="true"
+      [class.border-l-primary]="project.priority === 'HIGH'"
+      [class.border-l-secondary]="project.priority === 'MEDIUM'"
+      [class.border-l-gray-300]="project.priority === 'LOW'"
+    >
+      <!-- Priority badge -->
+      <div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-white"
+           [class.bg-primary]="project.priority === 'HIGH'"
+           [class.bg-secondary]="project.priority === 'MEDIUM'"
+           [class.bg-gray-500]="project.priority === 'LOW'">
+        {{ project.priority }}
+      </div>
 
-  <div
-    *ngIf="isNearDeadline || isPastDeadline"
-    class="absolute top-2.5 right-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-gray-400"
-    [class.bg-warning]="isNearDeadline"
-    [class.bg-error]="isPastDeadline"
-  >
-    <span class="material-icons text-xs">schedule</span>
-    {{ deadlineText }}
-  </div>
-  <br>
-
-  <div
-    *ngIf="project.isReminderActive && project.reminderDate"
-    class="absolute top-2.5 right-32 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-info text-gray-400"
-  >
-    <span class="material-icons text-xs">notifications</span>
-    {{ formatReminderDate() }}
-  </div>
-
-  <div class="flex justify-between items-start mb-2">
-    <h3 class="text-base font-semibold text-gray-800 m-0 leading-tight">{{ project.title }}</h3>
-    <div class="relative">
-      <button
-        (click)="toggleMenu()"
-        class="flex items-center justify-center w-7 h-7 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+      <!-- Deadline badge -->
+      <div
+        *ngIf="isNearDeadline || isPastDeadline"
+        class="absolute top-2.5 right-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-gray-400"
+        [class.bg-warning]="isNearDeadline"
+        [class.bg-error]="isPastDeadline"
       >
-        <span class="material-icons">more_vert</span>
-      </button>
-      
-      <div *ngIf="menuOpen" 
-           class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-        <div class="py-1">
-          <button (click)="onEdit()" 
-                  class="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-            <span class="material-icons text-base">edit</span>
-            Éditer
+        <span class="material-icons text-xs">schedule</span>
+        {{ deadlineText }}
+      </div>
+      <br>
+
+      <!-- Reminder badge -->
+      <div
+        *ngIf="project.isReminderActive && project.reminderDate"
+        class="absolute top-2.5 right-32 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-info text-gray-400"
+      >
+        <span class="material-icons text-xs">notifications</span>
+        {{ formatReminderDate() }}
+      </div>
+
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="text-base font-semibold text-gray-800 m-0 leading-tight">{{ project.title }}</h3>
+        <div class="relative">
+          <button
+            (click)="toggleMenu()"
+            class="flex items-center justify-center w-7 h-7 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <span class="material-icons">more_vert</span>
           </button>
-          <button (click)="openAddUserModal()" 
-                  class="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-            <span class="material-icons text-base">person_add</span>
-            Ajouter membre
-          </button>
-          <button (click)="onDelete()" 
-                  class="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2">
-            <span class="material-icons text-base">delete</span>
-            Supprimer
-          </button>
+          
+          <!-- Dropdown menu -->
+          <div *ngIf="menuOpen" 
+               class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+            <div class="py-1">
+              <button (click)="onEdit()" 
+                      class="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                <span class="material-icons text-base">edit</span>
+                Éditer
+              </button>
+              <button (click)="onDelete()" 
+                      class="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2">
+                <span class="material-icons text-base">delete</span>
+                Supprimer
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <p class="text-sm text-gray-600 mb-4 leading-relaxed">{{ project.description }}</p>
+      <p class="text-sm text-gray-600 mb-4 leading-relaxed">{{ project.description }}</p>
 
-  <div class="flex flex-wrap gap-1 mb-4">
-    <span *ngFor="let tag of project.tags" 
-          class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-      {{ tag }}
-    </span>
-  </div>
+      <!-- Tags -->
+      <div class="flex flex-wrap gap-1 mb-4">
+        <span *ngFor="let tag of project.tags" 
+              class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+          {{ tag }}
+        </span>
+      </div>
 
-  <!-- ✨ NOUVELLE SECTION: Affichage des instructions - SEULE MODIFICATION ✨ -->
-  <div *ngIf="project.instructions && project.instructions.length > 0" class="instructions-summary mb-4">
-    <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
-      <span class="material-icons text-sm">assignment</span>
-      <span>{{ completedInstructions }}/{{ project.instructions.length }} instructions</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-        <div 
-          class="bg-green-500 h-1.5 rounded-full transition-all duration-300"
-          [style.width.%]="instructionProgress"
+      <!-- Progress bar -->
+      <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-4 relative">
+        <div
+          class="h-full bg-secondary transition-all duration-300"
+          [style.width.%]="project.progress"
         ></div>
+        <span class="absolute -top-[18px] right-0 text-xs font-semibold text-gray-700">
+          {{ project.progress }}%
+        </span>
       </div>
-      <span class="text-xs font-medium text-gray-600">{{ instructionProgress }}%</span>
-    </div>
-  </div>
-  <!-- ✨ FIN DE LA NOUVELLE SECTION ✨ -->
 
-  <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-4 relative">
-    <div
-      class="h-full bg-secondary transition-all duration-300"
-      [style.width.%]="project.progress"
-    ></div>
-    <span class="absolute -top-[18px] right-0 text-xs font-semibold text-gray-700">
-      {{ project.progress }}%
-    </span>
-  </div>
+      <div class="flex justify-between items-center">
+        <!-- Team members avec gestion -->
+        <div class="flex items-center relative">
+          <div
+            *ngFor="let member of displayedTeamMembers; let i = index; trackBy: trackByMemberId"
+            class="w-[26px] h-[26px] rounded-full overflow-hidden border-2 border-white -ml-2 first:ml-0 relative"
+            [title]="member.name + ' - ' + member.role"
+          >
+            <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" *ngIf="member.avatar" />
+            <div class="w-full h-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-semibold" *ngIf="!member.avatar">
+              {{ member.name.charAt(0).toUpperCase() }}
+            </div>
+          </div>
+          
+          <div
+            *ngIf="additionalMembersCount > 0"
+            class="w-[26px] h-[26px] rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-[10px] font-semibold border-2 border-white -ml-2"
+            [title]="'+' + additionalMembersCount + ' membre(s)'"
+          >
+            +{{ additionalMembersCount }}
+          </div>
 
-  <div class="flex justify-between items-center">
-    <div class="flex items-center">
-      <div
-        *ngFor="let member of project.team.slice(0, 3); let i = index"
-        class="w-[26px] h-[26px] rounded-full overflow-hidden border-2 border-white -ml-2 first:ml-0 relative group cursor-pointer"
-        [title]="member.name + ' - ' + member.role"
-      >
-        <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <span class="material-icons text-white text-xs cursor-pointer" 
-                (click)="removeUser(member.id, $event)"
-                [title]="'Retirer ' + member.name">
-            close
-          </span>
+          <!-- Bouton ajouter utilisateur -->
+          <button 
+            class="w-[26px] h-[26px] rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold border-2 border-white -ml-2 hover:bg-blue-600 transition-colors"
+            (click)="onAddUsersClick($event)"
+            title="Ajouter des membres"
+          >
+            +
+          </button>
+
+          <!-- Menu équipe (optionnel pour voir tous les membres) -->
+          <button 
+            class="ml-2 text-xs text-gray-500 hover:text-gray-700 underline"
+            (click)="toggleTeamMenu($event)"
+            *ngIf="project.team.length > 0"
+          >
+            {{ project.team.length }} membre(s)
+          </button>
+
+          <!-- Menu déroulant équipe -->
+          <div *ngIf="showTeamMenu" 
+               class="absolute top-8 left-0 w-64 bg-white rounded-md shadow-lg z-20 border border-gray-200">
+            <div class="p-3">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold text-sm">Équipe du projet</span>
+                <button class="text-gray-400 hover:text-gray-600" (click)="showTeamMenu = false">×</button>
+              </div>
+              
+              <div class="max-h-32 overflow-y-auto">
+                <div 
+                  *ngFor="let member of project.team; trackBy: trackByMemberId" 
+                  class="flex items-center justify-between py-1"
+                >
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full overflow-hidden">
+                      <img [src]="member.avatar" [alt]="member.name" class="w-full h-full object-cover" *ngIf="member.avatar" />
+                      <div class="w-full h-full bg-blue-500 text-white flex items-center justify-center text-xs" *ngIf="!member.avatar">
+                        {{ member.name.charAt(0).toUpperCase() }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-xs font-medium">{{ member.name }}</div>
+                      <div class="text-xs text-gray-500">{{ member.role }}</div>
+                    </div>
+                  </div>
+                  <button 
+                    class="text-red-500 hover:text-red-700 text-xs"
+                    (click)="onRemoveUserClick($event, member.id)"
+                    title="Retirer du projet"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              
+              <button 
+                class="w-full mt-2 text-xs text-blue-600 hover:text-blue-800" 
+                (click)="onAddUsersClick($event)"
+              >
+                + Ajouter des membres
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta information -->
+        <div class="flex gap-3">
+          <div class="flex items-center gap-1 text-gray-500 text-xs">
+            <span class="material-icons text-base">schedule</span>
+            {{ getFormattedDueDate() }}
+          </div>
         </div>
       </div>
-      
-      <button
-        (click)="openAddUserModal()"
-        class="w-[26px] h-[26px] rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs hover:bg-blue-500 hover:text-white transition-colors border-2 border-white -ml-2"
-        title="Ajouter des membres"
-      >
-        <span class="material-icons text-sm">add</span>
-      </button>
-      
-      <div
-        *ngIf="project.team.length > 3"
-        class="w-[26px] h-[26px] rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-[10px] font-semibold border-2 border-white -ml-2"
-      >
-        +{{ project.team.length - 3 }}
-      </div>
     </div>
-
-    <div class="flex gap-3">
-      <div class="flex items-center gap-1 text-gray-500 text-xs">
-        <span class="material-icons text-base">schedule</span>
-        {{ getFormattedDueDate() }}
-      </div>
-    </div>
-  </div>
-
-  <app-add-user-modal
-    [isOpen]="showAddUserModal"
-    [currentTeamIds]="getCurrentTeamIds()"
-    (close)="closeAddUserModal()"
-    (userAdded)="onUsersAdded($event)">
-  </app-add-user-modal>
-</div>

@@ -2,13 +2,27 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Configuration pour accepter des payloads plus volumineux (pour les images base64)
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+  // Servir les fichiers statiques
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Enable CORS for frontend integration
   app.enableCors({
-    origin: ['http://localhost:3009', 'http://localhost:4200'],
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
@@ -27,8 +41,9 @@ async function bootstrap() {
     .setTitle('Project Lifecycle Management API')
     .setDescription('API pour la gestion du cycle de vie des projets')
     .setVersion('1.0')
-    .addTag('projects')
-    .addTag('teams')
+    .addTag('projects', 'Gestion des projets')
+    .addTag('teams', 'Gestion des équipes')
+    .addBearerAuth()
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

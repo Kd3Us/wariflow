@@ -1,6 +1,10 @@
 export const environment = {
-  // URL de l'API externe pour l'authentification
-  externaleAuthUrl: 'http://localhost:3000/auth',
-  // URL pour vérifier le token
-  verifyTokenUrl: 'http://localhost:3000/auth/verify'
+  apiProjectURL: 'https://d331iii8637gut.cloudfront.net/projects',
+  apiProjectManagementURL: 'https://d331iii8637gut.cloudfront.net/project-management',
+  apiWorkspaceURL: 'https://d331iii8637gut.cloudfront.net/workspaces',
+  apiTeamsURL: 'https://d331iii8637gut.cloudfront.net/teams',
+  externaleAuthUrl: "https://startupkit.speedpresta.com/",
+  verifyTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/login",
+  jwtSecret: "votre_secret_jwt",
+  versionNumber: 1.1
 };

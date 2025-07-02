@@ -1,38 +1,25 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: project-lifecycle-postgres
-    restart: always
-    environment:
-      POSTGRES_DB: project_lifecycle
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project-lifecycle-backend
+    restart: unless-stopped
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - project-lifecycle-network
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: project-lifecycle-pgadmin
-    restart: always
+      - "80:3009"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
+      - NODE_ENV=development
+      - DB_HOST=postgredb.speedpresta.com
+      - DB_PORT=5432
+      - DB_USERNAME=root
+      - DB_PASSWORD=admin4wfw
+      - DB_NAME=wfwdb
+      - PORT=3009
     networks:
-      - project-lifecycle-network
-
-volumes:
-  postgres_data:
+      - speedpresta-network
 
 networks:
-  project-lifecycle-network:
+  speedpresta-network:
     driver: bridge
