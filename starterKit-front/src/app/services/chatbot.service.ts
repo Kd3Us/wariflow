@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { JwtService } from './jwt.service';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { AIClientService } from './ai-client.service';
 
 export interface GenerateProjectRequest {
   description: string;
@@ -9,28 +9,11 @@ export interface GenerateProjectRequest {
   targetAudience?: string;
 }
 
-export interface ProjectTask {
-  title: string;
-  description: string;
-  stage: string;
-  estimatedDays: number;
-}
-
-export interface ProjectAnalysis {
-  projectType: string;
-  complexity: 'simple' | 'moyen' | 'complexe';
-  keywords: string[];
-  estimatedDuration: number;
-  suggestedTags: string[];
-  suggestedPriority: 'LOW' | 'MEDIUM' | 'HIGH';
-  breakdown: ProjectTask[];
-}
-
 export interface ChatbotResponse {
   success: boolean;
   message: string;
   projects: any[];
-  analysis: ProjectAnalysis;
+  analysis: any;
   suggestions: string[];
 }
 
@@ -38,43 +21,41 @@ export interface ChatbotResponse {
   providedIn: 'root'
 })
 export class ChatbotService {
-  private apiUrl = 'http://localhost:3009/chatbot';
-
-  constructor(
-    private http: HttpClient,
-    private jwtService: JwtService
-  ) {}
-
-  private getAuthHeaders(): HttpHeaders {
-    const token = this.jwtService.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-  }
+  constructor(private aiClient: AIClientService) {}
 
   generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
-    console.log('Appel API pour génération de projet:', request);
-    console.log('URL API:', `${this.apiUrl}/generate-project`);
+    console.log('🤖 Appel du microservice IA:', request);
     
-    return this.http.post<ChatbotResponse>(
-      `${this.apiUrl}/generate-project`,
-      request,
-      { headers: this.getAuthHeaders() }
+    return this.aiClient.generateProjects({
+      description: request.description,
+      context: request.context,
+      targetAudience: request.targetAudience,
+      includeAnalysis: true
+    }).pipe(
+      map(response => ({
+        success: true,
+        message: 'Projets générés via le microservice IA !',
+        projects: response.projects || [],
+        analysis: response.analysis || {},
+        suggestions: response.suggestions || []
+      })),
+      catchError(error => {
+        console.error('❌ Erreur microservice:', error);
+        return of({
+          success: false,
+          message: 'Erreur du microservice IA',
+          projects: [],
+          analysis: {},
+          suggestions: ['Microservice IA indisponible']
+        });
+      })
     );
   }
 
-  analyzeProject(request: GenerateProjectRequest): Observable<ProjectAnalysis> {
-    console.log('Appel API pour analyse de projet:', request);
-    
-    return this.http.post<ProjectAnalysis>(
-      `${this.apiUrl}/analyze-only`,
-      request,
-      { headers: this.getAuthHeaders() }
+  testConnection(): Observable<boolean> {
+    return this.aiClient.checkHealth().pipe(
+      map(() => true),
+      catchError(() => of(false))
     );
-  }
-
-  testConnection(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/test`);
   }
 }

@@ -7,7 +7,6 @@ import { LoggerModule } from './common/logger/logger.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ProjectManagementModule } from './project-management/project-management.module';
 import { DatabaseModule } from './database/database.module';
-import { ChatbotModule } from './chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { ChatbotModule } from './chatbot/chatbot.module';
     LoggerModule,
     WorkspacesModule,
     ProjectManagementModule,
-    ChatbotModule
   ],
 })
 export class AppModule {}
