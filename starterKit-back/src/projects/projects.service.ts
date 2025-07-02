@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Project, SubStep } from './entities/project.entity';
+import { Project } from './entities/project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AddUsersToProjectDto } from './dto/add-users-to-project.dto';
 import { FilterProjectsDto } from './dto/filter-projects.dto';
 import { ProjectStage, PROJECT_STAGE_ORDER } from '../common/enums/project-stage.enum';
 import { TeamsService } from '../teams/teams.service';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ProjectsService {
@@ -18,7 +17,7 @@ export class ProjectsService {
     private readonly teamsService: TeamsService,
   ) {}
 
-  async create(createProjectDto: CreateProjectDto, userEmail?: string): Promise<Project> {
+  async create(createProjectDto: CreateProjectDto, organization?: string): Promise<Project> {
     const teamMembers = await this.teamsService.findByIds(createProjectDto.teamIds);
     
     const project = this.projectRepository.create({
@@ -29,12 +28,12 @@ export class ProjectsService {
       isReminderActive: !!createProjectDto.reminderDate,
       priority: createProjectDto.priority || 'MEDIUM',
       tags: createProjectDto.tags || [],
-      organisation: userEmail || 'unknown@example.com',
-      subSteps: []
+      organisation: organization,
     });
 
     return this.projectRepository.save(project);
   }
+
 
   async findAll(filters?: FilterProjectsDto): Promise<Project[]> {
     const queryBuilder = this.projectRepository.createQueryBuilder('project')
@@ -65,6 +64,12 @@ export class ProjectsService {
       if (filters.hasActiveReminder !== undefined) {
         queryBuilder.andWhere('project.isReminderActive = :hasActiveReminder', { 
           hasActiveReminder: filters.hasActiveReminder 
+        });
+      }
+
+      if (filters.organisation) {
+        queryBuilder.andWhere('project.organisation = :organisation', { 
+          organisation: filters.organisation 
         });
       }
 
@@ -163,78 +168,6 @@ export class ProjectsService {
     return this.projectRepository.save(project);
   }
 
-  async addSubStep(projectId: string, subStepData: { title: string; description?: string }): Promise<Project> {
-    const project = await this.findOne(projectId);
-    
-    const newSubStep: SubStep = {
-      id: uuidv4(),
-      title: subStepData.title,
-      description: subStepData.description || '',
-      isCompleted: false,
-      order: project.subSteps?.length || 0,
-      createdAt: new Date()
-    };
-
-    if (!project.subSteps) {
-      project.subSteps = [];
-    }
-    
-    project.subSteps.push(newSubStep);
-    return this.projectRepository.save(project);
-  }
-
-  async updateSubStep(projectId: string, subStepId: string, updateData: Partial<SubStep>): Promise<Project> {
-    const project = await this.findOne(projectId);
-    
-    if (!project.subSteps) {
-      project.subSteps = [];
-    }
-    
-    const subStepIndex = project.subSteps.findIndex(step => step.id === subStepId);
-    
-    if (subStepIndex === -1) {
-      throw new NotFoundException(`Sub-step with ID ${subStepId} not found`);
-    }
-
-    project.subSteps[subStepIndex] = {
-      ...project.subSteps[subStepIndex],
-      ...updateData
-    };
-
-    return this.projectRepository.save(project);
-  }
-
-  async deleteSubStep(projectId: string, subStepId: string): Promise<Project> {
-    const project = await this.findOne(projectId);
-    
-    if (!project.subSteps) {
-      project.subSteps = [];
-    }
-    
-    project.subSteps = project.subSteps.filter(step => step.id !== subStepId);
-    return this.projectRepository.save(project);
-  }
-
-  async toggleSubStepCompletion(projectId: string, subStepId: string): Promise<Project> {
-    const project = await this.findOne(projectId);
-    
-    if (!project.subSteps) {
-      project.subSteps = [];
-    }
-    
-    const subStep = project.subSteps.find(step => step.id === subStepId);
-    
-    if (!subStep) {
-      throw new NotFoundException(`Sub-step with ID ${subStepId} not found`);
-    }
-
-    subStep.isCompleted = !subStep.isCompleted;
-    
-    this.updateProjectProgress(project);
-    
-    return this.projectRepository.save(project);
-  }
-
   async remove(id: string): Promise<void> {
     const result = await this.projectRepository.delete(id);
     if (result.affected === 0) {
@@ -283,12 +216,29 @@ export class ProjectsService {
       .getMany();
   }
 
-  private updateProjectProgress(project: Project): void {
-    if (!project.subSteps || project.subSteps.length === 0) {
-      return;
-    }
+  async findByOrganisation(organisation: string): Promise<Project[]> {
+    return this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.team', 'team')
+      .where('project.organisation = :organisation', { organisation })
+      .orderBy('project.createdAt', 'DESC')
+      .getMany();
+  }
 
-    const completedSteps = project.subSteps.filter(step => step.isCompleted).length;
-    project.progress = Math.round((completedSteps / project.subSteps.length) * 100);
+  async getProjectsByOrganisationAndStage(organisation: string): Promise<Record<ProjectStage, Project[]>> {
+    const projects = await this.findByOrganisation(organisation);
+    
+    const projectsByStage = {
+      [ProjectStage.IDEE]: [],
+      [ProjectStage.MVP]: [],
+      [ProjectStage.TRACTION]: [],
+      [ProjectStage.LEVEE]: [],
+    };
+
+    projects.forEach(project => {
+      projectsByStage[project.stage].push(project);
+    });
+
+    return projectsByStage;
   }
 }

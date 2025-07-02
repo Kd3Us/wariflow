@@ -5,15 +5,6 @@ export enum ProjectStage {
   LEVEE = 'LEVEE'
 }
 
-export interface SubStep {
-  id: string;
-  title: string;
-  description?: string;
-  isCompleted: boolean;
-  order: number;
-  createdAt: Date;
-}
-
 export interface TeamMember {
   id: string;
   name: string;
@@ -38,6 +29,5 @@ export interface Project {
   reminderDate?: Date;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   tags: string[];
-  organisation: string;
-  subSteps: SubStep[];
+  organisation: string; // Email de l'utilisateur qui a créé le projet
 }

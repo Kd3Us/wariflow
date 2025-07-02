@@ -124,71 +124,35 @@ export class WorkspacesController {
   })
   create(@Body() createWorkspaceDto: CreateWorkspaceDto, @Req() request: Request) {
 
-    const jwtPayload = decode(request['validatedToken']);
-    const userInfo = request['userInfo'];
-    let userEmail = userInfo?.email;
-    console.error(jwtPayload.sub)
-
-    // TODO utilisation de jsonwebtoken en attendant un fix
-    if (jwtPayload.sub) {
-      userEmail = jwtPayload.sub;
-    }
-    else {
-      throw new NotFoundException('User email not found in token');
-    }
+    const userEmail = request['userInfo']?.['sub'];
     
-    /*if (!userEmail) {
+    if (!userEmail) {
       throw new NotFoundException('User email not found in token');
-    }*/
+    }
     
     return this.workspacesService.create(createWorkspaceDto, userEmail);
   }
 
   @Get()
   @ApiBearerAuth()
-  findAll(@Req() request: Request) {
-    const userInfo = request['userInfo'];
-    const jwtPayload = decode(request['validatedToken']);
-    let userEmail = userInfo?.email;
-
-    
-
-     // TODO utilisation de jsonwebtoken en attendant un fix
-     if (jwtPayload.sub) {
-       userEmail = jwtPayload.sub;
-     }
-
-    /*if (!userEmail) {
-      throw new NotFoundException('User email not found in token');
-    }*/
-    
+  findAll() {
     return this.workspacesService.findAll();
   }
 
   @Get('user/me')
   @ApiBearerAuth()
   findMyWorkspaces(@Req() request: Request) {
-    const userInfo = request['userInfo'];
-    const jwtPayload = decode(request['validatedToken']);
-    let userEmail = userInfo?.email;
-
-    // TODO utilisation de jsonwebtoken en attendant un fix
-     if (jwtPayload.sub) {
-      userEmail = jwtPayload.sub;
-    }
-    
-    /*if (!userEmail) {
+    const userEmail = request['userInfo']?.['sub'];
+    if (!userEmail) {
       throw new NotFoundException('User email not found in token');
-    }*/
-    
+    }
     return this.workspacesService.findByUserEmail(userEmail);
   }
 
   @Get(':id')
   @ApiBearerAuth()
   async findOne(@Param('id') id: string, @Req() request: Request) {
-    const userInfo = request['userInfo'];
-    const userEmail = userInfo?.email;
+    const userEmail = request['userInfo']?.['sub'];
     
     if (!userEmail) {
       throw new NotFoundException('User email not found in token');
@@ -210,8 +174,7 @@ export class WorkspacesController {
   @Get('project/:projectId')
   @ApiBearerAuth()
   async findByProjectId(@Param('projectId') projectId: string, @Req() request: Request) {
-    const userInfo = request['userInfo'];
-    const userEmail = userInfo?.email;
+    const userEmail = request['userInfo']?.['sub'];
     
     if (!userEmail) {
       throw new NotFoundException('User email not found in token');
@@ -233,18 +196,11 @@ export class WorkspacesController {
   @Patch(':id')
   @ApiBearerAuth()
   async update(@Param('id') id: string, @Body() updateWorkspaceDto: UpdateWorkspaceDto, @Req() request: Request) {
-    const userInfo = request['userInfo'];
-    const jwtPayload = decode(request['validatedToken']);
-    let userEmail = userInfo?.email;
+    const userEmail = request['userInfo']?.['sub'];
     
-    // TODO utilisation de jsonwebtoken en attendant un fix
-    if (jwtPayload.sub) {
-      userEmail = jwtPayload.sub;
-    }
-
-    /*if (!userEmail) {
+    if (!userEmail) {
       throw new NotFoundException('User email not found in token');
-    }*/
+    }
     
     // Vérifier que le workspace existe et appartient à l'utilisateur
     const existingWorkspace = await this.workspacesService.findOne(id);
@@ -266,18 +222,11 @@ export class WorkspacesController {
   @Delete(':id')
   @ApiBearerAuth()
   async remove(@Param('id') id: string, @Req() request: Request) {
-    const jwtPayload = decode(request['validatedToken']);
-    const userInfo = request['userInfo'];
-    let userEmail = userInfo?.email;
+    const userEmail = request['userInfo']?.['sub'];
 
-    // TODO utilisation de jsonwebtoken en attendant un fix
-    if (jwtPayload.sub) {
-      userEmail = jwtPayload.sub;
-    }
-
-    /*if (!userEmail) {
+    if (!userEmail) {
       throw new NotFoundException('User email not found in token');
-    }*/
+    }
     
     // Vérifier que le workspace existe et appartient à l'utilisateur
     const existingWorkspace = await this.workspacesService.findOne(id);

@@ -31,8 +31,7 @@ import { Request } from 'express';
 @UseGuards(TokenAuthGuard)
 export class ProjectsController {
   constructor(
-    private readonly projectsService: ProjectsService,
-    private readonly tokenVerificationService: TokenVerificationService
+    private readonly projectsService: ProjectsService
   ) {}
 
   @Post()
@@ -45,12 +44,13 @@ export class ProjectsController {
     console.log('Creating project with token:', validatedToken);
     
     try {
-      const tokenData = await this.tokenVerificationService.verifyTokenAndGetUserInfo(validatedToken);
-      const userEmail = tokenData.userInfo?.email || 'unknown@example.com';
+      // Récupérer les informations utilisateur depuis le token
+      const organization = req['userInfo']?.['organization'];
       
-      return this.projectsService.create(createProjectDto, userEmail);
+      return this.projectsService.create(createProjectDto, organization);
     } catch (error) {
       console.error('Error getting user info from token:', error);
+      // En cas d'erreur, créer le projet sans email spécifique
       return this.projectsService.create(createProjectDto);
     }
   }
@@ -64,7 +64,21 @@ export class ProjectsController {
     const validatedToken = req['validatedToken'];
     console.log('Fetching projects with token:', validatedToken);
     
-    return this.projectsService.findAll(filters);
+    try {
+      // Si aucune organisation n'est spécifiée dans les filtres, utiliser celle du token
+      if (!filters.organisation) {
+        const organization = req['userInfo']?.['organization'];
+        if (organization) {
+          filters.organisation = organization;
+        }
+      }
+      
+      return this.projectsService.findAll(filters);
+    } catch (error) {
+      console.error('Error getting organization from token:', error);
+      // En cas d'erreur, continuer sans filtre d'organisation
+      return this.projectsService.findAll(filters);
+    }
   }
 
   @Get('by-stage')
@@ -76,7 +90,20 @@ export class ProjectsController {
     const validatedToken = req['validatedToken'];
     console.log('Fetching projects by stage with token:', validatedToken);
     
-    return this.projectsService.getProjectsByStage();
+    try {
+      const organization = req['userInfo']?.['organization'];
+      if (organization) {
+        // Si l'organisation est disponible, utiliser la méthode spécifique
+        return this.projectsService.getProjectsByOrganisationAndStage(organization);
+      } else {
+        // Sinon, utiliser la méthode générale
+        return this.projectsService.getProjectsByStage();
+      }
+    } catch (error) {
+      console.error('Error getting organization from token:', error);
+      // En cas d'erreur, utiliser la méthode générale
+      return this.projectsService.getProjectsByStage();
+    }
   }
 
   @Get('upcoming-deadlines')
@@ -103,6 +130,56 @@ export class ProjectsController {
     console.log('Fetching active reminders with token:', validatedToken);
     
     return this.projectsService.getActiveReminders();
+  }
+
+  @Get('my-organisation')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Récupérer les projets de mon organisation' })
+  @ApiResponse({ status: 200, description: 'Projets de mon organisation', type: [Project] })
+  @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
+  async findByMyOrganisation(@Req() req: Request): Promise<Project[]> {
+    const validatedToken = req['validatedToken'];
+    console.log('Fetching projects by my organisation with token:', validatedToken);
+    
+    try {
+      const organization = req['userInfo']?.['organization'];
+      if (!organization) {
+        throw new Error('Organisation non trouvée dans le token');
+      }
+      
+
+      if (organization == "STARTUPKIT" || organization == "SPEEDPRESTA") {
+        return this.projectsService.findAll();
+      }
+
+      
+      return this.projectsService.findByOrganisation(organization);
+    } catch (error) {
+      console.error('Error getting organization from token:', error);
+      throw new Error('Impossible de récupérer l\'organisation depuis le token');
+    }
+  }
+
+  @Get('my-organisation/by-stage')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Récupérer les projets de mon organisation groupés par étape' })
+  @ApiResponse({ status: 200, description: 'Projets de mon organisation groupés par étape' })
+  @ApiResponse({ status: 401, description: 'Token d\'authentification requis' })
+  async getProjectsByMyOrganisationAndStage(@Req() req: Request): Promise<Record<ProjectStage, Project[]>> {
+    const validatedToken = req['validatedToken'];
+    console.log('Fetching projects by my organisation and stage with token:', validatedToken);
+    
+    try {
+      const organization = req['userInfo']?.['organization'];
+      if (!organization) {
+        throw new Error('Organisation non trouvée dans le token');
+      }
+      
+      return this.projectsService.getProjectsByOrganisationAndStage(organization);
+    } catch (error) {
+      console.error('Error getting organization from token:', error);
+      throw new Error('Impossible de récupérer l\'organisation depuis le token');
+    }
   }
 
   @Get(':id')
@@ -176,55 +253,6 @@ export class ProjectsController {
     console.log('Removing user from project with token:', validatedToken);
     
     return this.projectsService.removeUserFromProject(projectId, userId);
-  }
-
-  @Post(':id/substeps')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Ajouter une sous-étape à un projet' })
-  @ApiResponse({ status: 201, description: 'Sous-étape ajoutée avec succès' })
-  @ApiResponse({ status: 404, description: 'Projet non trouvé' })
-  addSubStep(
-    @Param('id') projectId: string,
-    @Body() subStepData: { title: string; description?: string }
-  ) {
-    return this.projectsService.addSubStep(projectId, subStepData);
-  }
-
-  @Patch(':id/substeps/:subStepId')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mettre à jour une sous-étape' })
-  @ApiResponse({ status: 200, description: 'Sous-étape mise à jour avec succès' })
-  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
-  updateSubStep(
-    @Param('id') projectId: string,
-    @Param('subStepId') subStepId: string,
-    @Body() updateData: { title?: string; description?: string; isCompleted?: boolean; order?: number }
-  ) {
-    return this.projectsService.updateSubStep(projectId, subStepId, updateData);
-  }
-
-  @Patch(':id/substeps/:subStepId/toggle')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Basculer le statut de complétion d\'une sous-étape' })
-  @ApiResponse({ status: 200, description: 'Statut de la sous-étape basculé avec succès' })
-  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
-  toggleSubStepCompletion(
-    @Param('id') projectId: string,
-    @Param('subStepId') subStepId: string
-  ) {
-    return this.projectsService.toggleSubStepCompletion(projectId, subStepId);
-  }
-
-  @Delete(':id/substeps/:subStepId')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Supprimer une sous-étape' })
-  @ApiResponse({ status: 200, description: 'Sous-étape supprimée avec succès' })
-  @ApiResponse({ status: 404, description: 'Projet ou sous-étape non trouvé' })
-  deleteSubStep(
-    @Param('id') projectId: string,
-    @Param('subStepId') subStepId: string
-  ) {
-    return this.projectsService.deleteSubStep(projectId, subStepId);
   }
 
   @Delete(':id')

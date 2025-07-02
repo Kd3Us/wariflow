@@ -2,13 +2,14 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { JwtService } from '../services/jwt.service';
 import { map, catchError, of, tap } from 'rxjs';
+import { EmbedService } from '../services/embed.service';
 
 /**
  * Vérifie si le token est présent et non expiré localement
  * @param jwtService - Service JWT
  * @returns boolean - true si le token est valide localement
  */
-function isTokenValidLocally(jwtService: JwtService): boolean {
+function isTokenValidLocally(jwtService: JwtService, embedService: EmbedService): boolean {
   const token = jwtService.getToken();
   if (!token) {
     console.log('No token found in session storage');
@@ -32,23 +33,47 @@ function isTokenValidLocally(jwtService: JwtService): boolean {
     });
     return false;
   }
-
+  checkEnableEmbed(embedService);
   console.log('Token is valid locally');
   return true;
 }
 
+function checkEnableEmbed(embedService:EmbedService): void {
+  const embedIsSet = embedService.getEmbedFromUrl();
+  if (embedIsSet) {
+    embedService.setEmbed(true);
+  }
+}
+
 export const authGuard: CanActivateFn = (route, state) => {
   const jwtService = inject(JwtService);
+  const embedService = inject(EmbedService);
+  const router = inject(Router);
 
   // Vérifier d'abord si le token est valide localement
-  if (!isTokenValidLocally(jwtService)) {
+  if (!isTokenValidLocally(jwtService, embedService)) {
     // Si le token n'est pas valide localement, faire appel à l'API
     return jwtService.checkTokenAndRedirect().pipe(
       tap(isValid => console.log('AuthGuard received verification result from API:', isValid)),
+      map(isValid => {
+        if (!isValid) {
+          // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
+          setTimeout(() => {
+            jwtService.redirectLoginPage();
+          }, 0);
+          return false;
+        }
+
+        checkEnableEmbed(embedService);
+        return true;
+      }),
       catchError((error) => {
         console.error('AuthGuard caught error during token verification:', error);
         jwtService.removeToken();
-        jwtService.redirectLoginPage();
+        // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
+        setTimeout(() => {
+          jwtService.redirectLoginPage();
+        }, 0);
         return of(false);
       })
     );

@@ -43,14 +43,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // S'abonner aux changements du token
     this.tokenSubscription = this.jwtService.token$.subscribe(decodedToken => {
-      if (decodedToken) {
-        // Utilise le nom complet du token s'il existe
-        this.user.name = decodedToken.name;
-        const match = decodedToken?.sub.match(/@([^.]+)\./);
-        const organisation = match ? match[1] : "";
-        this.user.organisation = organisation.toUpperCase();
-      } else {
-        // Si pas de token, réinitialiser le nom
+      try {
+        if (decodedToken && decodedToken.name && decodedToken.sub) {
+          // Utilise le nom complet du token s'il existe
+          this.user.name = decodedToken.name;
+          const match = decodedToken.sub.match(/@([^.]+)\./);
+          const organisation = match ? match[1] : "";
+          this.user.organisation = organisation.toUpperCase();
+        } else {
+          // Si pas de token, réinitialiser le nom
+          this.user.name = '';
+          this.user.organisation = '';
+        }
+      } catch (error) {
+        console.error('Error processing token in header component:', error);
         this.user.name = '';
         this.user.organisation = '';
       }
@@ -59,7 +65,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Forcer une mise à jour du token observable au cas où il serait déjà disponible
     // mais pas encore émis par le BehaviorSubject
     setTimeout(() => {
-      this.jwtService.updateTokenObservable();
+      try {
+        this.jwtService.updateTokenObservable();
+      } catch (error) {
+        console.error('Error updating token observable:', error);
+      }
     }, 100);
   }
 

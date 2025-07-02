@@ -5,5 +5,6 @@ export const environment = {
   apiTeamsURL: 'https://d331iii8637gut.cloudfront.net/teams',
   externaleAuthUrl: "https://startupkit.speedpresta.com/",
   verifyTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/login",
-  jwtSecret: "votre_secret_jwt"
+  jwtSecret: "votre_secret_jwt",
+  versionNumber: 1.1
 };

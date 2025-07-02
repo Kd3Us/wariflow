@@ -5,6 +5,7 @@ interface CachedToken {
   isValid: boolean;
   validatedAt: Date;
   expiresAt: Date;
+  userInfo?: any;
 }
 
 @Injectable()
@@ -12,7 +13,7 @@ export class TokenCacheService {
   private tokenCache = new Map<string, CachedToken>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  addValidToken(token: string): void {
+  addValidToken(token: string, userInfo?: any): void {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + this.CACHE_DURATION);
     
@@ -21,6 +22,7 @@ export class TokenCacheService {
       isValid: true,
       validatedAt: now,
       expiresAt,
+      userInfo,
     });
   }
 
@@ -40,6 +42,16 @@ export class TokenCacheService {
     return cached.isValid;
   }
 
+  getCachedUserInfo(token: string): any {
+    const cached = this.tokenCache.get(token);
+    
+    if (!cached || new Date() > cached.expiresAt) {
+      return null;
+    }
+
+    return cached.userInfo;
+  }
+
   invalidateToken(token: string): void {
     this.tokenCache.delete(token);
   }
@@ -56,4 +68,4 @@ export class TokenCacheService {
   getCacheSize(): number {
     return this.tokenCache.size;
   }
-} 
+}

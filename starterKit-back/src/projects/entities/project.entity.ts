@@ -3,15 +3,6 @@ import { ProjectStage } from '../../common/enums/project-stage.enum';
 import { TeamMember } from '../../teams/entities/team-member.entity';
 import { ProjectManagementTask } from '../../project-management/entities/project-management-task.entity';
 
-export interface SubStep {
-  id: string;
-  title: string;
-  description?: string;
-  isCompleted: boolean;
-  order: number;
-  createdAt: Date;
-}
-
 @Entity('projects')
 export class Project {
   @PrimaryGeneratedColumn('uuid')
@@ -73,10 +64,7 @@ export class Project {
   tags: string[];
 
   @Column()
-  organisation: string;
-
-  @Column({ type: 'jsonb', default: '[]' })
-  subSteps: SubStep[];
+  organisation: string; // Email de l'utilisateur qui a créé le projet
 
   @OneToMany(() => ProjectManagementTask, task => task.project)
   tasks: ProjectManagementTask[];

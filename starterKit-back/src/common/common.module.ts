@@ -2,7 +2,6 @@ import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { TokenVerificationService } from './services/token-verification.service';
 import { TokenCacheService } from './services/token-cache.service';
 import { TokenVerificationMiddleware } from './middleware/token-verification.middleware';
-import { GlobalAuthMiddleware } from './middleware/global-auth.middleware';
 import { TokenAuthGuard } from './guards/token-auth.guard';
 import { AuthController } from './controllers/auth.controller';
 

@@ -25,6 +25,7 @@ interface DecodedToken {
 export class JwtService {
   private readonly EXTERNAL_AUTH_URL = environment.externaleAuthUrl;
   private readonly VERIFY_TOKEN_URL = environment.verifyTokenUrl;
+  private readonly VERSION_NUMBER = environment.versionNumber;
   
   // BehaviorSubject pour observer les changements du token
   private tokenSubject = new BehaviorSubject<DecodedToken | null>(null);
@@ -33,9 +34,10 @@ export class JwtService {
   public token$ = this.tokenSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    console.log('JwtService initialized with URLs:', {
+    console.log('initialized with :', {
       verifyTokenUrl: this.VERIFY_TOKEN_URL,
-      externalAuthUrl: this.EXTERNAL_AUTH_URL
+      externalAuthUrl: this.EXTERNAL_AUTH_URL,
+      version: this.VERSION_NUMBER
     });
     
     // Initialiser le token au démarrage
@@ -90,6 +92,12 @@ export class JwtService {
         map(response => {
           const isValid = response.success === true;
           return isValid;
+        }),
+        // Gérer les erreurs HTTP
+        tap({
+          error: (error) => {
+            console.error('Error during token verification:', error);
+          }
         })
       );
   }
@@ -140,9 +148,9 @@ export class JwtService {
       tap(isValid => console.log('Token verification result in checkTokenAndRedirect:', isValid)),
       map(isValid => {
         if (!isValid) {
-          console.log('Token invalid, removing token and redirecting to login');
+          console.log('Token invalid, removing token');
           this.removeToken();
-          this.redirectLoginPage();
+          // Ne pas rediriger ici, laisser le guard s'en charger
           return false;
         }
         return true;

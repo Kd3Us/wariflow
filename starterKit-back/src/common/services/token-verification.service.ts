@@ -2,6 +2,8 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import { TokenVerificationResponse } from '../interfaces/token.interface';
 import { appConfig } from '../config/app.config';
+import { decode } from 'jsonwebtoken';
+
 
 @Injectable()
 export class TokenVerificationService {
@@ -10,7 +12,6 @@ export class TokenVerificationService {
 
   async verifyToken(token: string): Promise<boolean> {
     try {
-    console.error(token)
       const response = await axios.post<TokenVerificationResponse>(
         this.API_URL,
         {
@@ -21,9 +22,10 @@ export class TokenVerificationService {
           timeout: this.TIMEOUT,
         }
       );
-      console.error(response);
+      const resposesBackend = this.setUserDataManualy(response.data,token);
+
       // Vérifier si la réponse indique un succès
-      if (response.data.msg === 'Verified') {
+      if (resposesBackend.msg === 'Verified') {
         return true;
       }
       
@@ -66,11 +68,11 @@ export class TokenVerificationService {
           timeout: this.TIMEOUT,
         }
       );
-      console.error(response);
       
       // Vérifier si la réponse indique un succès
       if (response.data.msg === 'Verified') {
-        return response.data;
+        const processedResponse = this.setUserDataManualy(response.data, token);
+        return processedResponse;
       }
       
       throw new HttpException(
@@ -101,4 +103,36 @@ export class TokenVerificationService {
       );
     }
   }
+
+
+setUserDataManualy(responseData: any, token: string): TokenVerificationResponse {
+  console.error('Response data:', responseData);
+  
+  // Vérifier si userInfo est vide, undefined, null ou un objet vide
+  if (!responseData.userInfo || 
+      (typeof responseData.userInfo === 'object' && Object.keys(responseData.userInfo).length === 0)) {
+    
+    console.log('UserInfo is empty, extracting data from token');
+    const jwtPayload = decode(token);
+    console.log('JWT Payload:', jwtPayload);
+    
+    if (jwtPayload && typeof jwtPayload === 'object') {
+      const match = jwtPayload.sub?.match(/@([^.]+)\./);
+      const organisation = match ? match[1] : "";
+      
+      // Créer un nouvel objet avec les données du JWT
+      const userInfoFromToken = {
+        ...jwtPayload,
+        organization: organisation.toUpperCase()
+      };
+      
+      responseData.userInfo = userInfoFromToken;
+      console.log('UserInfo set from token:', userInfoFromToken);
+    }
+  } else {
+    console.log('UserInfo already exists:', responseData.userInfo);
+  }
+  
+  return responseData;
+}
 }

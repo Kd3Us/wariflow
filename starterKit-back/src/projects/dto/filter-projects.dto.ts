@@ -39,4 +39,9 @@ export class FilterProjectsDto {
   @IsOptional()
   @IsEnum(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc';
+
+  @ApiProperty({ required: false, description: 'Filtrer par organisation (email)' })
+  @IsOptional()
+  @IsString()
+  organisation?: string;
 }

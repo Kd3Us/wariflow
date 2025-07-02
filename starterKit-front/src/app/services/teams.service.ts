@@ -34,9 +34,8 @@ export interface UpdateTeamMemberDto {
 export class TeamsService {
   private apiUrl = environment.apiTeamsURL;
 
-  constructor(
-    private http: HttpClient,
-    private jwtService: JwtService,
+  constructor(private http: HttpClient,
+        private jwtService: JwtService,
   ) {}
 
   private getAuthHeaders(): HttpHeaders {
@@ -47,11 +46,24 @@ export class TeamsService {
     });
   }
 
+
   getAllTeamMembers(): Observable<TeamMember[]> {
     return this.http.get<TeamMember[]>(this.apiUrl, { headers: this.getAuthHeaders() });
   }
 
   getTeamMember(id: string): Observable<TeamMember> {
     return this.http.get<TeamMember>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
+  }
+
+  createTeamMember(teamMember: CreateTeamMemberDto): Observable<TeamMember> {
+    return this.http.post<TeamMember>(this.apiUrl, teamMember, { headers: this.getAuthHeaders() });
+  }
+
+  updateTeamMember(id: string, teamMember: UpdateTeamMemberDto): Observable<TeamMember> {
+    return this.http.put<TeamMember>(`${this.apiUrl}/${id}`, teamMember, { headers: this.getAuthHeaders() });
+  }
+
+  deleteTeamMember(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 }
