@@ -4,7 +4,8 @@ export const environment = {
   apiWorkspaceURL: 'https://d331iii8637gut.cloudfront.net/workspaces',
   apiTeamsURL: 'https://d331iii8637gut.cloudfront.net/teams',
   externaleAuthUrl: "https://startupkit.speedpresta.com/",
+  revokeTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/logout",
   verifyTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/login",
   jwtSecret: "votre_secret_jwt",
-  versionNumber: 1.1
+  versionNumber: 1.2
 };

@@ -150,6 +150,7 @@ Créez un fichier `.env` basé sur `.env.example` :
 ```bash
 # SpeedPresta API Configuration
 SPEEDPRESTA_API_URL=https://api.speedpresta.com/api/v1/verify/token
+SPEEDPRESTA_LOGOUT_API_URL=https://api.speedpresta.com/api/v1/revoke/token
 SPEEDPRESTA_TIMEOUT=10000
 ```
 

@@ -1,8 +1,12 @@
 import { Controller, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { TokenVerificationService } from '../services/token-verification.service';
 
 @Controller('auth')
 export class AuthController {
+
+  constructor(private readonly tokenVerification: TokenVerificationService) {}
+
   @Post('login')
   async login(@Req() req: Request, @Res() res: Response) {
     try {
@@ -27,4 +31,31 @@ export class AuthController {
       });
     }
   }
-} 
+
+  @Post('logout')
+  async logout(@Req() req: Request, @Res() res: Response) {
+    try {
+      const token = req.body.token || req['validatedToken'];
+      
+      if (!token) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'Token is required',
+        });
+      }
+
+      await this.tokenVerification.revokeToken(token);
+      
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'Token revoked successfully',
+      });
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Logout failed',
+        error: error.message,
+      });
+    }
+  }
+}

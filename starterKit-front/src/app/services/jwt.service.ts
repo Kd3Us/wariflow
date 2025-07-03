@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, tap, BehaviorSubject } from 'rxjs';
+import { Observable, map, tap, BehaviorSubject, Subscription, catchError, of } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
 interface VerifyTokenResponse {
@@ -26,6 +26,7 @@ export class JwtService {
   private readonly EXTERNAL_AUTH_URL = environment.externaleAuthUrl;
   private readonly VERIFY_TOKEN_URL = environment.verifyTokenUrl;
   private readonly VERSION_NUMBER = environment.versionNumber;
+  private readonly LOGOUT_URL = environment.revokeTokenUrl;
   
   // BehaviorSubject pour observer les changements du token
   private tokenSubject = new BehaviorSubject<DecodedToken | null>(null);
@@ -127,10 +128,54 @@ export class JwtService {
    * Supprime le token du sessionStorage
    */
   public removeToken(): void {
-    console.log('Removing token from sessionStorage');
+    
+    // Supprimer le token local immédiatement
+    this.clearLocalToken();
+    
+    // Appeler l'API de logout en arrière-plan (optionnel)
+    this.removeTokenUser().subscribe({
+      next: (success) => {
+        console.log('Logout API call result:', success);
+      },
+      error: (error) => {
+        console.error('Logout API call failed:', error);
+      }
+    });
+  }
+
+  private clearLocalToken(): void {
+    console.log('Clearing local token');
     sessionStorage.removeItem('startupkit_SESSION');
     // Émettre null pour indiquer qu'il n'y a plus de token
     this.tokenSubject.next(null);
+  }
+
+  private removeTokenUser(): Observable<boolean> {
+    const token = this.getToken();
+    
+    if (!token) {
+      console.log('No token found for logout');
+      return new Observable<boolean>(observer => {
+        observer.next(false);
+        observer.complete();
+      });
+    }
+
+    return this.http.post<any>(this.LOGOUT_URL, { token }, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }).pipe(
+      map((res: any) => {
+        console.log('Logout API response:', res);
+        return res && res.success === true;
+      }),
+      tap({
+        error: (error) => {
+          console.error('Logout API error:', error);
+        }
+      })
+    );
   }
 
   /**
@@ -154,6 +199,11 @@ export class JwtService {
           return false;
         }
         return true;
+      }),
+      catchError((error) => {
+        console.error('Error in checkTokenAndRedirect:', error);
+        this.removeToken();
+        return of(false);
       })
     );
   }

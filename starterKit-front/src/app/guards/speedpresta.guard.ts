@@ -2,9 +2,11 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { JwtService } from '../services/jwt.service';
 import { map, catchError, of, tap } from 'rxjs';
+import { EmbedService } from '../services/embed.service';
 
 export const speedprestaGuard: CanActivateFn = (route, state) => {
   const jwtService = inject(JwtService);
+  const embedService = inject(EmbedService);
   const router = inject(Router);
 
   return jwtService.checkTokenAndRedirect().pipe(
@@ -27,6 +29,12 @@ export const speedprestaGuard: CanActivateFn = (route, state) => {
       const hasSpeedpresta = decodedToken.sub.toLowerCase().includes('speedpresta');
       
       if (!hasSpeedpresta) {
+
+        // check si mode embed
+        const embedIsSet = embedService.getEmbedFromUrl();
+        if (embedIsSet) {
+          return true;
+        }
         // Rediriger vers une page d'accès refusé ou la page d'accueil
         router.navigate(['/']);
         return false;

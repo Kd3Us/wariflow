@@ -48,15 +48,16 @@ function checkEnableEmbed(embedService:EmbedService): void {
 export const authGuard: CanActivateFn = (route, state) => {
   const jwtService = inject(JwtService);
   const embedService = inject(EmbedService);
-  const router = inject(Router);
 
   // Vérifier d'abord si le token est valide localement
   if (!isTokenValidLocally(jwtService, embedService)) {
+    console.log('AuthGuard: Token not valid locally, checking with API');
     // Si le token n'est pas valide localement, faire appel à l'API
     return jwtService.checkTokenAndRedirect().pipe(
       tap(isValid => console.log('AuthGuard received verification result from API:', isValid)),
       map(isValid => {
         if (!isValid) {
+          console.log('AuthGuard: Token invalid, redirecting to login');
           // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
           setTimeout(() => {
             jwtService.redirectLoginPage();
@@ -64,11 +65,13 @@ export const authGuard: CanActivateFn = (route, state) => {
           return false;
         }
 
+        console.log('AuthGuard: Token valid, allowing access');
         checkEnableEmbed(embedService);
         return true;
       }),
       catchError((error) => {
         console.error('AuthGuard caught error during token verification:', error);
+        console.log('AuthGuard: Error occurred, removing token and redirecting');
         jwtService.removeToken();
         // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
         setTimeout(() => {
@@ -79,6 +82,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     );
   }
 
+  console.log('AuthGuard: Token valid locally, allowing access');
   // Si le token est valide localement, on peut directement retourner true
   return of(true);
 };

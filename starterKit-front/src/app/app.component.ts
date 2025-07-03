@@ -30,6 +30,6 @@ export class AppComponent implements OnInit {
       if (res) {
         this.isEmbedRoute = res;
       }
-    })
+    });
   }
 }

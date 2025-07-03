@@ -9,6 +9,8 @@ import { decode } from 'jsonwebtoken';
 export class TokenVerificationService {
   private readonly API_URL = appConfig.speedPresta.apiUrl;
   private readonly TIMEOUT = appConfig.speedPresta.timeout;
+  private readonly API_LOGOUT_URL = appConfig.speedPresta.apiLogoutUrl;
+  private readonly APP_ID = appConfig.speedPresta.appId;
 
   async verifyToken(token: string): Promise<boolean> {
     try {
@@ -16,7 +18,7 @@ export class TokenVerificationService {
         this.API_URL,
         {
           token,
-          appid: "StartupKitZEiuiiKW0b21UKxSCxVSmrEtsfUCeVWiMxK2NdTAWd8HE6D4hOlmzI72EnPNpq4mS4AjD9aFzDU6A3oTMaDO5BnGn4il8EbEbIeKElPaIYHWmVm7PcE7sO"
+          appid: this.APP_ID
         },
         {
           timeout: this.TIMEOUT,
@@ -51,6 +53,46 @@ export class TokenVerificationService {
       throw new HttpException(
         'Token verification failed',
         HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }
+
+  async revokeToken(token: string): Promise<any> {
+    try {
+      const response = await axios.post(
+        this.API_LOGOUT_URL,
+        {
+          token,
+          appid: this.APP_ID
+        },
+        {
+          timeout: this.TIMEOUT,
+        }
+      );
+      
+      console.log('Token revocation response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Token revocation error:', error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          throw new HttpException(
+            'Invalid token for revocation',
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        if (error.response?.status === 500) {
+          throw new HttpException(
+            'Token revocation service unavailable',
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+      }
+      
+      throw new HttpException(
+        'Token revocation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -105,34 +147,34 @@ export class TokenVerificationService {
   }
 
 
-setUserDataManualy(responseData: any, token: string): TokenVerificationResponse {
-  console.error('Response data:', responseData);
-  
-  // Vérifier si userInfo est vide, undefined, null ou un objet vide
-  if (!responseData.userInfo || 
-      (typeof responseData.userInfo === 'object' && Object.keys(responseData.userInfo).length === 0)) {
+  setUserDataManualy(responseData: any, token: string): TokenVerificationResponse {
+    console.error('Response data:', responseData);
     
-    console.log('UserInfo is empty, extracting data from token');
-    const jwtPayload = decode(token);
-    console.log('JWT Payload:', jwtPayload);
-    
-    if (jwtPayload && typeof jwtPayload === 'object') {
-      const match = jwtPayload.sub?.match(/@([^.]+)\./);
-      const organisation = match ? match[1] : "";
+    // Vérifier si userInfo est vide, undefined, null ou un objet vide
+    if (!responseData.userInfo || 
+        (typeof responseData.userInfo === 'object' && Object.keys(responseData.userInfo).length === 0)) {
       
-      // Créer un nouvel objet avec les données du JWT
-      const userInfoFromToken = {
-        ...jwtPayload,
-        organization: organisation.toUpperCase()
-      };
+      console.log('UserInfo is empty, extracting data from token');
+      const jwtPayload = decode(token);
+      console.log('JWT Payload:', jwtPayload);
       
-      responseData.userInfo = userInfoFromToken;
-      console.log('UserInfo set from token:', userInfoFromToken);
+      if (jwtPayload && typeof jwtPayload === 'object') {
+        const match = jwtPayload.sub?.match(/@([^.]+)\./);
+        const organisation = match ? match[1] : "";
+        
+        // Créer un nouvel objet avec les données du JWT
+        const userInfoFromToken = {
+          ...jwtPayload,
+          organization: organisation.toUpperCase()
+        };
+        
+        responseData.userInfo = userInfoFromToken;
+        console.log('UserInfo set from token:', userInfoFromToken);
+      }
+    } else {
+      console.log('UserInfo already exists:', responseData.userInfo);
     }
-  } else {
-    console.log('UserInfo already exists:', responseData.userInfo);
+    
+    return responseData;
   }
-  
-  return responseData;
-}
 }

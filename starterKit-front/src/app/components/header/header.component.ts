@@ -82,6 +82,5 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout() {
     this.jwtService.removeToken();
-    this.jwtService.redirectLoginPage();
   }
 }

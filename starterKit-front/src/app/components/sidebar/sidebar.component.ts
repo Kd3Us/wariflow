@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { JwtService } from '../../services/jwt.service';
 import { Subscription } from 'rxjs';
+import { EmbedService } from '../../services/embed.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,14 +15,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     private tokenSubscription: Subscription | null = null;
     decodedToken: any;
+    isEmbedRoute = false;
 
     constructor(
-      private jwtService: JwtService
+      private jwtService: JwtService,
+      private embedService: EmbedService
     ) {}
 
 
   ngOnInit(): void {
     this.decodedToken = this.jwtService.decodeToken();
+    this.embedService.embed$.subscribe(res => {
+      if (res) {
+        this.isEmbedRoute = res;
+      }
+    })
   }
     
   ngOnDestroy(): void {

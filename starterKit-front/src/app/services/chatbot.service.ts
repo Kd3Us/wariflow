@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { AIClientService } from './ai-client.service';
+import { ProjectStage } from '../models/project.model';
+import { environment } from '../../environments/environment';
+import { JwtService } from './jwt.service';
 
 export interface GenerateProjectRequest {
   description: string;
@@ -21,7 +25,21 @@ export interface ChatbotResponse {
   providedIn: 'root'
 })
 export class ChatbotService {
-  constructor(private aiClient: AIClientService) {}
+  private apiUrl = environment.apiProjectURL.replace('/projects', '') || 'http://localhost:3000';
+
+  constructor(
+    private aiClient: AIClientService,
+    private http: HttpClient,
+    private jwtService: JwtService
+  ) {}
+
+  private getAuthHeaders() {
+    const token = this.jwtService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  }
 
   generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
     console.log('🤖 Appel du microservice IA:', request);
@@ -32,15 +50,59 @@ export class ChatbotService {
       targetAudience: request.targetAudience,
       includeAnalysis: true
     }).pipe(
-      map(response => ({
-        success: true,
-        message: 'Projets générés via le microservice IA !',
-        projects: response.projects || [],
-        analysis: response.analysis || {},
-        suggestions: response.suggestions || []
-      })),
+      switchMap(response => {
+        console.log('🎯 STRUCTURE COMPLÈTE de la réponse IA:', JSON.stringify(response, null, 2));
+        console.log('🔍 response.projects:', response.projects);
+        console.log('🔍 Premier projet:', response.projects?.[0]);
+        console.log('🔍 Tasks du premier projet:', response.projects?.[0]?.tasks);
+        
+        if (response.projects && response.projects.length > 0) {
+          console.log('💾 Sauvegarde des projets en base locale...');
+          
+          const savePromises = response.projects.map((project: any, index: number) => 
+            this.http.post(`${this.apiUrl}/projects`, {
+              title: project.name || project.title || `Projet IA ${index + 1} - ${request.description.substring(0, 30)}`,
+              description: project.description || request.description,
+              stage: ProjectStage.IDEE,
+              progress: 0,
+              deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              teamIds: [],
+              priority: 'MEDIUM',
+              tags: []
+            }, { headers: this.getAuthHeaders() }).toPromise()
+          );
+
+          return Promise.all(savePromises).then(savedProjects => {
+            console.log('✅ Projets sauvés en local:', savedProjects.length);
+            return {
+              success: true,
+              message: `${savedProjects.length} projets générés et sauvés !`,
+              projects: savedProjects,
+              analysis: response.analysis || {},
+              suggestions: response.suggestions || []
+            };
+          }).catch(saveError => {
+            console.error('❌ Erreur sauvegarde:', saveError);
+            return {
+              success: true,
+              message: 'Projets générés mais non sauvés localement',
+              projects: response.projects || [],
+              analysis: response.analysis || {},
+              suggestions: response.suggestions || ['Erreur de sauvegarde locale']
+            };
+          });
+        }
+
+        return of({
+          success: true,
+          message: 'Projets générés via le microservice IA !',
+          projects: response.projects || [],
+          analysis: response.analysis || {},
+          suggestions: response.suggestions || []
+        });
+      }),
       catchError(error => {
-        console.error('❌ Erreur microservice:', error);
+        console.error('❌ Erreur microservice IA:', error);
         return of({
           success: false,
           message: 'Erreur du microservice IA',
