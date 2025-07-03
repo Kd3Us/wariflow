@@ -59,8 +59,8 @@ export class ChatbotService {
         if (response.projects && response.projects.length > 0) {
           console.log('💾 Sauvegarde des projets en base locale...');
           
-          const savePromises = response.projects.map((project: any, index: number) => 
-            this.http.post(`${this.apiUrl}/projects`, {
+          const savePromises = response.projects.map(async (project: any, index: number) => {
+            const savedProject: any = await this.http.post(`${this.apiUrl}/projects`, {
               title: project.name || project.title || `Projet IA ${index + 1} - ${request.description.substring(0, 30)}`,
               description: project.description || request.description,
               stage: ProjectStage.IDEE,
@@ -69,14 +69,38 @@ export class ChatbotService {
               teamIds: [],
               priority: 'MEDIUM',
               tags: []
-            }, { headers: this.getAuthHeaders() }).toPromise()
-          );
+            }, { headers: this.getAuthHeaders() }).toPromise();
+
+            if (project.tasks && project.tasks.length > 0 && savedProject) {
+              console.log(`💾 Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
+              
+              const taskPromises = project.tasks.map((task: any) => 
+                this.http.post(`${this.apiUrl}/project-management`, {
+                  title: task.name || task.title || 'Tâche IA',
+                  description: task.description || 'Tâche générée par IA',
+                  stage: 'PENDING',
+                  priority: task.priority || 'MEDIUM',
+                  projectId: savedProject.id,
+                  progress: 0,
+                  estimatedHours: task.estimatedHours || null,
+                  deadline: task.deadline ? new Date(task.deadline) : null,
+                  assignedTo: [],
+                  tags: task.tags || []
+                }, { headers: this.getAuthHeaders() }).toPromise()
+              );
+
+              await Promise.all(taskPromises);
+              console.log(`✅ ${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
+            }
+
+            return savedProject;
+          });
 
           return Promise.all(savePromises).then(savedProjects => {
             console.log('✅ Projets sauvés en local:', savedProjects.length);
             return {
               success: true,
-              message: `${savedProjects.length} projets générés et sauvés !`,
+              message: `${savedProjects.length} projets générés et sauvés avec leurs tâches !`,
               projects: savedProjects,
               analysis: response.analysis || {},
               suggestions: response.suggestions || []
@@ -85,7 +109,7 @@ export class ChatbotService {
             console.error('❌ Erreur sauvegarde:', saveError);
             return {
               success: true,
-              message: 'Projets générés mais non sauvés localement',
+              message: 'Projets générés mais erreur lors de la sauvegarde',
               projects: response.projects || [],
               analysis: response.analysis || {},
               suggestions: response.suggestions || ['Erreur de sauvegarde locale']

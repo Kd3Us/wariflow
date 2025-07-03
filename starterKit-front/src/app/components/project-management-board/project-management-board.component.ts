@@ -438,4 +438,6 @@ export class ProjectManagementBoardComponent implements OnInit {
     const task = allTasks.find(t => t.id === this.selectedTaskId);
     return task ? task.assignedTo.map(member => member.id) : [];
   }
+
+  
 }

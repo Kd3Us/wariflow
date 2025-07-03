@@ -25,7 +25,8 @@ export const jwtInterceptor: HttpInterceptorFn = (request: HttpRequest<unknown>,
     '/auth/verify',
     '/auth/login',
     '/auth/logout',
-    '/auth/refresh'
+    '/auth/refresh',
+    '13.38.32.181:3001'
   ];
 
   // Ne pas intercepter les requêtes d'authentification
