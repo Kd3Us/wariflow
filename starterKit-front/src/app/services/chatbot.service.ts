@@ -42,7 +42,7 @@ export class ChatbotService {
   }
 
   generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
-    console.log('🤖 Appel du microservice IA:', request);
+    console.log('Appel du microservice IA:', request);
     
     return this.aiClient.generateProjects({
       description: request.description,
@@ -51,13 +51,13 @@ export class ChatbotService {
       includeAnalysis: true
     }).pipe(
       switchMap(response => {
-        console.log('🎯 STRUCTURE COMPLÈTE de la réponse IA:', JSON.stringify(response, null, 2));
-        console.log('🔍 response.projects:', response.projects);
-        console.log('🔍 Premier projet:', response.projects?.[0]);
-        console.log('🔍 Tasks du premier projet:', response.projects?.[0]?.tasks);
+        console.log('STRUCTURE COMPLÈTE de la réponse IA:', JSON.stringify(response, null, 2));
+        console.log('response.projects:', response.projects);
+        console.log('Premier projet:', response.projects?.[0]);
+        console.log('Tasks du premier projet:', response.projects?.[0]?.tasks);
         
         if (response.projects && response.projects.length > 0) {
-          console.log('💾 Sauvegarde des projets en base locale...');
+          console.log('Sauvegarde des projets en base locale...');
           
           const savePromises = response.projects.map(async (project: any, index: number) => {
             const savedProject: any = await this.http.post(`${this.apiUrl}/projects`, {
@@ -72,7 +72,7 @@ export class ChatbotService {
             }, { headers: this.getAuthHeaders() }).toPromise();
 
             if (project.tasks && project.tasks.length > 0 && savedProject) {
-              console.log(`💾 Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
+              console.log(`Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
               
               const taskPromises = project.tasks.map((task: any) => 
                 this.http.post(`${this.apiUrl}/project-management`, {
@@ -90,14 +90,14 @@ export class ChatbotService {
               );
 
               await Promise.all(taskPromises);
-              console.log(`✅ ${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
+              console.log(`${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
             }
 
             return savedProject;
           });
 
           return Promise.all(savePromises).then(savedProjects => {
-            console.log('✅ Projets sauvés en local:', savedProjects.length);
+            console.log('Projets sauvés en local:', savedProjects.length);
             return {
               success: true,
               message: `${savedProjects.length} projets générés et sauvés avec leurs tâches !`,
@@ -106,7 +106,7 @@ export class ChatbotService {
               suggestions: response.suggestions || []
             };
           }).catch(saveError => {
-            console.error('❌ Erreur sauvegarde:', saveError);
+            console.error('Erreur sauvegarde:', saveError);
             return {
               success: true,
               message: 'Projets générés mais erreur lors de la sauvegarde',
@@ -126,7 +126,7 @@ export class ChatbotService {
         });
       }),
       catchError(error => {
-        console.error('❌ Erreur microservice IA:', error);
+        console.error('Erreur microservice IA:', error);
         return of({
           success: false,
           message: 'Erreur du microservice IA',
@@ -134,6 +134,53 @@ export class ChatbotService {
           analysis: {},
           suggestions: ['Microservice IA indisponible']
         });
+      })
+    );
+  }
+
+  generateTasksForProject(request: any): Observable<any[]> {
+    console.log('Génération de tâches pour le projet:', request);
+    
+    return this.aiClient.generateProjects({
+      description: request.description,
+      projectId: request.projectId,
+      taskGeneration: true
+    }).pipe(
+      switchMap((response: any) => {
+        console.log('Réponse IA pour tâches:', response);
+        
+        // Le microservice retourne des projets avec des tâches, on extrait les tâches du premier projet
+        if (response.projects && response.projects.length > 0 && response.projects[0].tasks) {
+          const tasks = response.projects[0].tasks;
+          console.log(`Sauvegarde de ${tasks.length} tâches pour le projet ${request.projectId}`);
+          
+          const taskPromises = tasks.map((task: any) => 
+            this.http.post(`${this.apiUrl}/project-management`, {
+              title: task.name || task.title || 'Tâche IA',
+              description: task.description || 'Tâche générée par IA',
+              stage: 'PENDING',
+              priority: task.priority || 'MEDIUM',
+              projectId: request.projectId,
+              progress: 0,
+              estimatedHours: task.estimatedHours || null,
+              deadline: task.deadline ? new Date(task.deadline) : null,
+              assignedTo: [],
+              tags: task.tags || []
+            }, { headers: this.getAuthHeaders() }).toPromise()
+          );
+
+          return Promise.all(taskPromises).then((savedTasks: any[]) => {
+            console.log(`${savedTasks.length} tâches sauvées`);
+            return savedTasks;
+          });
+        }
+
+        console.log('Aucune tâche trouvée dans la réponse IA');
+        return Promise.resolve([]);
+      }),
+      catchError((error: any) => {
+        console.error('Erreur génération tâches:', error);
+        return of([]);
       })
     );
   }

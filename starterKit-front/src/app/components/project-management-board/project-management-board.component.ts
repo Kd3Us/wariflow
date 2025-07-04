@@ -232,8 +232,10 @@ import { ChatbotResponse } from '../../services/chatbot.service';
     <!-- AI Project Modal -->
     <app-ai-project-modal
       *ngIf="showAiProjectModal"
+      [projects]="projects"
       (close)="closeAIProjectModal()"
       (projectsGenerated)="onProjectsGenerated($event)"
+      (tasksGenerated)="onTasksGenerated($event)"
     ></app-ai-project-modal>
   `
 })
@@ -250,7 +252,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   showAiProjectModal = false;
   isNewTask = true;
   
-  // Gestion des projets
   projects: Project[] = [];
   selectedProjectId: string = '';
   selectedProject: Project | null = null;
@@ -271,7 +272,6 @@ export class ProjectManagementBoardComponent implements OnInit {
     this.loadProjects();
     this.loadTasks();
     
-    // S'abonner aux changements de tâches
     this.projectManagementService.tasks$.subscribe(tasks => {
       this.organizeTasks(tasks);
     });
@@ -294,7 +294,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   onProjectChange(projectId: string): void {
     this.selectedProject = this.projects.find(p => p.id === projectId) || null;
     
-    // Charger les tâches du projet sélectionné
     if (projectId) {
       this.projectManagementService.getTasksByProject(projectId).subscribe(tasks => {
         this.organizeTasks(tasks);
@@ -305,7 +304,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   }
 
   organizeTasks(tasks: ProjectManagementTask[]): void {
-    // Filtrer par projet sélectionné si un projet est sélectionné
     const filteredTasks = this.selectedProjectId ? 
       tasks.filter(task => task.projectId === this.selectedProjectId) : 
       tasks;
@@ -327,7 +325,6 @@ export class ProjectManagementBoardComponent implements OnInit {
         event.currentIndex,
       );
       
-      // Déterminer la nouvelle étape
       const task = event.container.data[event.currentIndex];
       let newStage: ProjectManagementStage;
       
@@ -343,15 +340,12 @@ export class ProjectManagementBoardComponent implements OnInit {
         return;
       }
       
-      // Mettre à jour l'étape de la tâche
       task.stage = newStage;
       
-      // Si la tâche passe à DONE, mettre la progression à 100%
       if (newStage === ProjectManagementStage.DONE) {
         task.progress = 100;
       }
       
-      // Mettre à jour via l'API
       this.projectManagementService.updateTaskStage(task.id, newStage).subscribe(() => {
         this.loadTasks();
       });
@@ -382,6 +376,16 @@ export class ProjectManagementBoardComponent implements OnInit {
       alert(`${result.projects.length} projet(s) créé(s) avec succès ! Vous pouvez maintenant les sélectionner pour créer des tâches.`);
     }
   }
+
+  onTasksGenerated(tasks: any[]): void {
+    console.log('Tâches générées par IA:', tasks);
+    this.closeAIProjectModal();
+    
+    if (tasks && tasks.length > 0) {
+      this.loadTasks();
+      alert(`${tasks.length} tâche(s) générée(s) avec succès pour le projet sélectionné !`);
+    }
+  }
   
   editTask(task: ProjectManagementTask): void {
     this.isNewTask = false;
@@ -404,7 +408,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   
   saveTask(taskData: Partial<ProjectManagementTask>): void {
     if (this.isNewTask) {
-      // S'assurer que le projet sélectionné est assigné à la nouvelle tâche
       const newTaskData = {
         ...taskData,
         projectId: this.selectedProjectId
@@ -427,7 +430,6 @@ export class ProjectManagementBoardComponent implements OnInit {
   }
 
   onRemoveUser(data: { taskId: string, userId: string }): void {
-    // Pour l'instant, on simule la suppression
     console.log('Removing user', data.userId, 'from task', data.taskId);
   }
 
@@ -438,6 +440,4 @@ export class ProjectManagementBoardComponent implements OnInit {
     const task = allTasks.find(t => t.id === this.selectedTaskId);
     return task ? task.assignedTo.map(member => member.id) : [];
   }
-
-  
 }

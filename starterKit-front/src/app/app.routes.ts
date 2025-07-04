@@ -5,29 +5,26 @@ import { speedprestaGuard } from './guards/speedpresta.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'kanban',
+    redirectTo: 'project-management',
     pathMatch: 'full'
   },
   {
     path: 'kanban',
-    loadComponent: () => import('./components/kanban-board/kanban-board.component').then(m => m.KanbanBoardComponent)
-    // GUARDS DÉSACTIVÉS POUR LE DÉVELOPPEMENT
-    // canActivate: [speedprestaGuard]
+    loadComponent: () => import('./components/kanban-board/kanban-board.component').then(m => m.KanbanBoardComponent),
+    canActivate: [speedprestaGuard]
   },
   {
     path: 'methodology',
-    loadComponent: () => import('./components/methodology/methodology.component').then(m => m.MethodologyComponent)
-    // GUARDS DÉSACTIVÉS POUR LE DÉVELOPPEMENT
-    // canActivate: [authGuard]
+    loadComponent: () => import('./components/methodology/methodology.component').then(m => m.MethodologyComponent),
+    canActivate: [authGuard]
   },
   {
     path: 'project-management',
-    loadComponent: () => import('./components/project-management-board/project-management-board.component').then(m => m.ProjectManagementBoardComponent)
-    // GUARDS DÉSACTIVÉS POUR LE DÉVELOPPEMENT
-    // canActivate: [authGuard]
+    loadComponent: () => import('./components/project-management-board/project-management-board.component').then(m => m.ProjectManagementBoardComponent),
+    canActivate: [authGuard]
   },
   {
     path: '**',
-    redirectTo: 'kanban'
+    redirectTo: 'project-management'
   }
 ];
