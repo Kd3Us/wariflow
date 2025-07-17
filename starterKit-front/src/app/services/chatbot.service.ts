@@ -54,104 +54,88 @@ export class ChatbotService {
     }).pipe(
       switchMap(async (response) => {
         console.log('STRUCTURE COMPLÈTE de la réponse IA:', JSON.stringify(response, null, 2));
-        console.log('response.projects:', response.projects);
-        console.log('Premier projet:', response.projects?.[0]);
-        console.log('Tasks du premier projet:', response.projects?.[0]?.tasks);
+        console.log('response.analysis:', response.analysis);
+        console.log('Tâches ML générées:', response.analysis?.project_tasks?.ml_generated_tasks);
 
-        if (response.projects && response.projects.length > 0) {
-          console.log('Début de la sauvegarde des projets...');
+        if (response.analysis?.project_tasks?.ml_generated_tasks && response.analysis.project_tasks.ml_generated_tasks.length > 0) {
+          const tasks = response.analysis.project_tasks.ml_generated_tasks;
+          
+          console.log('Début de la création du projet avec tâches ML...');
           
           try {
-            const savedProjects = [];
-            
-            for (const project of response.projects) {
-              console.log('Sauvegarde du projet:', project.title);
+            // 1. Créer le projet principal
+            const projectData = {
+              title: response.analysis.project_classification?.project_type || 'Projet IA',
+              description: request.description,
+              stage: 'IDEE',
+              priority: 'MEDIUM',
+              deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 jours
+              tags: ['ia-generated'],
+              teamIds: [],
+              progress: 0
+            };
+
+            console.log('Création du projet:', projectData);
+
+            const savedProject = await this.http.post(`${this.apiUrl}/projects`, projectData, { 
+              headers: this.getAuthHeaders() 
+            }).toPromise() as any;
+
+            console.log('Projet créé avec succès:', savedProject);
+
+            // 2. Ajouter les tâches au projet créé
+            if (savedProject?.id) {
+              console.log(`Ajout de ${tasks.length} tâches au projet ${savedProject.id}`);
               
-              const projectData = {
-                title: project.title || project.name || 'Projet IA',
-                description: project.description || 'Projet généré par IA',
-                stage: this.mapStageToEnum(project.stage || 'IDEE'),
-                priority: project.priority || 'MEDIUM',
-                deadline: project.deadline ? new Date(project.deadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                tags: project.tags || [],
-                teamIds: [],
-                progress: 0
-              };
+              const savedTasks = [];
+              for (const task of tasks) {
+                try {
+                  const taskData = {
+                    title: task.name || 'Tâche IA',
+                    description: task.description || 'Tâche générée par IA',
+                    stage: 'PENDING',
+                    priority: task.priority || 'MEDIUM',
+                    projectId: savedProject.id,
+                    progress: 0,
+                    estimatedHours: task.estimatedHours || null,
+                    deadline: null,
+                    assignedTo: [],
+                    tags: task.tags || []
+                  };
 
-              console.log('Données du projet à sauver:', projectData);
+                  const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
+                    headers: this.getAuthHeaders() 
+                  }).toPromise();
 
-              try {
-                const savedProject = await this.http.post(`${this.apiUrl}/projects`, projectData, { 
-                  headers: this.getAuthHeaders() 
-                }).toPromise() as any;
-
-                console.log('Projet sauvé avec succès:', savedProject);
-                savedProjects.push(savedProject);
-
-                if (project.tasks && project.tasks.length > 0 && savedProject?.id) {
-                  console.log(`Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
-                  
-                  const savedTasks = [];
-                  for (const task of project.tasks) {
-                    try {
-                      const taskData = {
-                        title: task.name || task.title || 'Tâche IA',
-                        description: task.description || 'Tâche générée par IA',
-                        stage: 'PENDING',
-                        priority: task.priority || 'MEDIUM',
-                        projectId: savedProject.id,
-                        progress: 0,
-                        estimatedHours: task.estimatedHours || null,
-                        deadline: task.deadline ? new Date(task.deadline) : null,
-                        assignedTo: [],
-                        tags: task.tags || []
-                      };
-
-                      const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
-                        headers: this.getAuthHeaders() 
-                      }).toPromise();
-
-                      savedTasks.push(savedTask);
-                      console.log(`Tâche sauvée: ${task.name || task.title}`);
-                    } catch (taskError) {
-                      console.error('Erreur sauvegarde tâche:', taskError);
-                    }
-                  }
-                  console.log(`${savedTasks.length}/${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
+                  savedTasks.push(savedTask);
+                  console.log(`Tâche ajoutée: ${task.name}`);
+                } catch (taskError) {
+                  console.error('Erreur ajout tâche:', taskError);
                 }
-              } catch (projectError) {
-                console.error('Erreur sauvegarde projet:', projectError);
-                throw projectError;
               }
+
+              console.log(`Projet créé avec ${savedTasks.length}/${tasks.length} tâches`);
+              
+              return {
+                success: true,
+                message: `Projet créé avec ${savedTasks.length} tâches !`,
+                projects: [{ ...savedProject, tasks: savedTasks }],
+                analysis: response.analysis,
+                suggestions: ['Projet et tâches créés avec succès']
+              };
             }
-
-            console.log('Tous les projets sauvés avec succès:', savedProjects.length);
-            return {
-              success: true,
-              message: `${savedProjects.length} projets générés et sauvés avec leurs tâches !`,
-              projects: savedProjects,
-              analysis: response.analysis || {},
-              suggestions: response.suggestions || []
-            };
-
-          } catch (saveError) {
-            console.error('Erreur lors de la sauvegarde:', saveError);
-            return {
-              success: false,
-              message: 'Erreur lors de la sauvegarde des projets',
-              projects: response.projects || [],
-              analysis: response.analysis || {},
-              suggestions: ['Erreur de sauvegarde: ' + (saveError as any)?.message || 'Erreur inconnue']
-            };
+          } catch (error) {
+            console.error('Erreur création projet:', error);
+            throw error;
           }
         }
 
         return {
           success: true,
-          message: 'Projets générés via le microservice IA mais aucun projet à sauvegarder',
-          projects: response.projects || [],
+          message: 'Analyse ML terminée mais aucune tâche générée',
+          projects: [],
           analysis: response.analysis || {},
-          suggestions: response.suggestions || []
+          suggestions: ['Aucune tâche générée par le ML']
         };
       }),
       catchError(error => {
@@ -180,9 +164,11 @@ export class ChatbotService {
     }).pipe(
       switchMap(async (response: any) => {
         console.log('Réponse IA pour tâches:', response);
+        console.log('Structure détaillée:', response.analysis?.project_tasks);
+        console.log('Tâches ML:', response.analysis?.project_tasks?.ml_generated_tasks);
         
-        if (response.projects && response.projects.length > 0 && response.projects[0].tasks) {
-          const tasks = response.projects[0].tasks;
+        if (response.analysis?.project_tasks?.ml_generated_tasks && response.analysis.project_tasks.ml_generated_tasks.length > 0) {
+          const tasks = response.analysis.project_tasks.ml_generated_tasks;
           console.log(`Sauvegarde de ${tasks.length} tâches pour le projet ${request.projectId}`);
           
           const savedTasks = [];

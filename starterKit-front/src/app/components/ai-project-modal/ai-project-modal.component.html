@@ -109,8 +109,8 @@
               [(ngModel)]="maxTasks"
               (ngModelChange)="onMaxTasksChange()"
               name="maxTasks"
-              min="1"
-              max="25"
+              min="3"
+              max="15"
               step="1"
               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
@@ -120,16 +120,13 @@
                 [(ngModel)]="maxTasks"
                 (ngModelChange)="onMaxTasksChange()"
                 name="maxTasksInput"
-                min="1"
-                max="25"
+                min="3"
+                max="15"
                 class="w-16 border border-gray-300 rounded-md px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <span class="text-sm text-gray-600">tâches</span>
             </div>
           </div>
-          <p class="mt-1 text-sm text-gray-500">
-            Entre 1 et 25 tâches. Plus il y a de tâches, plus le projet sera détaillé.
-          </p>
         </div>
       </div>
 

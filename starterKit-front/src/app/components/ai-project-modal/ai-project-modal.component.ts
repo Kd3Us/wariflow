@@ -94,8 +94,8 @@ export class AiProjectModalComponent {
       return;
     }
 
-    if (this.maxTasks < 1 || this.maxTasks > 25) {
-      this.error = 'Le nombre de tâches doit être entre 1 et 25';
+    if (this.maxTasks < 3 || this.maxTasks > 15) {
+      this.error = 'Le nombre de tâches doit être entre 3 et 15';
       return;
     }
 
