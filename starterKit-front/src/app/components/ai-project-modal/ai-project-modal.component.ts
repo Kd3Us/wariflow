@@ -19,11 +19,13 @@ export class AiProjectModalComponent {
 
   generationType: 'new-project' | 'add-tasks' = 'new-project';
   selectedProjectId = '';
+  maxTasks = 5;
 
   request: GenerateProjectRequest = {
     description: '',
     context: '',
-    targetAudience: ''
+    targetAudience: '',
+    maxTasks: 5
   };
 
   isLoading = false;
@@ -33,11 +35,17 @@ export class AiProjectModalComponent {
   constructor(private chatbotService: ChatbotService) {}
 
   onSubmit(): void {
+    this.request.maxTasks = this.maxTasks;
+    
     if (this.generationType === 'add-tasks') {
       this.generateTasksForProject();
     } else {
       this.generateNewProject();
     }
+  }
+
+  onMaxTasksChange(): void {
+    this.request.maxTasks = this.maxTasks;
   }
 
   private generateNewProject(): void {
@@ -46,11 +54,16 @@ export class AiProjectModalComponent {
       return;
     }
 
+    if (this.maxTasks < 1 || this.maxTasks > 25) {
+      this.error = 'Le nombre de tâches doit être entre 1 et 25';
+      return;
+    }
+
     this.isLoading = true;
     this.error = null;
     this.lastResult = null;
 
-    console.log('Génération de projets IA démarrée');
+    console.log('Génération de projets IA démarrée avec', this.maxTasks, 'tâches');
 
     this.chatbotService.generateProject(this.request).subscribe({
       next: (result) => {
@@ -81,15 +94,23 @@ export class AiProjectModalComponent {
       return;
     }
 
+    if (this.maxTasks < 1 || this.maxTasks > 25) {
+      this.error = 'Le nombre de tâches doit être entre 1 et 25';
+      return;
+    }
+
     this.isLoading = true;
     this.error = null;
     this.lastResult = null;
 
-    console.log('Génération de tâches IA démarrée');
+    console.log('Génération de tâches IA démarrée avec', this.maxTasks, 'tâches');
 
     const request = {
       description: this.request.description,
-      projectId: this.selectedProjectId
+      context: this.request.context,
+      targetAudience: this.request.targetAudience,
+      projectId: this.selectedProjectId,
+      maxTasks: this.maxTasks
     };
 
     this.chatbotService.generateTasksForProject(request).subscribe({

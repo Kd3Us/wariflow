@@ -11,6 +11,7 @@ export interface GenerateProjectRequest {
   description: string;
   context?: string;
   targetAudience?: string;
+  maxTasks?: number;
 }
 
 export interface ChatbotResponse {
@@ -48,56 +49,83 @@ export class ChatbotService {
       description: request.description,
       context: request.context,
       targetAudience: request.targetAudience,
+      maxTasks: request.maxTasks || 5,
       includeAnalysis: true
     }).pipe(
-      switchMap(response => {
+      switchMap(async (response) => {
         console.log('STRUCTURE COMPLÈTE de la réponse IA:', JSON.stringify(response, null, 2));
         console.log('response.projects:', response.projects);
         console.log('Premier projet:', response.projects?.[0]);
         console.log('Tasks du premier projet:', response.projects?.[0]?.tasks);
-        
+
         if (response.projects && response.projects.length > 0) {
-          console.log('Sauvegarde des projets en base locale...');
+          console.log('Début de la sauvegarde des projets...');
           
-          const savePromises = response.projects.map(async (project: any, index: number) => {
-            const savedProject: any = await this.http.post(`${this.apiUrl}/projects`, {
-              title: project.name || project.title || `Projet IA ${index + 1} - ${request.description.substring(0, 30)}`,
-              description: project.description || request.description,
-              stage: ProjectStage.IDEE,
-              progress: 0,
-              deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-              teamIds: [],
-              priority: 'MEDIUM',
-              tags: []
-            }, { headers: this.getAuthHeaders() }).toPromise();
-
-            if (project.tasks && project.tasks.length > 0 && savedProject) {
-              console.log(`Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
+          try {
+            const savedProjects = [];
+            
+            for (const project of response.projects) {
+              console.log('Sauvegarde du projet:', project.title);
               
-              const taskPromises = project.tasks.map((task: any) => 
-                this.http.post(`${this.apiUrl}/project-management`, {
-                  title: task.name || task.title || 'Tâche IA',
-                  description: task.description || 'Tâche générée par IA',
-                  stage: 'PENDING',
-                  priority: task.priority || 'MEDIUM',
-                  projectId: savedProject.id,
-                  progress: 0,
-                  estimatedHours: task.estimatedHours || null,
-                  deadline: task.deadline ? new Date(task.deadline) : null,
-                  assignedTo: [],
-                  tags: task.tags || []
-                }, { headers: this.getAuthHeaders() }).toPromise()
-              );
+              const projectData = {
+                title: project.title || project.name || 'Projet IA',
+                description: project.description || 'Projet généré par IA',
+                stage: this.mapStageToEnum(project.stage || 'IDEE'),
+                priority: project.priority || 'MEDIUM',
+                deadline: project.deadline ? new Date(project.deadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                tags: project.tags || [],
+                teamIds: [],
+                progress: 0
+              };
 
-              await Promise.all(taskPromises);
-              console.log(`${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
+              console.log('Données du projet à sauver:', projectData);
+
+              try {
+                const savedProject = await this.http.post(`${this.apiUrl}/projects`, projectData, { 
+                  headers: this.getAuthHeaders() 
+                }).toPromise() as any;
+
+                console.log('Projet sauvé avec succès:', savedProject);
+                savedProjects.push(savedProject);
+
+                if (project.tasks && project.tasks.length > 0 && savedProject?.id) {
+                  console.log(`Sauvegarde de ${project.tasks.length} tâches pour le projet ${savedProject.id}`);
+                  
+                  const savedTasks = [];
+                  for (const task of project.tasks) {
+                    try {
+                      const taskData = {
+                        title: task.name || task.title || 'Tâche IA',
+                        description: task.description || 'Tâche générée par IA',
+                        stage: 'PENDING',
+                        priority: task.priority || 'MEDIUM',
+                        projectId: savedProject.id,
+                        progress: 0,
+                        estimatedHours: task.estimatedHours || null,
+                        deadline: task.deadline ? new Date(task.deadline) : null,
+                        assignedTo: [],
+                        tags: task.tags || []
+                      };
+
+                      const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
+                        headers: this.getAuthHeaders() 
+                      }).toPromise();
+
+                      savedTasks.push(savedTask);
+                      console.log(`Tâche sauvée: ${task.name || task.title}`);
+                    } catch (taskError) {
+                      console.error('Erreur sauvegarde tâche:', taskError);
+                    }
+                  }
+                  console.log(`${savedTasks.length}/${project.tasks.length} tâches sauvées pour le projet ${savedProject.id}`);
+                }
+              } catch (projectError) {
+                console.error('Erreur sauvegarde projet:', projectError);
+                throw projectError;
+              }
             }
 
-            return savedProject;
-          });
-
-          return Promise.all(savePromises).then(savedProjects => {
-            console.log('Projets sauvés en local:', savedProjects.length);
+            console.log('Tous les projets sauvés avec succès:', savedProjects.length);
             return {
               success: true,
               message: `${savedProjects.length} projets générés et sauvés avec leurs tâches !`,
@@ -105,25 +133,26 @@ export class ChatbotService {
               analysis: response.analysis || {},
               suggestions: response.suggestions || []
             };
-          }).catch(saveError => {
-            console.error('Erreur sauvegarde:', saveError);
+
+          } catch (saveError) {
+            console.error('Erreur lors de la sauvegarde:', saveError);
             return {
-              success: true,
-              message: 'Projets générés mais erreur lors de la sauvegarde',
+              success: false,
+              message: 'Erreur lors de la sauvegarde des projets',
               projects: response.projects || [],
               analysis: response.analysis || {},
-              suggestions: response.suggestions || ['Erreur de sauvegarde locale']
+              suggestions: ['Erreur de sauvegarde: ' + (saveError as any)?.message || 'Erreur inconnue']
             };
-          });
+          }
         }
 
-        return of({
+        return {
           success: true,
-          message: 'Projets générés via le microservice IA !',
+          message: 'Projets générés via le microservice IA mais aucun projet à sauvegarder',
           projects: response.projects || [],
           analysis: response.analysis || {},
           suggestions: response.suggestions || []
-        });
+        };
       }),
       catchError(error => {
         console.error('Erreur microservice IA:', error);
@@ -132,7 +161,7 @@ export class ChatbotService {
           message: 'Erreur du microservice IA',
           projects: [],
           analysis: {},
-          suggestions: ['Microservice IA indisponible']
+          suggestions: ['Microservice IA indisponible: ' + (error?.message || 'Erreur inconnue')]
         });
       })
     );
@@ -143,40 +172,52 @@ export class ChatbotService {
     
     return this.aiClient.generateProjects({
       description: request.description,
+      context: request.context || '',
+      targetAudience: request.targetAudience || '',
       projectId: request.projectId,
+      maxTasks: request.maxTasks || 5,
       taskGeneration: true
     }).pipe(
-      switchMap((response: any) => {
+      switchMap(async (response: any) => {
         console.log('Réponse IA pour tâches:', response);
         
-        // Le microservice retourne des projets avec des tâches, on extrait les tâches du premier projet
         if (response.projects && response.projects.length > 0 && response.projects[0].tasks) {
           const tasks = response.projects[0].tasks;
           console.log(`Sauvegarde de ${tasks.length} tâches pour le projet ${request.projectId}`);
           
-          const taskPromises = tasks.map((task: any) => 
-            this.http.post(`${this.apiUrl}/project-management`, {
-              title: task.name || task.title || 'Tâche IA',
-              description: task.description || 'Tâche générée par IA',
-              stage: 'PENDING',
-              priority: task.priority || 'MEDIUM',
-              projectId: request.projectId,
-              progress: 0,
-              estimatedHours: task.estimatedHours || null,
-              deadline: task.deadline ? new Date(task.deadline) : null,
-              assignedTo: [],
-              tags: task.tags || []
-            }, { headers: this.getAuthHeaders() }).toPromise()
-          );
+          const savedTasks = [];
+          for (const task of tasks) {
+            try {
+              const taskData = {
+                title: task.name || task.title || 'Tâche IA',
+                description: task.description || 'Tâche générée par IA',
+                stage: 'PENDING',
+                priority: task.priority || 'MEDIUM',
+                projectId: request.projectId,
+                progress: 0,
+                estimatedHours: task.estimatedHours || null,
+                deadline: task.deadline ? new Date(task.deadline) : null,
+                assignedTo: [],
+                tags: task.tags || []
+              };
 
-          return Promise.all(taskPromises).then((savedTasks: any[]) => {
-            console.log(`${savedTasks.length} tâches sauvées`);
-            return savedTasks;
-          });
+              const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
+                headers: this.getAuthHeaders() 
+              }).toPromise();
+
+              savedTasks.push(savedTask);
+              console.log(`Tâche sauvée: ${task.name || task.title}`);
+            } catch (taskError) {
+              console.error('Erreur sauvegarde tâche:', taskError);
+            }
+          }
+
+          console.log(`${savedTasks.length}/${tasks.length} tâches sauvées`);
+          return savedTasks;
         }
 
         console.log('Aucune tâche trouvée dans la réponse IA');
-        return Promise.resolve([]);
+        return [];
       }),
       catchError((error: any) => {
         console.error('Erreur génération tâches:', error);
@@ -190,5 +231,16 @@ export class ChatbotService {
       map(() => true),
       catchError(() => of(false))
     );
+  }
+
+  private mapStageToEnum(stage: string): ProjectStage {
+    const stageMap: { [key: string]: ProjectStage } = {
+      'IDEE': ProjectStage.IDEE,
+      'MVP': ProjectStage.MVP,
+      'TRACTION': ProjectStage.TRACTION,
+      'LEVEE': ProjectStage.LEVEE
+    };
+    
+    return stageMap[stage.toUpperCase()] || ProjectStage.IDEE;
   }
 }
