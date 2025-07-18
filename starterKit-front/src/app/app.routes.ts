@@ -5,7 +5,7 @@ import { speedprestaGuard } from './guards/speedpresta.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'project-management',
+    redirectTo: 'kanban',
     pathMatch: 'full'
   },
   {
@@ -25,6 +25,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'project-management'
+    redirectTo: 'kanban'
   }
 ];

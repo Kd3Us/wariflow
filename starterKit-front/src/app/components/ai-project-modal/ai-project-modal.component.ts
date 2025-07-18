@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatbotService, GenerateProjectRequest, ChatbotResponse } from '../../services/chatbot.service';
+import { ProjectService } from '../../services/project.service';
 import { Project } from '../../models/project.model';
 import { ProjectManagementTask } from '../../models/project-management.model';
 
@@ -11,7 +12,7 @@ import { ProjectManagementTask } from '../../models/project-management.model';
   imports: [CommonModule, FormsModule],
   templateUrl: './ai-project-modal.component.html'
 })
-export class AiProjectModalComponent {
+export class AiProjectModalComponent implements OnInit {
   @Input() projects: Project[] = [];
   @Output() close = new EventEmitter<void>();
   @Output() projectsGenerated = new EventEmitter<ChatbotResponse>();
@@ -32,7 +33,23 @@ export class AiProjectModalComponent {
   error: string | null = null;
   lastResult: ChatbotResponse | null = null;
 
-  constructor(private chatbotService: ChatbotService) {}
+  constructor(
+    private chatbotService: ChatbotService,
+    private projectService: ProjectService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadProjects();
+  }
+
+  private loadProjects(): void {
+    if (this.projects.length === 0) {
+      this.projectService.getProjects().subscribe(projects => {
+        this.projects = projects;
+        console.log('Projets chargés dans la modale:', this.projects.length);
+      });
+    }
+  }
 
   onSubmit(): void {
     this.request.maxTasks = this.maxTasks;
@@ -54,7 +71,7 @@ export class AiProjectModalComponent {
       return;
     }
 
-    if (this.maxTasks < 1 || this.maxTasks > 25) {
+    if (this.maxTasks < 3 || this.maxTasks > 15) {
       this.error = 'Le nombre de tâches doit être entre 1 et 25';
       return;
     }
@@ -95,7 +112,7 @@ export class AiProjectModalComponent {
     }
 
     if (this.maxTasks < 3 || this.maxTasks > 15) {
-      this.error = 'Le nombre de tâches doit être entre 3 et 15';
+      this.error = 'Le nombre de tâches doit être entre 1 et 25';
       return;
     }
 
@@ -136,7 +153,6 @@ export class AiProjectModalComponent {
       }
     });
   }
-
   onCancel(): void {
     this.close.emit();
   }

@@ -1,5 +1,7 @@
 <div class="overlay" (click)="onCancel()"></div>
 <div class="modal">
+  <!-- Loader -->
+  <app-loader *ngIf="isLoading$ | async"></app-loader>
   <div class="modal-header">
     <h2>{{ project ? 'Edit Project' : 'New Project' }}</h2>
     <button class="close-button" (click)="onCancel()">
@@ -9,61 +11,64 @@
   
   <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
     <div class="form-group">
-      <label for="title">Title</label>
-      <input type="text" id="title" formControlName="title" placeholder="Project title">
+      <label for="title">Titre du projet</label>
+      <input type="text" id="title" formControlName="title" placeholder="Titre du projet">
       <div class="error-message" *ngIf="projectForm.get('title')?.invalid && projectForm.get('title')?.touched">
-        Title is required and must be at least 3 characters
+        Le titre est requis et doit comporter au moins 3 caractères.
       </div>
     </div>
     
     <div class="form-group">
       <label for="description">Description</label>
-      <textarea id="description" formControlName="description" placeholder="Project description" rows="3"></textarea>
+      <div class="flex">
+        <textarea id="description" formControlName="description" placeholder="Décrivez le projet..." rows="3" class="flex-grow border border-gray-300 rounded-l-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" #inputDescriptionText></textarea>
+        <button type="button" (click)="correctWord(inputDescriptionText.value, 'DESCRIPTION')" class="bg-gray-400 text-white px-4 rounded-r-lg hover:bg-gray-700">Améliorer</button>
+      </div>
       <div class="error-message" *ngIf="projectForm.get('description')?.invalid && projectForm.get('description')?.touched">
-        Description is required
+        La description est requise.
       </div>
     </div>
     
     <div class="form-group">
-      <label for="stage">Stage</label>
+      <label for="stage">Phase</label>
       <select id="stage" formControlName="stage">
         <option *ngFor="let stage of projectStages" [value]="stage">{{ stage }}</option>
       </select>
     </div>
     
     <div class="form-group">
-      <label for="priority">Priority</label>
+      <label for="priority">Priorité</label>
       <select id="priority" formControlName="priority">
         <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
       </select>
     </div>
     
     <div class="form-group">
-      <label for="progress">Progress ({{ projectForm.get('progress')?.value }}%)</label>
+      <label for="progress">Progression ({{ projectForm.get('progress')?.value }}%)</label>
       <input type="range" id="progress" formControlName="progress" min="0" max="100" step="5">
     </div>
     
     <div class="form-group">
-      <label for="deadline">Deadline</label>
+      <label for="deadline">Échéance</label>
       <input type="date" id="deadline" formControlName="deadline">
       <div class="error-message" *ngIf="projectForm.get('deadline')?.invalid && projectForm.get('deadline')?.touched">
-        Deadline is required
+        L'échéance est requise.
       </div>
     </div>
 
     <div class="form-group">
-      <label for="reminderDate">Reminder Date (Optional)</label>
+      <label for="reminderDate">Date de rappel (facultatif)</label>
       <input type="date" id="reminderDate" formControlName="reminderDate">
     </div>
 
     <div class="form-group">
-      <label for="tags">Tags (comma-separated)</label>
-      <input type="text" id="tags" formControlName="tags" placeholder="tag1, tag2, tag3">
+      <label for="tags">Tags (séparés par une virgule)</label>
+      <input type="text" id="tags" formControlName="tags" placeholder="Mobile, Rencontre, Musique">
     </div>
     
     <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="onCancel()">Cancel</button>
-      <button type="submit" class="btn-primary" [disabled]="projectForm.invalid">Save</button>
+      <button type="button" class="btn-secondary" (click)="onCancel()">Annuler</button>
+      <button type="submit" class="btn-primary" [disabled]="projectForm.invalid">Enregistrer</button>
     </div>
   </form>
 </div>

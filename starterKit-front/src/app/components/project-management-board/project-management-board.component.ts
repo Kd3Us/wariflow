@@ -10,6 +10,7 @@ import { TaskCardComponent } from './task-card/task-card.component';
 import { TaskFormComponent } from './task-form/task-form.component';
 import { AiProjectModalComponent } from '../ai-project-modal/ai-project-modal.component';
 import { LoaderComponent } from '../loader/loader.component';
+import { ProjectManagementOnboardingComponent } from '../onboarding/project-management-onboarding.component';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { ChatbotResponse } from '../../services/chatbot.service';
@@ -24,6 +25,7 @@ import { ChatbotResponse } from '../../services/chatbot.service';
     TaskFormComponent, 
     AiProjectModalComponent,
     LoaderComponent,
+    ProjectManagementOnboardingComponent,
     FormsModule
   ],
   template: `
@@ -35,12 +37,21 @@ import { ChatbotResponse } from '../../services/chatbot.service';
         <h1 class="text-2xl font-semibold text-gray-800">Gestion de Projet</h1>
         <div class="flex gap-2">
           <button
+            (click)="showOnboarding()"
+            class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-blue-700"
+            title="Guide d'utilisation"
+          >
+            <span class="material-icons text-lg">help</span>
+            Guide
+          </button>
+          <!--<button
             (click)="openAIProjectForm()"
+            [disabled]="!selectedProjectId"
             class="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-purple-700"
           >
             <span class="material-icons text-lg">auto_awesome</span>
             Générer avec IA
-          </button>
+          </button>-->
           <button
             (click)="openTaskForm()"
             class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
@@ -85,7 +96,7 @@ import { ChatbotResponse } from '../../services/chatbot.service';
         <!-- PENDING Column -->
         <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
           <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.PENDING }}</h2>
+            <h2 class="text-base font-semibold text-gray-700 m-0">{{ getStageTranslation(ProjectManagementStage.PENDING) }}</h2>
             <span class="ml-2 px-2 py-0.5 bg-gray-200 rounded-full text-xs text-gray-600">{{ pendingTasks.length }}</span>
             <button
               (click)="openTaskForm(ProjectManagementStage.PENDING)"
@@ -119,7 +130,7 @@ import { ChatbotResponse } from '../../services/chatbot.service';
         <!-- INPROGRESS Column -->
         <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
           <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.INPROGRESS }}</h2>
+            <h2 class="text-base font-semibold text-gray-700 m-0">{{ getStageTranslation(ProjectManagementStage.INPROGRESS) }}</h2>
             <span class="ml-2 px-2 py-0.5 bg-blue-200 rounded-full text-xs text-blue-800">{{ inProgressTasks.length }}</span>
             <button
               (click)="openTaskForm(ProjectManagementStage.INPROGRESS)"
@@ -153,7 +164,7 @@ import { ChatbotResponse } from '../../services/chatbot.service';
         <!-- TEST Column -->
         <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
           <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.TEST }}</h2>
+            <h2 class="text-base font-semibold text-gray-700 m-0">{{ getStageTranslation(ProjectManagementStage.TEST) }}</h2>
             <span class="ml-2 px-2 py-0.5 bg-yellow-200 rounded-full text-xs text-yellow-800">{{ testTasks.length }}</span>
             <button
               (click)="openTaskForm(ProjectManagementStage.TEST)"
@@ -187,7 +198,7 @@ import { ChatbotResponse } from '../../services/chatbot.service';
         <!-- DONE Column -->
         <div class="flex-1 min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4 flex flex-col h-full">
           <div class="flex items-center mb-4">
-            <h2 class="text-base font-semibold text-gray-700 m-0">{{ ProjectManagementStage.DONE }}</h2>
+            <h2 class="text-base font-semibold text-gray-700 m-0">{{ getStageTranslation(ProjectManagementStage.DONE) }}</h2>
             <span class="ml-2 px-2 py-0.5 bg-green-200 rounded-full text-xs text-green-800">{{ doneTasks.length }}</span>
             <button
               (click)="openTaskForm(ProjectManagementStage.DONE)"
@@ -237,6 +248,12 @@ import { ChatbotResponse } from '../../services/chatbot.service';
       (projectsGenerated)="onProjectsGenerated($event)"
       (tasksGenerated)="onTasksGenerated($event)"
     ></app-ai-project-modal>
+
+    <!-- Project Management Onboarding -->
+    <app-project-management-onboarding
+      *ngIf="showProjectManagementOnboarding"
+      (close)="closeOnboarding()"
+    ></app-project-management-onboarding>
   `
 })
 export class ProjectManagementBoardComponent implements OnInit {
@@ -246,10 +263,19 @@ export class ProjectManagementBoardComponent implements OnInit {
   inProgressTasks: ProjectManagementTask[] = [];
   testTasks: ProjectManagementTask[] = [];
   doneTasks: ProjectManagementTask[] = [];
+
+  // Traductions des étapes en français
+  stageTranslations = {
+    [ProjectManagementStage.PENDING]: 'À faire',
+    [ProjectManagementStage.INPROGRESS]: 'En cours',
+    [ProjectManagementStage.TEST]: 'Test',
+    [ProjectManagementStage.DONE]: 'Terminé'
+  };
   
   selectedTask: ProjectManagementTask | null = null;
   showTaskForm = false;
   showAiProjectModal = false;
+  showProjectManagementOnboarding = false;
   isNewTask = true;
   
   projects: Project[] = [];
@@ -354,7 +380,8 @@ export class ProjectManagementBoardComponent implements OnInit {
 
   openTaskForm(stage: ProjectManagementStage = ProjectManagementStage.PENDING): void {
     this.isNewTask = true;
-    this.selectedTask = null;
+    this.selectedTask = {} as ProjectManagementTask;
+    this.selectedTask['stage'] = stage
     this.showTaskForm = true;
   }
 
@@ -372,8 +399,9 @@ export class ProjectManagementBoardComponent implements OnInit {
     this.closeAIProjectModal();
     
     if (result && result.projects && result.projects.length > 0) {
-      this.projects = [...this.projects, ...result.projects];
-      alert(`${result.projects.length} projet(s) créé(s) avec succès ! Vous pouvez maintenant les sélectionner pour créer des tâches.`);
+      this.projectService.refreshProjects();
+      
+      this.loadProjects();
     }
   }
 
@@ -383,7 +411,6 @@ export class ProjectManagementBoardComponent implements OnInit {
     
     if (tasks && tasks.length > 0) {
       this.loadTasks();
-      alert(`${tasks.length} tâche(s) générée(s) avec succès pour le projet sélectionné !`);
     }
   }
   
@@ -439,5 +466,17 @@ export class ProjectManagementBoardComponent implements OnInit {
     const allTasks = [...this.pendingTasks, ...this.inProgressTasks, ...this.testTasks, ...this.doneTasks];
     const task = allTasks.find(t => t.id === this.selectedTaskId);
     return task ? task.assignedTo.map(member => member.id) : [];
+  }
+
+  showOnboarding(): void {
+    this.showProjectManagementOnboarding = true;
+  }
+
+  closeOnboarding(): void {
+    this.showProjectManagementOnboarding = false;
+  }
+
+  getStageTranslation(stage: ProjectManagementStage): string {
+    return this.stageTranslations[stage] || stage;
   }
 }

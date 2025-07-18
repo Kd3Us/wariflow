@@ -23,7 +23,6 @@ import { UpdateStageDto } from './dto/update-stage.dto';
 import { Project } from './entities/project.entity';
 import { ProjectStage } from '../common/enums/project-stage.enum';
 import { TokenAuthGuard } from '../common/guards/token-auth.guard';
-import { TokenVerificationService } from '../common/services/token-verification.service';
 import { Request } from 'express';
 
 @ApiTags('projects')

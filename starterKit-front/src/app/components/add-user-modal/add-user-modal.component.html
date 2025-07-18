@@ -1,71 +1,165 @@
 <div class="modal-overlay" [class.show]="isOpen" (click)="onCancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Ajouter des utilisateurs au projet</h3>
+      <h3>{{ showCreateTeamForm ? 'Créer un nouveau membre d\'équipe' : 'Ajouter des utilisateurs au projet' }}</h3>
       <button class="close-btn" (click)="onCancel()">&times;</button>
     </div>
 
     <div class="modal-body">
-      <form [formGroup]="searchForm" class="search-form">
-        <div class="search-input-container">
-          <input
-            type="text"
-            formControlName="searchTerm"
-            placeholder="Rechercher par nom, email ou rôle..."
-            class="search-input"
+      <!-- Vue de sélection des utilisateurs existants -->
+      <div *ngIf="!showCreateTeamForm">
+        <div class="action-buttons">
+          <button class="btn btn-outline" (click)="showCreateForm()">
+            ➕ Créer un nouveau membre d'équipe
+          </button>
+        </div>
+
+        <form [formGroup]="searchForm" class="search-form">
+          <div class="search-input-container">
+            <input
+              type="text"
+              formControlName="searchTerm"
+              placeholder="Rechercher par nom, email ou rôle..."
+              class="search-input"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
+        </form>
+
+        <div class="users-list" *ngIf="!loading">
+          <div 
+            *ngFor="let user of filteredUsers" 
+            class="user-item"
+            [class.selected]="isUserSelected(user.id)"
+            (click)="toggleUserSelection(user.id)"
           >
-          <span class="search-icon">🔍</span>
-        </div>
-      </form>
+            <div class="user-avatar">
+              <img [src]="user.avatar" [alt]="user.name" *ngIf="user.avatar">
+              <div class="avatar-placeholder" *ngIf="!user.avatar">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            
+            <div class="user-info">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-details">
+                <span class="user-role">{{ user.role }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </div>
+            
+            <div class="selection-indicator" *ngIf="isUserSelected(user.id)">
+              ✓
+            </div>
+          </div>
 
-      <div class="users-list" *ngIf="!loading">
-        <div 
-          *ngFor="let user of filteredUsers" 
-          class="user-item"
-          [class.selected]="isUserSelected(user.id)"
-          (click)="toggleUserSelection(user.id)"
-        >
-          <div class="user-avatar">
-            <img [src]="user.avatar" [alt]="user.name" *ngIf="user.avatar">
-            <div class="avatar-placeholder" *ngIf="!user.avatar">
-              {{ user.name.charAt(0).toUpperCase() }}
-            </div>
-          </div>
-          
-          <div class="user-info">
-            <div class="user-name">{{ user.name }}</div>
-            <div class="user-details">
-              <span class="user-role">{{ user.role }}</span>
-              <span class="user-email">{{ user.email }}</span>
-            </div>
-          </div>
-          
-          <div class="selection-indicator" *ngIf="isUserSelected(user.id)">
-            ✓
+          <div class="no-users" *ngIf="filteredUsers.length === 0">
+            Aucun utilisateur disponible
           </div>
         </div>
 
-        <div class="no-users" *ngIf="filteredUsers.length === 0">
-          Aucun utilisateur disponible
+        <div class="loading" *ngIf="loading">
+          Chargement des utilisateurs...
         </div>
       </div>
 
-      <div class="loading" *ngIf="loading">
-        Chargement des utilisateurs...
+      <!-- Vue de création d'un nouveau membre d'équipe -->
+      <div *ngIf="showCreateTeamForm">
+        <form [formGroup]="createTeamForm" class="create-team-form">
+          <div class="form-group">
+            <label for="name">Nom complet *</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              placeholder="Ex: Jean Dupont"
+              class="form-input"
+              [class.error]="createTeamForm.get('name')?.invalid && createTeamForm.get('name')?.touched"
+            >
+            <div class="error-message" *ngIf="createTeamForm.get('name')?.invalid && createTeamForm.get('name')?.touched">
+              Le nom est requis (minimum 2 caractères)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="Ex: jean.dupont@example.com"
+              class="form-input"
+              [class.error]="createTeamForm.get('email')?.invalid && createTeamForm.get('email')?.touched"
+            >
+            <div class="error-message" *ngIf="createTeamForm.get('email')?.invalid && createTeamForm.get('email')?.touched">
+              Un email valide est requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Rôle *</label>
+            <select
+              id="role"
+              formControlName="role"
+              class="form-input"
+              [class.error]="createTeamForm.get('role')?.invalid && createTeamForm.get('role')?.touched"
+            >
+              <option value="">Sélectionner un rôle</option>
+              <option value="Developer">Développeur</option>
+              <option value="Designer">Designer</option>
+              <option value="Project Manager">Chef de projet</option>
+              <option value="QA Tester">Testeur QA</option>
+              <option value="DevOps">DevOps</option>
+              <option value="Business Analyst">Analyste métier</option>
+              <option value="Scrum Master">Scrum Master</option>
+            </select>
+            <div class="error-message" *ngIf="createTeamForm.get('role')?.invalid && createTeamForm.get('role')?.touched">
+              Le rôle est requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="avatar">URL de l'avatar (optionnel)</label>
+            <input
+              id="avatar"
+              type="url"
+              formControlName="avatar"
+              placeholder="Ex: https://example.com/avatar.jpg"
+              class="form-input"
+            >
+          </div>
+        </form>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="onCancel()">
-        Annuler
-      </button>
-      <button 
-        class="btn btn-primary" 
-        (click)="onConfirm()"
-        [disabled]="selectedUsers.length === 0"
-      >
-        Ajouter {{ selectedUsers.length }} utilisateur(s)
-      </button>
+      <!-- Footer pour la vue de sélection des utilisateurs -->
+      <div *ngIf="!showCreateTeamForm">
+        <button class="btn btn-secondary" (click)="onCancel()">
+          Annuler
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="onConfirm()"
+          [disabled]="selectedUsers.length === 0"
+        >
+          Ajouter {{ selectedUsers.length }} utilisateur(s)
+        </button>
+      </div>
+
+      <!-- Footer pour la vue de création d'équipe -->
+      <div *ngIf="showCreateTeamForm">
+        <button class="btn btn-secondary" (click)="hideCreateForm()">
+          Retour
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="onCreateTeam()"
+          [disabled]="createTeamForm.invalid || creatingTeam"
+        >
+          {{ creatingTeam ? 'Création...' : 'Créer le membre' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

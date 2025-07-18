@@ -49,7 +49,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.user.name = decodedToken.name;
           const match = decodedToken.sub.match(/@([^.]+)\./);
           const organisation = match ? match[1] : "";
-          this.user.organisation = organisation.toUpperCase();
+          this.user.organisation = decodedToken.organization ?? organisation.toUpperCase();
         } else {
           // Si pas de token, réinitialiser le nom
           this.user.name = '';
@@ -81,6 +81,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.jwtService.removeToken();
+    // Supprimer le token et rediriger automatiquement vers la page de login
+    this.jwtService.removeToken(true);
   }
 }

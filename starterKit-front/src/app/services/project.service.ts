@@ -31,7 +31,7 @@ export class ProjectService {
     });
   }
 
-  private loadProjects(): void {
+  public loadProjects(): void {
     this.loaderService.startLoading();
     this.http.get<Project[]>(this.apiUrl + '/my-organisation', { headers: this.getAuthHeaders() })
       .pipe(
@@ -59,7 +59,21 @@ export class ProjectService {
 
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): void {
     this.loaderService.startLoading();
-    this.http.post<Project>(this.apiUrl, project, { headers: this.getAuthHeaders() })
+
+    // Préparer les données pour le backend
+    const projectData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline ? project.deadline.toISOString() : undefined,
+      priority: project.priority || 'MEDIUM',
+      teamIds: [],
+      tags: project.tags || [],
+      reminderDate: project.reminderDate ? project.reminderDate.toISOString() : undefined
+    };
+
+    this.http.post<Project>(this.apiUrl, projectData, { headers: this.getAuthHeaders() })
       .pipe(
         map(newProject => ({
           ...newProject,
@@ -72,6 +86,11 @@ export class ProjectService {
           const currentProjects = this.projectsSubject.value;
           this.projectsSubject.next([...currentProjects, newProject]);
         }),
+        tap({
+          error: (error) => {
+            console.error('Erreur lors de la création du projet:', error);
+          }
+        }),
         finalize(() => this.loaderService.stopLoading())
       )
       .subscribe();
@@ -79,7 +98,23 @@ export class ProjectService {
 
   updateProject(project: Project): void {
     this.loaderService.startLoading();
-    this.http.put<Project>(`${this.apiUrl}/${project.id}`, project, { headers: this.getAuthHeaders() })
+    
+    // Préparer les données pour le backend
+    const updateData = {
+      title: project.title,
+      description: project.description,
+      stage: project.stage,
+      progress: project.progress || 0,
+      deadline: project.deadline ? project.deadline.toISOString() : undefined,
+      teamIds: project.team.map(member => member.id),
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate ? project.reminderDate.toISOString() : undefined
+    };
+
+    console.log('Données envoyées pour la mise à jour complète:', updateData);
+
+    this.http.put<Project>(`${this.apiUrl}/${project.id}`, updateData, { headers: this.getAuthHeaders() })
       .pipe(
         map(updatedProject => ({
           ...updatedProject,
@@ -89,11 +124,17 @@ export class ProjectService {
           updatedAt: new Date(updatedProject.updatedAt)
         })),
         tap(updatedProject => {
+          console.log('Projet mis à jour reçu du backend:', updatedProject);
           const currentProjects = this.projectsSubject.value;
           const index = currentProjects.findIndex(p => p.id === updatedProject.id);
           if (index !== -1) {
             currentProjects[index] = updatedProject;
             this.projectsSubject.next([...currentProjects]);
+          }
+        }),
+        tap({
+          error: (error) => {
+            console.error('Erreur lors de la mise à jour complète du projet:', error);
           }
         }),
         finalize(() => this.loaderService.stopLoading())
@@ -104,39 +145,51 @@ export class ProjectService {
   updateProjectStage(projectId: string, stage: ProjectStage): Observable<Project> {
     const currentProjects = this.projectsSubject.value;
     const project = currentProjects.find(p => p.id === projectId);
-    if (project) {
-      this.loaderService.startLoading();
-      const updateData = {
-        title: project.title,
-        description: project.description,
-        stage: stage,
-        progress: project.progress || 0,
-        deadline: project.deadline?.toISOString(),
-        teamIds: project.team.map(member => member.id),
-        priority: project.priority,
-        tags: project.tags || [],
-        reminderDate: project.reminderDate?.toISOString()
-      };
-
-      return this.http.put<Project>(`${this.apiUrl}/${projectId}`, updateData, { headers: this.getAuthHeaders() })
-        .pipe(
-          map(updatedProject => ({
-            ...updatedProject,
-            deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
-            reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined
-          })),
-          tap(updatedProject => {
-            const currentProjects = this.projectsSubject.value;
-            const index = currentProjects.findIndex(p => p.id === updatedProject.id);
-            if (index !== -1) {
-              currentProjects[index] = updatedProject;
-              this.projectsSubject.next([...currentProjects]);
-            }
-          }),
-          finalize(() => this.loaderService.stopLoading())
-        );
+    if (!project) {
+      console.error('Projet non trouvé avec l\'ID:', projectId);
+      return new Observable<Project>();
     }
-    return new Observable<Project>();
+
+    this.loaderService.startLoading();
+    const updateData = {
+      title: project.title,
+      description: project.description,
+      stage: stage,
+      progress: project.progress || 0,
+      deadline: project.deadline ? project.deadline.toISOString() : undefined,
+      teamIds: project.team.map(member => member.id),
+      priority: project.priority || 'MEDIUM',
+      tags: project.tags || [],
+      reminderDate: project.reminderDate ? project.reminderDate.toISOString() : undefined
+    };
+
+    console.log('Données envoyées pour la mise à jour:', updateData);
+
+    return this.http.put<Project>(`${this.apiUrl}/${projectId}`, updateData, { headers: this.getAuthHeaders() })
+      .pipe(
+        map(updatedProject => ({
+          ...updatedProject,
+          deadline: updatedProject.deadline ? new Date(updatedProject.deadline) : undefined,
+          reminderDate: updatedProject.reminderDate ? new Date(updatedProject.reminderDate) : undefined,
+          createdAt: new Date(updatedProject.createdAt),
+          updatedAt: new Date(updatedProject.updatedAt)
+        })),
+        tap(updatedProject => {
+          console.log('Projet mis à jour reçu du backend:', updatedProject);
+          const currentProjects = this.projectsSubject.value;
+          const index = currentProjects.findIndex(p => p.id === updatedProject.id);
+          if (index !== -1) {
+            currentProjects[index] = updatedProject;
+            this.projectsSubject.next([...currentProjects]);
+          }
+        }),
+        tap({
+          error: (error) => {
+            console.error('Erreur lors de la mise à jour du projet:', error);
+          }
+        }),
+        finalize(() => this.loaderService.stopLoading())
+      );
   }
 
   deleteProject(id: string): void {
@@ -158,8 +211,7 @@ export class ProjectService {
     );
   }
 
-  // Ajouter ces méthodes à la fin de ton ProjectService
-
+  
   addUsersToProject(projectId: string, userIds: string[]): Observable<Project> {
     this.loaderService.startLoading();
     return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds }, { headers: this.getAuthHeaders() })
@@ -204,5 +256,26 @@ export class ProjectService {
         }),
         finalize(() => this.loaderService.stopLoading())
       );
+  }
+
+  refreshProjects(): void {
+    this.loaderService.startLoading();
+    console.log('Force refresh des projets...');
+    
+    this.http.get<any[]>(`${this.apiUrl}/my-organisation`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map(projects => projects.map(project => ({
+          ...project,
+          deadline: project.deadline ? new Date(project.deadline) : undefined,
+          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
+          createdAt: new Date(project.createdAt),
+          updatedAt: new Date(project.updatedAt)
+        }))),
+        finalize(() => this.loaderService.stopLoading())
+      )
+      .subscribe(projects => {
+        console.log('Projets rechargés:', projects.length);
+        this.projectsSubject.next(projects);
+      });
   }
 }

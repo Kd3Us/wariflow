@@ -76,6 +76,14 @@ export class ProjectManagementTask {
   })
   assignedTo: TeamMember[];
 
+  @ManyToMany(() => TeamMember, { eager: true })
+  @JoinTable({
+    name: 'task_referents',
+    joinColumn: { name: 'task_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'team_member_id', referencedColumnName: 'id' }
+  })
+  referents: TeamMember[];
+
   @Column({ type: 'int', default: 0 })
   comments: number;
 

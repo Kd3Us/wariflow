@@ -32,11 +32,25 @@ export class ProjectManagementService {
   }
 
   createTask(task: Omit<ProjectManagementTask, 'id' | 'createdAt' | 'updatedAt'>): Observable<ProjectManagementTask> {
-    return this.http.post<ProjectManagementTask>(this.apiUrl, task, { headers: this.getAuthHeaders() });
+    // Préparer les données pour l'API backend
+    const taskData = {
+      ...task,
+      assignedTo: task.assignedTo?.map(member => typeof member === 'string' ? member : member.id) || [],
+      referents: task.referents?.map(member => typeof member === 'string' ? member : member.id) || []
+    };
+    
+    return this.http.post<ProjectManagementTask>(this.apiUrl, taskData, { headers: this.getAuthHeaders() });
   }
 
   updateTask(id: string, task: Partial<ProjectManagementTask>): Observable<ProjectManagementTask> {
-    return this.http.patch<ProjectManagementTask>(`${this.apiUrl}/${id}`, task, { headers: this.getAuthHeaders() });
+    // Préparer les données pour l'API backend
+    const taskData = {
+      ...task,
+      assignedTo: task.assignedTo?.map(member => typeof member === 'string' ? member : member.id) || [],
+      referents: task.referents?.map(member => typeof member === 'string' ? member : member.id) || []
+    };
+    
+    return this.http.patch<ProjectManagementTask>(`${this.apiUrl}/${id}`, taskData, { headers: this.getAuthHeaders() });
   }
 
   updateTaskStage(id: string, stage: ProjectManagementStage): Observable<ProjectManagementTask> {
@@ -57,6 +71,14 @@ export class ProjectManagementService {
 
   getTaskStatistics(projectId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/project/${projectId}/statistics`, { headers: this.getAuthHeaders() });
+  }
+
+  assignReferentsToTask(taskId: string, referentIds: string[]): Observable<ProjectManagementTask> {
+    return this.http.post<ProjectManagementTask>(`${this.apiUrl}/${taskId}/referents`, { referentIds }, { headers: this.getAuthHeaders() });
+  }
+
+  removeReferentFromTask(taskId: string, referentId: string): Observable<ProjectManagementTask> {
+    return this.http.delete<ProjectManagementTask>(`${this.apiUrl}/${taskId}/referents/${referentId}`, { headers: this.getAuthHeaders() });
   }
 
   // Méthodes locales pour la gestion des tâches (simulation)

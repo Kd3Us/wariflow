@@ -42,6 +42,25 @@ export class ProjectManagementService {
         
         assignedUsers = await Promise.all(userPromises);
       }
+
+      // Traiter les référents si fournis
+      let referentUsers = [];
+      if (createTaskDto.referents && createTaskDto.referents.length > 0) {
+        const referentPromises = createTaskDto.referents.map(async (user) => {
+          if (typeof user === 'string') {
+            // Si c'est un ID, récupérer l'utilisateur complet
+            const foundUser = await this.teamsService.findOne(user);
+            if (!foundUser) {
+              throw new BadRequestException(`Référent avec l'ID ${user} non trouvé`);
+            }
+            return foundUser;
+          }
+          // Si c'est déjà un objet TeamMember, le retourner tel quel
+          return user;
+        });
+        
+        referentUsers = await Promise.all(referentPromises);
+      }
       
       const task = this.taskRepository.create({
         title: createTaskDto.title,
@@ -55,6 +74,7 @@ export class ProjectManagementService {
         estimatedHours: createTaskDto.estimatedHours || null,
         actualHours: createTaskDto.actualHours || null,
         assignedTo: assignedUsers,
+        referents: referentUsers,
         comments: createTaskDto.comments || 0,
         attachments: createTaskDto.attachments || 0
       });
@@ -73,7 +93,7 @@ export class ProjectManagementService {
 
   async findAll(): Promise<ProjectManagementTask[]> {
     return this.taskRepository.find({
-      relations: ['assignedTo'],
+      relations: ['assignedTo', 'referents'],
       order: { createdAt: 'DESC' }
     });
   }
@@ -81,7 +101,7 @@ export class ProjectManagementService {
   async findByProject(projectId: string): Promise<ProjectManagementTask[]> {
     return this.taskRepository.find({
       where: { projectId },
-      relations: ['assignedTo'],
+      relations: ['assignedTo', 'referents'],
       order: { createdAt: 'DESC' }
     });
   }
@@ -89,7 +109,7 @@ export class ProjectManagementService {
   async findOne(id: string): Promise<ProjectManagementTask> {
     const task = await this.taskRepository.findOne({
       where: { id },
-      relations: ['assignedTo']
+      relations: ['assignedTo', 'referents']
     });
 
     if (!task) {
@@ -127,8 +147,32 @@ export class ProjectManagementService {
         }
       }
 
-      // Créer un objet de mise à jour sans assignedTo pour éviter les conflits
-      const { assignedTo, ...updateData } = updateTaskDto;
+      // Traiter les référents si fournis dans la mise à jour
+      if (updateTaskDto.referents !== undefined) {
+        if (updateTaskDto.referents.length === 0) {
+          // Si le tableau est vide, supprimer tous les référents
+          task.referents = [];
+        } else {
+          // Traiter les nouveaux référents
+          const referentPromises = updateTaskDto.referents.map(async (user) => {
+            if (typeof user === 'string') {
+              // Si c'est un ID, récupérer l'utilisateur complet
+              const foundUser = await this.teamsService.findOne(user);
+              if (!foundUser) {
+                throw new BadRequestException(`Référent avec l'ID ${user} non trouvé`);
+              }
+              return foundUser;
+            }
+            // Si c'est déjà un objet TeamMember, le retourner tel quel
+            return user;
+          });
+          
+          task.referents = await Promise.all(referentPromises);
+        }
+      }
+
+      // Créer un objet de mise à jour sans assignedTo et referents pour éviter les conflits
+      const { assignedTo, referents, ...updateData } = updateTaskDto;
 
       // Mettre à jour les champs
       Object.assign(task, {
@@ -205,7 +249,7 @@ export class ProjectManagementService {
   async getTasksByStage(projectId: string, stage: ProjectManagementStage): Promise<ProjectManagementTask[]> {
     return this.taskRepository.find({
       where: { projectId, stage },
-      relations: ['assignedTo'],
+      relations: ['assignedTo', 'referents'],
       order: { createdAt: 'DESC' }
     });
   }
@@ -225,5 +269,38 @@ export class ProjectManagementService {
     };
 
     return statistics;
+  }
+
+  async assignReferents(taskId: string, referentIds: string[]): Promise<ProjectManagementTask> {
+    const task = await this.findOne(taskId);
+
+    // Récupérer les référents actuellement assignés
+    const currentReferents = task.referents || [];
+    const currentReferentIds = currentReferents.map(referent => referent.id);
+    
+    // Récupérer les nouveaux référents à assigner
+    const newReferents = [];
+    
+    for (const referentId of referentIds) {
+      const referentFound = await this.teamsService.findOne(referentId);
+      if (referentFound && !currentReferentIds.includes(referentId)) {
+        newReferents.push(referentFound);
+      }
+    }
+
+    // Combiner les référents actuels et les nouveaux
+    task.referents = [...currentReferents, ...newReferents];
+
+    return this.taskRepository.save(task);
+  }
+
+  async removeReferent(taskId: string, referentId: string): Promise<ProjectManagementTask> {
+    const task = await this.findOne(taskId);
+    
+    if (task.referents) {
+      task.referents = task.referents.filter(referent => referent.id !== referentId);
+    }
+
+    return this.taskRepository.save(task);
   }
 }

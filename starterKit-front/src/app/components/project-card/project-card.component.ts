@@ -19,6 +19,16 @@ interface TeamMember {
   templateUrl: './project-card.component.html',
 })
 export class ProjectCardComponent {
+
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.menuOpen = false;
+    }
+  }
+
+
   @Input() project!: Project;
   @Output() edit = new EventEmitter<Project>();
   @Output() delete = new EventEmitter<Project>();
@@ -26,17 +36,7 @@ export class ProjectCardComponent {
   @Output() removeUser = new EventEmitter<{ projectId: string, userId: string }>();
 
   menuOpen = false;
-  showTeamMenu = false;
-
   constructor(private elementRef: ElementRef) {}
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.menuOpen = false;
-      this.showTeamMenu = false;
-    }
-  }
 
   toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
@@ -63,10 +63,6 @@ export class ProjectCardComponent {
     this.removeUser.emit({ projectId: this.project.id, userId });
   }
 
-  toggleTeamMenu(event: Event): void {
-    event.stopPropagation();
-    this.showTeamMenu = !this.showTeamMenu;
-  }
 
   get displayedTeamMembers(): TeamMember[] {
     return this.project.team.slice(0, 3);

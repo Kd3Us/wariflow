@@ -51,6 +51,10 @@ export class CreateTaskDto {
   assignedTo?: (TeamMember | string)[];
 
   @IsOptional()
+  @IsArray()
+  referents?: (TeamMember | string)[];
+
+  @IsOptional()
   @IsNumber()
   @Min(0)
   comments?: number;

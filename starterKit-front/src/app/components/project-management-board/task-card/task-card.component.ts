@@ -64,22 +64,47 @@ import { ProjectManagementTask } from '../../../models/project-management.model'
         </span>
       </div>
 
-      <!-- Footer avec assignés et actions -->
+      <!-- Footer avec assignés, référents et actions -->
       <div class="flex justify-between items-center">
-        <!-- Membres assignés -->
-        <div class="flex -space-x-2" *ngIf="task.assignedTo && task.assignedTo.length > 0">
-          <div 
-            *ngFor="let member of task.assignedTo.slice(0, 3)" 
-            class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-            [title]="member.name"
-          >
-            {{ member?.name?.charAt(0)?.toUpperCase()}}
+        <div class="flex flex-col gap-2">
+          <!-- Membres assignés -->
+          <div class="flex items-center gap-2" *ngIf="task.assignedTo && task.assignedTo.length > 0">
+            <span class="text-xs text-gray-500">Assignés:</span>
+            <div class="flex -space-x-2">
+              <div 
+                *ngFor="let member of task.assignedTo.slice(0, 3)" 
+                class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                [title]="member.name + ' (' + member.role + ')'"
+              >
+                {{ member?.name?.charAt(0)?.toUpperCase()}}
+              </div>
+              <div 
+                *ngIf="task.assignedTo.length > 3"
+                class="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+              >
+                +{{ task.assignedTo.length - 3 }}
+              </div>
+            </div>
           </div>
-          <div 
-            *ngIf="task.assignedTo.length > 3"
-            class="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-          >
-            +{{ task.assignedTo.length - 3 }}
+
+          <!-- Référents -->
+          <div class="flex items-center gap-2" *ngIf="task.referents && task.referents.length > 0">
+            <span class="text-xs text-gray-500">Référents:</span>
+            <div class="flex -space-x-2">
+              <div 
+                *ngFor="let referent of task.referents.slice(0, 3)" 
+                class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                [title]="referent.name + ' (' + referent.role + ')'"
+              >
+                {{ referent?.name?.charAt(0)?.toUpperCase()}}
+              </div>
+              <div 
+                *ngIf="task.referents.length > 3"
+                class="w-6 h-6 rounded-full bg-green-400 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+              >
+                +{{ task.referents.length - 3 }}
+              </div>
+            </div>
           </div>
         </div>
 

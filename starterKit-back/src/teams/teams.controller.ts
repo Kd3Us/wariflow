@@ -21,8 +21,13 @@ export class TeamsController {
   async findAll(@Req() req: Request): Promise<TeamMember[]> {
     const validatedToken = req['validatedToken'];
     console.log('Accessing teams with token:', validatedToken);
+
+    const organization = req['userInfo']?.['organization'];
+    if (!organization) {
+      throw new Error('Organisation non trouvée dans le token');
+    }
     
-    return this.teamsService.findAll();
+    return this.teamsService.findByOrganisation(organization);
   }
 
   @Get(':id')
@@ -54,11 +59,15 @@ export class TeamsController {
     console.log('Creating team member with token:', validatedToken);
     
     try {
-      return await this.teamsService.create(createTeamMemberDto);
+      // Récupérer les informations utilisateur depuis le token
+      const organization = req['userInfo']?.['organization'] || null;
+      console.log('Organization from token:', organization);
+      return await this.teamsService.create(createTeamMemberDto, organization);
     } catch (error) {
       if (error.code === '23505') { // PostgreSQL unique violation
         throw new ConflictException('Un membre avec cet email existe déjà');
       }
+      console.error('Error creating team member:', error);
       throw error;
     }
   }

@@ -24,6 +24,9 @@ export class TeamMember {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ nullable: true })
+  organisation: string;
+
   @ManyToMany(() => Project, project => project.team)
   projects: Project[];
 }

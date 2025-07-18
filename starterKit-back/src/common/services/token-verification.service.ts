@@ -24,10 +24,10 @@ export class TokenVerificationService {
           timeout: this.TIMEOUT,
         }
       );
-      const resposesBackend = this.setUserDataManualy(response.data,token);
 
       // Vérifier si la réponse indique un succès
-      if (resposesBackend.msg === 'Verified') {
+      if (response.data.msg === 'Verified') {
+        this.checkUserData(response.data);
         return true;
       }
       
@@ -113,8 +113,8 @@ export class TokenVerificationService {
       
       // Vérifier si la réponse indique un succès
       if (response.data.msg === 'Verified') {
-        const processedResponse = this.setUserDataManualy(response.data, token);
-        return processedResponse;
+        this.checkUserData(response.data);
+        return response.data;
       }
       
       throw new HttpException(
@@ -146,35 +146,20 @@ export class TokenVerificationService {
     }
   }
 
-
-  setUserDataManualy(responseData: any, token: string): TokenVerificationResponse {
-    console.error('Response data:', responseData);
-    
-    // Vérifier si userInfo est vide, undefined, null ou un objet vide
-    if (!responseData.userInfo || 
+  checkUserData(responseData) {
+      if (!responseData.userInfo || 
         (typeof responseData.userInfo === 'object' && Object.keys(responseData.userInfo).length === 0)) {
-      
-      console.log('UserInfo is empty, extracting data from token');
-      const jwtPayload = decode(token);
-      console.log('JWT Payload:', jwtPayload);
-      
-      if (jwtPayload && typeof jwtPayload === 'object') {
-        const match = jwtPayload.sub?.match(/@([^.]+)\./);
-        const organisation = match ? match[1] : "";
-        
-        // Créer un nouvel objet avec les données du JWT
-        const userInfoFromToken = {
-          ...jwtPayload,
-          organization: organisation.toUpperCase()
-        };
-        
-        responseData.userInfo = userInfoFromToken;
-        console.log('UserInfo set from token:', userInfoFromToken);
+          throw new HttpException(
+            'Invalid token',
+            HttpStatus.UNAUTHORIZED,
+          );
+        } else {
+        if (!responseData.userInfo.organization) {
+          throw new HttpException(
+            'Invalid token',
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
       }
-    } else {
-      console.log('UserInfo already exists:', responseData.userInfo);
     }
-    
-    return responseData;
-  }
 }

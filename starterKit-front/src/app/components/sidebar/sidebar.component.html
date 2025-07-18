@@ -5,7 +5,7 @@
     </div>
   </div>
 
-  <ng-container *ngIf="decodedToken.sub.toLowerCase().includes('speedpresta') || isEmbedRoute">
+  <ng-container *ngIf="decodedToken?.sub.toLowerCase().includes('speedpresta') || isEmbedRoute">
     <nav class="flex flex-col gap-2">
       <a
         routerLink="/kanban"

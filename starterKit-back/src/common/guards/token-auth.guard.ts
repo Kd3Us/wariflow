@@ -42,7 +42,7 @@ export class TokenAuthGuard implements CanActivate {
           const jwtPayload = decode(request['validatedToken']);
           const match = jwtPayload?.sub.match(/@([^.]+)\./);
           const organisation = match ? match[1] : "";
-          jwtPayload['organization']= organisation.toUpperCase()
+          jwtPayload['organization']= jwtPayload?.organization ?? organisation.toUpperCase()
           request['userInfo'] = jwtPayload;
           tokenResponse.userInfo = request['userInfo'];
         }

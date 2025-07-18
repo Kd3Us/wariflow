@@ -2,11 +2,15 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Project, ProjectStage } from '../../models/project.model';
+import { WariflowService } from '../../services/wariflow.service';
+import { LoaderComponent } from '../loader/loader.component';
+import { Observable } from 'rxjs';
+import { LoaderService } from '../../services/loader.service';
 
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LoaderComponent],
   templateUrl: './project-form.component.html',
   styleUrls: ['./project-form.component.css']
 })
@@ -18,8 +22,13 @@ export class ProjectFormComponent implements OnInit {
   projectForm!: FormGroup;
   projectStages = Object.values(ProjectStage);
   priorities = ['LOW', 'MEDIUM', 'HIGH'];
+  isLoading$: Observable<boolean>;
   
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private wariflowService: WariflowService,
+        private loaderService: LoaderService
+  ) {
+    this.isLoading$ = this.loaderService.isLoading$;
+  }
   
   ngOnInit(): void {
     this.initForm();
@@ -68,6 +77,25 @@ export class ProjectFormComponent implements OnInit {
     };
     
     this.save.emit(projectData);
+  }
+
+  correctWord(text: string, type: string): any {
+    this.loaderService.startLoading();
+    this.wariflowService.correctWord(text)
+    .subscribe({
+          next: (word) => {
+            if (type === "TITLE") {
+              this.projectForm.patchValue({"title": word.corrected_text});
+            } else if (type === "DESCRIPTION") {
+              this.projectForm.patchValue({"description": word.corrected_text});
+            }
+            this.loaderService.stopLoading();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la reformulation:', error);
+            this.loaderService.stopLoading();
+          }
+    });
   }
   
   onCancel(): void {

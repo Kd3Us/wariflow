@@ -17,6 +17,7 @@ interface DecodedToken {
   exp: number;
   apikey: string;
   [key: string]: any;
+  organization: string;
 }
 
 @Injectable({
@@ -33,6 +34,9 @@ export class JwtService {
   
   // Observable public pour que les composants puissent s'abonner
   public token$ = this.tokenSubject.asObservable();
+  
+  // Flag pour éviter les vérifications multiples
+  private hasCheckedUrl = false;
 
   constructor(private http: HttpClient) {
     console.log('initialized with :', {
@@ -55,6 +59,8 @@ export class JwtService {
     const tokenFromUrl = this.getTokenFromUrl();
     if (tokenFromUrl) {
       this.setToken(tokenFromUrl);
+      // Marquer comme vérifié pour éviter les vérifications répétitives
+      this.hasCheckedUrl = true;
       return;
     }
     
@@ -126,8 +132,9 @@ export class JwtService {
 
   /**
    * Supprime le token du sessionStorage
+   * @param redirectToLogin - Si true, redirige automatiquement vers la page de login
    */
-  public removeToken(): void {
+  public removeToken(redirectToLogin: boolean = false): void {
     
     // Supprimer le token local immédiatement
     this.clearLocalToken();
@@ -141,6 +148,11 @@ export class JwtService {
         console.error('Logout API call failed:', error);
       }
     });
+
+    // Rediriger si demandé
+    if (redirectToLogin) {
+      this.redirectLoginPage();
+    }
   }
 
   private clearLocalToken(): void {
@@ -183,10 +195,17 @@ export class JwtService {
    * @returns Observable<boolean>
    */
   public checkTokenAndRedirect(): Observable<boolean> {
-    const tokenFromUrl = this.getTokenFromUrl();
-
-    if (tokenFromUrl) {
-      this.setToken(tokenFromUrl);
+    // Vérifier l'URL seulement si on n'a pas encore vérifié et qu'on n'a pas de token en session
+    const existingToken = this.getToken();
+    
+    if (!existingToken && !this.hasCheckedUrl) {
+      const tokenFromUrl = this.getTokenFromUrl();
+      if (tokenFromUrl) {
+        this.setToken(tokenFromUrl);
+        // Nettoyer l'URL après avoir récupéré le token
+        this.clearTokenFromUrl();
+      }
+      this.hasCheckedUrl = true;
     }
 
     return this.verifyTokenWithApi().pipe(
@@ -195,6 +214,8 @@ export class JwtService {
         if (!isValid) {
           console.log('Token invalid, removing token');
           this.removeToken();
+          // Réinitialiser le flag si le token est invalide
+          this.hasCheckedUrl = false;
           // Ne pas rediriger ici, laisser le guard s'en charger
           return false;
         }
@@ -203,6 +224,8 @@ export class JwtService {
       catchError((error) => {
         console.error('Error in checkTokenAndRedirect:', error);
         this.removeToken();
+        // Réinitialiser le flag en cas d'erreur
+        this.hasCheckedUrl = false;
         return of(false);
       })
     );
@@ -222,6 +245,16 @@ export class JwtService {
     const token = urlParams.get('token');
     console.log('getTokenFromUrl called, token found:', !!token);
     return token;
+  }
+
+  /**
+   * Nettoie le token de l'URL après l'avoir récupéré
+   */
+  private clearTokenFromUrl(): void {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('token');
+    window.history.replaceState({}, document.title, url.toString());
+    console.log('Token cleared from URL');
   }
 
   /**

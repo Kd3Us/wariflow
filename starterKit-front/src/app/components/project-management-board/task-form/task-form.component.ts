@@ -3,14 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectManagementTask, ProjectManagementStage, TeamMember } from '../../../models/project-management.model';
 import { Project } from '../../../models/project.model';
+import { TeamsService } from '../../../services/teams.service';
+import { WariflowService } from '../../../services/wariflow.service';
+import { LoaderComponent } from '../../loader/loader.component';
+import { Observable } from 'rxjs';
+import { LoaderService } from '../../../services/loader.service';
 
 @Component({
   selector: 'app-task-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoaderComponent],
   template: `
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Loader -->
+        <app-loader *ngIf="isLoading$ | async"></app-loader>
         <div class="p-6">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold text-gray-900">
@@ -38,7 +45,9 @@ import { Project } from '../../../models/project.model';
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Entrez le titre de la tâche"
-              >
+              />
+
+              
             </div>
 
             <!-- Description -->
@@ -46,14 +55,14 @@ import { Project } from '../../../models/project.model';
               <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <textarea
-                id="description"
-                name="description"
+               <div class="flex">
+                <textarea id="description" name="description"
                 [(ngModel)]="formData.description"
                 rows="3"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Décrivez la tâche..."
-              ></textarea>
+                placeholder="Décrivez la tâche..." #inputDescriptionText></textarea>
+                <button type="button" (click)="correctWord(inputDescriptionText.value, 'DESCRIPTION')" class="bg-gray-400 text-white px-4 rounded-r-lg hover:bg-gray-700">Améliorer</button>
+              </div>
             </div>
 
             <!-- Assignation des membres de l'équipe -->
@@ -89,6 +98,42 @@ import { Project } from '../../../models/project.model';
               </div>
               <div *ngIf="availableTeamMembers.length === 0" class="text-sm text-gray-500 italic p-3 border border-gray-200 rounded-md">
                 Aucun membre d'équipe disponible pour ce projet
+              </div>
+            </div>
+
+            <!-- Sélection des référents -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Référents (Teams)
+              </label>
+              <div class="text-xs text-gray-500 mb-3">
+                Sélectionnez un ou plusieurs référents pour cette tâche
+              </div>
+              <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md p-3" *ngIf="allTeamMembers.length > 0">
+                <div 
+                  *ngFor="let member of allTeamMembers" 
+                  class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                  (click)="onReferentToggle(member.id)"
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="isReferentSelected(member.id)"
+                    (change)="onReferentToggle(member.id)"
+                    class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  >
+                  <div class="flex items-center space-x-2 flex-1">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {{ member.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-gray-900">{{ member.name }}</div>
+                      <div class="text-xs text-gray-500">{{ member.role }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="allTeamMembers.length === 0" class="text-sm text-gray-500 italic p-3 border border-gray-200 rounded-md">
+                Aucun membre d'équipe disponible comme référent
               </div>
             </div>
 
@@ -250,6 +295,9 @@ export class TaskFormComponent implements OnInit {
   tagsString = '';
   availableTeamMembers: TeamMember[] = [];
   selectedTeamMemberIds: string[] = [];
+  allTeamMembers: TeamMember[] = [];
+  selectedReferentIds: string[] = [];
+  isLoading$: Observable<boolean>;
 
   formData: Partial<ProjectManagementTask> = {
     title: '',
@@ -262,11 +310,17 @@ export class TaskFormComponent implements OnInit {
     estimatedHours: 0,
     actualHours: 0,
     assignedTo: [],
+    referents: [],
     comments: 0,
     attachments: 0
   };
 
-  constructor() {}
+  constructor(private teamsService: TeamsService,
+    private wariflowService: WariflowService,
+    private loaderService: LoaderService
+  ) {
+    this.isLoading$ = this.loaderService.isLoading$;
+  }
 
   ngOnInit(): void {
     // Charger les membres de l'équipe du projet sélectionné
@@ -274,18 +328,33 @@ export class TaskFormComponent implements OnInit {
       this.availableTeamMembers = this.selectedProject.team || [];
       this.formData.projectId = this.selectedProject.id;
     }
+
+    // Charger tous les membres de l'équipe pour les référents
+    this.loadAllTeamMembers();
     
     if (this.task) {
       this.isNewTask = false;
       this.formData = { ...this.task };
       this.tagsString = this.task.tags?.join(', ') || '';
       this.selectedTeamMemberIds = this.task.assignedTo?.map(member => member.id) || [];
+      this.selectedReferentIds = this.task.referents?.map(member => member.id) || [];
       
       // Convertir la date pour l'input date
       if (this.task.deadline) {
         this.formData.deadline = new Date(this.task.deadline);
       }
     }
+  }
+
+  loadAllTeamMembers(): void {
+    this.teamsService.getAllTeamMembers().subscribe({
+      next: (members) => {
+        this.allTeamMembers = members;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des membres de l\'équipe:', error);
+      }
+    });
   }
 
   onTeamMemberToggle(memberId: string): void {
@@ -306,6 +375,24 @@ export class TaskFormComponent implements OnInit {
     return this.selectedTeamMemberIds.includes(memberId);
   }
 
+  onReferentToggle(memberId: string): void {
+    const index = this.selectedReferentIds.indexOf(memberId);
+    if (index > -1) {
+      this.selectedReferentIds.splice(index, 1);
+    } else {
+      this.selectedReferentIds.push(memberId);
+    }
+    
+    // Mettre à jour formData.referents
+    this.formData.referents = this.allTeamMembers.filter(member => 
+      this.selectedReferentIds.includes(member.id)
+    );
+  }
+
+  isReferentSelected(memberId: string): boolean {
+    return this.selectedReferentIds.includes(memberId);
+  }
+
   onSubmit(): void {
     // Traiter les tags
     this.formData.tags = this.tagsString
@@ -318,7 +405,31 @@ export class TaskFormComponent implements OnInit {
       this.selectedTeamMemberIds.includes(member.id)
     );
 
+    // S'assurer que les référents sont à jour
+    this.formData.referents = this.allTeamMembers.filter(member => 
+      this.selectedReferentIds.includes(member.id)
+    );
+
     this.save.emit(this.formData);
+  }
+
+  correctWord(text: string, type: string): any {
+    this.loaderService.startLoading();
+    this.wariflowService.correctWord(text)
+    .subscribe({
+          next: (word) => {
+            if (type === "TITLE") {
+              this.formData.title = word.corrected_text;
+            } else if (type === "DESCRIPTION") {
+              this.formData.description = word.corrected_text;
+            }
+            this.loaderService.stopLoading();
+          },
+          error: (error) => {
+            this.loaderService.stopLoading();
+            console.error('Erreur lors de la reformulation:', error);
+          }
+    });
   }
 
   onCancel(): void {

@@ -58,10 +58,8 @@ export const authGuard: CanActivateFn = (route, state) => {
       map(isValid => {
         if (!isValid) {
           console.log('AuthGuard: Token invalid, redirecting to login');
-          // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
-          setTimeout(() => {
-            jwtService.redirectLoginPage();
-          }, 0);
+          // Redirection immédiate sans setTimeout
+          jwtService.redirectLoginPage();
           return false;
         }
 
@@ -73,10 +71,8 @@ export const authGuard: CanActivateFn = (route, state) => {
         console.error('AuthGuard caught error during token verification:', error);
         console.log('AuthGuard: Error occurred, removing token and redirecting');
         jwtService.removeToken();
-        // Utiliser setTimeout pour éviter les erreurs de cycle de vie Angular
-        setTimeout(() => {
-          jwtService.redirectLoginPage();
-        }, 0);
+        // Redirection immédiate sans setTimeout
+        jwtService.redirectLoginPage();
         return of(false);
       })
     );

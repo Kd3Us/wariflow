@@ -7,7 +7,7 @@ import { catchError, retry, map, timeout } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AIClientService {
-  private baseUrl = 'http://127.0.0.1:8000';
+  private baseUrl = 'http://13.38.32.181:3001';
   
   constructor(private http: HttpClient) {}
 

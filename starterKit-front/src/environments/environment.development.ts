@@ -8,5 +8,6 @@ export const environment = {
     revokeTokenUrl: "http://localhost:3009/auth/logout",
     verifyTokenUrl: "http://localhost:3009/auth/login",
     jwtSecret: "votre_secret_jwt",
-    versionNumber: 1.2
+    wariflowDocumentCorrect: "https://api.speedpresta.com/api/v1/wariflow/document/correct",
+    versionNumber: 1.7
 };

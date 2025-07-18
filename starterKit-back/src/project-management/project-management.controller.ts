@@ -92,6 +92,22 @@ export class ProjectManagementController {
     return this.projectManagementService.removeUser(id, userId);
   }
 
+  @Post(':id/referents')
+  assignReferents(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('referentIds') referentIds: string[],
+  ) {
+    return this.projectManagementService.assignReferents(id, referentIds);
+  }
+
+  @Delete(':id/referents/:referentId')
+  removeReferent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('referentId') referentId: string,
+  ) {
+    return this.projectManagementService.removeReferent(id, referentId);
+  }
+
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectManagementService.remove(id);

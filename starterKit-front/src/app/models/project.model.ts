@@ -23,6 +23,7 @@ export interface Project {
   createdAt: Date;
   updatedAt: Date;
   team: TeamMember[];
+  teamIds?: string[];
   comments: number;
   attachments: number;
   isReminderActive: boolean;

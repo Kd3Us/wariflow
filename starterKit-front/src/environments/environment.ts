@@ -7,5 +7,6 @@ export const environment = {
   revokeTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/logout",
   verifyTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/login",
   jwtSecret: "votre_secret_jwt",
-  versionNumber: 1.2
+  wariflowDocumentCorrect: "https://api.speedpresta.com/api/v1/wariflow/document/correct",
+  versionNumber: 1.7
 };

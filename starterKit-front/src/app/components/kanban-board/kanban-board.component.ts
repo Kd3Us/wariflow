@@ -12,6 +12,7 @@ import { LoaderComponent } from '../loader/loader.component';
 import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
 import { Observable } from 'rxjs';
 import { ChatbotResponse } from '../../services/chatbot.service';
+import { TeamMember } from '../../services/teams.service';
 
 @Component({
   selector: 'app-kanban-board',
@@ -60,8 +61,6 @@ export class KanbanBoardComponent implements OnInit {
   loadProjects(): void {
     console.log('[DEBUG] Chargement des projets...');
     this.projectService.getProjects().subscribe(projects => {
-      console.log('[DEBUG] Projets reçus:', projects);
-      console.log('[DEBUG] Nombre de projets:', projects.length);
       
       this.ideeProjects = projects.filter(p => p.stage === ProjectStage.IDEE);
       this.mvpProjects = projects.filter(p => p.stage === ProjectStage.MVP);
@@ -132,6 +131,7 @@ export class KanbanBoardComponent implements OnInit {
   onProjectsGenerated(result: ChatbotResponse): void {
     console.log('[DEBUG] onProjectsGenerated appelé avec:', result);
     this.closeAIProjectModal();
+    this.projectService.refreshProjects();
     
     setTimeout(() => {
       console.log('[DEBUG] Rechargement DIRECT depuis API...');
@@ -162,7 +162,7 @@ export class KanbanBoardComponent implements OnInit {
         console.log('- LEVEE:', this.leveeProjects.length);
         
         if (result && result.projects && result.projects.length > 0) {
-          alert(`${result.projects.length} projet(s) créé(s) avec succès !`);
+          //alert(`${result.projects.length} projet(s) créé(s) avec succès !`);
         }
       });
       
@@ -191,9 +191,14 @@ export class KanbanBoardComponent implements OnInit {
     if (this.isNewProject) {
       this.projectService.addProject(projectData as any);
     } else if (this.selectedProject) {
-      this.projectService.updateProjectStage(this.selectedProject.id, projectData.stage!).subscribe(() => {
-        this.loadProjects();
-      });
+      // Fusionner les données existantes avec les nouvelles données
+      const updatedProject: Project = {
+        ...this.selectedProject,
+        ...projectData
+      };
+      
+      console.log('Sauvegarde du projet avec toutes les données:', updatedProject);
+      this.projectService.updateProject(updatedProject);
     }
     this.closeProjectForm();
     setTimeout(() => this.loadProjects(), 100);
@@ -221,6 +226,13 @@ export class KanbanBoardComponent implements OnInit {
         }
       });
     }
+  }
+
+  onTeamCreated(newTeamMember: TeamMember): void {
+    console.log('Nouveau membre d\'équipe créé:', newTeamMember);
+    // Optionnel: afficher une notification de succès
+    // Vous pouvez ajouter ici une logique pour afficher une notification
+    // Le modal se chargera automatiquement de recharger la liste des utilisateurs
   }
 
   onRemoveUser(data: { projectId: string, userId: string }): void {

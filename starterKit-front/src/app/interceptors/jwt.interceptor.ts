@@ -26,7 +26,11 @@ export const jwtInterceptor: HttpInterceptorFn = (request: HttpRequest<unknown>,
     '/auth/login',
     '/auth/logout',
     '/auth/refresh',
-    '13.38.32.181:3001'
+    '13.38.32.181:3001',
+    '/generate-projects',
+    '/auth/login',
+    'd331iii8637gut.cloudfront.net/auth/logout',
+    'd331iii8637gut.cloudfront.net/auth/verify'
   ];
 
   // Ne pas intercepter les requêtes d'authentification
@@ -38,11 +42,11 @@ export const jwtInterceptor: HttpInterceptorFn = (request: HttpRequest<unknown>,
   const token = jwtService.getToken();
   console.log('JwtInterceptor: Token found:', !!token);
   
-  // Si pas de token, rediriger vers la page de login
+  // Si pas de token, laisser passer la requête sans token
+  // Le guard s'occupera de la redirection si nécessaire
   if (!token) {
-    console.log('JwtInterceptor: No token found, redirecting to login');
-    handleUnauthorized(jwtService);
-    return throwError(() => new Error('No token found'));
+    console.log('JwtInterceptor: No token found, proceeding without token');
+    return next(request);
   }
 
   // Ajouter le token à la requête

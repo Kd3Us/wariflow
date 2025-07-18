@@ -15,6 +15,7 @@ export interface ProjectManagementTask {
   createdAt: Date;
   updatedAt: Date;
   assignedTo: TeamMember[];
+  referents?: TeamMember[]; // Référents teams pour la tâche
   projectId: string; // Lié à un projet
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   tags: string[];
