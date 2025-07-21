@@ -1,6 +1,7 @@
 """
 Module Orchestrateur Principal - CORRIGÉ
 Corrections des erreurs de prédiction et de variables manquantes
+Avec détection de langue centralisée utilisée PARTOUT
 """
 
 from fastapi import FastAPI, HTTPException
@@ -22,6 +23,7 @@ from module_3_project_type import MLProjectTypeStackPredictor
 from module_4_task_generator import MLTaskGenerator
 from module_5_business import MLBusinessProjectGenerator
 from module_6_risks import MLRiskOpportunityAnalyzer
+from language_detector import detect_project_language
 
 # Configuration
 logging.basicConfig(level=logging.INFO)
@@ -139,9 +141,9 @@ class ProjectOrchestrator:
                 # Continue avec les autres modules
                 continue
     
-    def _get_cache_key(self, description: str, additional_context: str = "") -> str:
-        """Générer une clé de cache"""
-        content = f"{description}_{additional_context}".lower().strip()
+    def _get_cache_key(self, description: str, additional_context: str = "", language: str = "") -> str:
+        """Générer une clé de cache (mise à jour pour inclure la langue)"""
+        content = f"{description}_{additional_context}_{language}".lower().strip()
         return str(hash(content))
     
     def _check_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
@@ -158,18 +160,18 @@ class ProjectOrchestrator:
                 oldest_key = next(iter(self.cache))
                 del self.cache[oldest_key]
     
-    def _execute_base_modules_parallel(self, description: str, language: str) -> Dict[str, Any]:
-        """Exécution parallèle des 3 modules de base avec gestion d'erreurs améliorée"""
+    def _execute_base_modules_parallel(self, description: str, detected_language: str) -> Dict[str, Any]:
+        """Exécution parallèle des 3 modules de base avec langue centralisée"""
         logger.info("Exécution parallèle des modules de base...")
         
         base_results = {}
         futures = {}
         
         try:
-            # Lancer les 3 modules en parallèle avec gestion d'erreurs
+            # Lancer les 3 modules en parallèle avec la langue détectée
             try:
                 futures['industry'] = self.thread_pool.submit(
-                    self._safe_predict_industry, description
+                    self._safe_predict_industry, description, detected_language  # ✅ Langue passée
                 )
             except Exception as e:
                 logger.error(f"Erreur soumission module industry: {e}")
@@ -177,7 +179,7 @@ class ProjectOrchestrator:
             
             try:
                 futures['complexity'] = self.thread_pool.submit(
-                    self._safe_predict_complexity, description
+                    self._safe_predict_complexity, description, detected_language  # ✅ Langue passée
                 )
             except Exception as e:
                 logger.error(f"Erreur soumission module complexity: {e}")
@@ -185,7 +187,7 @@ class ProjectOrchestrator:
             
             try:
                 futures['project_type'] = self.thread_pool.submit(
-                    self._safe_predict_project_type, description
+                    self._safe_predict_project_type, description, detected_language  # ✅ Langue passée
                 )
             except Exception as e:
                 logger.error(f"Erreur soumission module project_type: {e}")
@@ -213,56 +215,56 @@ class ProjectOrchestrator:
                 future.cancel()
             raise e
     
-    def _safe_predict_industry(self, description: str) -> Dict[str, Any]:
-        """Prédiction d'industrie avec gestion d'erreurs"""
+    def _safe_predict_industry(self, description: str, language: str) -> Dict[str, Any]:
+        """Prédiction d'industrie avec langue centralisée"""
         try:
-            result = self._modules['industry'].predict_industry(description)
+            result = self._modules['industry'].predict_industry(description, language)  # ✅ Passer la langue
             # Vérifier que le résultat contient les clés attendues
-            if 'industry' not in result:  # ✅ Corrigé
+            if 'industry' not in result:
                 logger.warning("Clé 'industry' manquante, ajout avec valeur par défaut")
-                result['industry'] = 'Technology'  # ✅ Corrigé
+                result['industry'] = 'Technology'
             return result
         except Exception as e:
             logger.error(f"Erreur dans _safe_predict_industry: {e}")
             return {
-                'industry': 'Technology',  # ✅ Corrigé
+                'industry': 'Technology',
                 'confidence': 0.5,
                 'method': 'fallback',
                 'error': str(e)
             }
     
-    def _safe_predict_complexity(self, description: str) -> Dict[str, Any]:
-        """Prédiction de complexité avec gestion d'erreurs"""
+    def _safe_predict_complexity(self, description: str, language: str) -> Dict[str, Any]:
+        """Prédiction de complexité avec langue centralisée"""
         try:
-            result = self._modules['complexity'].predict_complexity_and_duration(description)
+            result = self._modules['complexity'].predict_complexity_and_duration(description, language=language)  # ✅ Passer la langue
             # Vérifier que le résultat contient les clés attendues
-            if 'complexity' not in result:  # ✅ Corrigé
-                result['complexity'] = 'moyen'  # ✅ Corrigé
-            if 'estimated_duration_days' not in result:  # ✅ Corrigé
-                result['estimated_duration_days'] = 45  # ✅ Corrigé
+            if 'complexity' not in result:
+                result['complexity'] = 'moyen'
+            if 'estimated_duration_days' not in result:
+                result['estimated_duration_days'] = 45
             return result
         except Exception as e:
             logger.error(f"Erreur dans _safe_predict_complexity: {e}")
             return {
-                'complexity': 'moyen',  # ✅ Corrigé
-                'estimated_duration_days': 45,  # ✅ Corrigé
+                'complexity': 'moyen',
+                'estimated_duration_days': 45,
                 'working_days': 32,
                 'method': 'fallback',
                 'error': str(e)
             }
     
-    def _safe_predict_project_type(self, description: str) -> Dict[str, Any]:
-        """Prédiction de type de projet avec gestion d'erreurs"""
+    def _safe_predict_project_type(self, description: str, language: str) -> Dict[str, Any]:
+        """Prédiction de type de projet avec langue centralisée"""
         try:
-            result = self._modules['project_type'].predict_project_type_and_stack(description)
+            result = self._modules['project_type'].predict_project_type_and_stack(description, language=language)  # ✅ Passer la langue
             # Vérifier que le résultat contient les clés attendues
-            if 'project_type' not in result:  # ✅ Corrigé
-                result['project_type'] = 'Application Web'  # ✅ Corrigé
+            if 'project_type' not in result:
+                result['project_type'] = 'Application Web'
             return result
         except Exception as e:
             logger.error(f"Erreur dans _safe_predict_project_type: {e}")
             return {
-                'project_type': 'Application Web',  # ✅ Corrigé
+                'project_type': 'Application Web',
                 'confidence': 0.5,
                 'main_stack': 'React/Node.js',
                 'method': 'fallback',
@@ -273,18 +275,18 @@ class ProjectOrchestrator:
         """Créer un résultat de fallback en cas d'erreur"""
         fallback_results = {
             'industry': {
-                'industry': 'Technology',  # ✅ Corrigé
+                'industry': 'Technology',
                 'confidence': 0.5,
                 'method': 'fallback'
             },
             'complexity': {
-                'complexity': 'moyen',  # ✅ Corrigé
-                'estimated_duration_days': 45,  # ✅ Corrigé
+                'complexity': 'moyen',
+                'estimated_duration_days': 45,
                 'working_days': 32,
                 'method': 'fallback'
             },
             'project_type': {
-                'project_type': 'Application Web',  # ✅ Corrigé
+                'project_type': 'Application Web',
                 'confidence': 0.5,
                 'main_stack': 'React/Node.js',
                 'method': 'fallback'
@@ -292,8 +294,9 @@ class ProjectOrchestrator:
         }
         return fallback_results.get(module_name, {'error': 'Module inconnu'})
     
-    def _execute_advanced_modules_sequential(self, description: str, base_results: Dict[str, Any], request: ProjectAnalysisRequest) -> Dict[str, Any]:
-        """Exécution séquentielle des 3 modules avancés avec gestion d'erreurs robuste"""
+    def _execute_advanced_modules_sequential(self, description: str, base_results: Dict[str, Any], 
+                                           request: ProjectAnalysisRequest, detected_language: str) -> Dict[str, Any]:
+        """Exécution séquentielle des 3 modules avancés avec langue centralisée"""
         logger.info("Exécution séquentielle des modules avancés...")
         
         advanced_results = {}
@@ -307,12 +310,12 @@ class ProjectOrchestrator:
             
             logger.info(f"Variables extraites - Industry: {industry}, Complexity: {complexity}, Type: {project_type}, Duration: {duration}")
             
-            # Module 4: Générateur de tâches
+            # Module 4: Générateur de tâches avec langue centralisée
             try:
                 logger.info("Génération des tâches ML...")
                 max_tasks_count = request.max_tasks if hasattr(request, 'max_tasks') and request.max_tasks else 5
                 advanced_results['tasks'] = self._modules['task_generator'].generate_tasks_from_description(
-                    description, industry, complexity, max_tasks_count
+                    description, industry, complexity, max_tasks_count, language=detected_language  # ✅ Passer la langue
                 )
                 logger.info("Module task_generator terminé avec succès")
             except Exception as e:
@@ -323,11 +326,11 @@ class ProjectOrchestrator:
                     'method': 'fallback'
                 }
             
-            # Module 5: Générateur business
+            # Module 5: Générateur business avec langue centralisée
             try:
                 logger.info("Génération de l'analyse business...")
                 advanced_results['business'] = self._modules['business'].generate_complete_business_project(
-                    description, industry, complexity, duration, project_type
+                    description, industry, complexity, duration, project_type, language=detected_language  # ✅ Passer la langue
                 )
                 logger.info("Module business terminé avec succès")
             except Exception as e:
@@ -340,11 +343,11 @@ class ProjectOrchestrator:
                     'method': 'fallback'
                 }
             
-            # Module 6: Analyseur de risques
+            # Module 6: Analyseur de risques avec langue centralisée
             try:
                 logger.info("Analyse des risques et opportunités...")
                 advanced_results['risks'] = self._modules['risks'].analyze_project_risks_opportunities(
-                description, industry, complexity
+                    description, industry, complexity, language=detected_language  # ✅ Passer la langue
                 )
                 logger.info("Module risks terminé avec succès")
             except Exception as e:
@@ -369,7 +372,7 @@ class ProjectOrchestrator:
             }
     
     async def analyze_project(self, request: ProjectAnalysisRequest) -> Dict[str, Any]:
-        """Analyse complète de projet avec gestion d'erreurs robuste"""
+        """Analyse complète de projet avec gestion d'erreurs robuste et détection de langue centralisée"""
         start_time = time.time()
         
         try:
@@ -381,30 +384,44 @@ class ProjectOrchestrator:
             # Préparer les données
             description = request.description.strip()
             additional_context = request.additional_context or ""
-            language = request.preferred_language or 'french'
             
             if len(description) < 10:
                 raise HTTPException(status_code=400, detail="Description trop courte (minimum 10 caractères)")
             
-            logger.info(f"Analyse du projet en {language}")
+            # ✅ DÉTECTION CENTRALISÉE DE LA LANGUE
+            detected_language = detect_project_language(
+                description, 
+                additional_context, 
+                request.preferred_language
+            )
             
-            # Vérifier le cache
-            cache_key = self._get_cache_key(description, additional_context)
+            logger.info(f"🌍 Langue détectée centralisée: {detected_language}")
+            
+            # Vérifier le cache (inclut maintenant la langue dans la clé)
+            cache_key = self._get_cache_key(description, additional_context, detected_language)
             cached_result = self._check_cache(cache_key)
             if cached_result:
                 logger.info("Résultat trouvé dans le cache")
                 return cached_result
             
-            # Exécution parallèle des modules de base
-            base_results = self._execute_base_modules_parallel(description, language)
+            # Exécution parallèle des modules de base avec langue centralisée
+            base_results = self._execute_base_modules_parallel(description, detected_language)
             
-            # Exécution séquentielle des modules avancés
-            advanced_results = self._execute_advanced_modules_sequential(description, base_results, request)
+            # Exécution séquentielle des modules avancés avec langue centralisée
+            advanced_results = self._execute_advanced_modules_sequential(
+                description, 
+                base_results, 
+                request, 
+                detected_language
+            )
             
             # Assemblage de la réponse finale
             processing_time = time.time() - start_time
             final_response = self._assemble_final_response(
-                base_results, advanced_results, processing_time, language
+                base_results, 
+                advanced_results, 
+                processing_time, 
+                detected_language
             )
             
             # Mise à jour du cache et des statistiques
@@ -429,7 +446,7 @@ class ProjectOrchestrator:
     def _assemble_final_response(self, base_results: Dict[str, Any], 
                                 advanced_results: Dict[str, Any], 
                                 processing_time: float,
-                                language: str) -> Dict[str, Any]:
+                                detected_language: str) -> Dict[str, Any]:
         """Assemblage de la réponse finale structurée avec gestion des erreurs"""
         
         try:
@@ -440,16 +457,17 @@ class ProjectOrchestrator:
             
             return {
                 "success": True,
+                "detected_language": detected_language,  # ✅ Langue centralisée
                 "analysis": {
                     "project_classification": {
-                        "industry": industry_data.get('industry', 'Technology'),  # ✅ Corrigé
+                        "industry": industry_data.get('industry', 'Technology'),
                         "industry_confidence": industry_data.get('confidence', 0.0),
-                        "complexity": complexity_data.get('complexity', 'moyen'),  # ✅ Corrigé
+                        "complexity": complexity_data.get('complexity', 'moyen'),
                         "complexity_factors": complexity_data.get('complexity_analysis', {}).get('main_contributors', []),
-                        "project_type": project_type_data.get('project_type', 'Application Web'),  # ✅ Corrigé
+                        "project_type": project_type_data.get('project_type', 'Application Web'),
                         "type_confidence": project_type_data.get('confidence', 0.0),
                         "duration_estimate": {
-                            "total_days": complexity_data.get('estimated_duration_days', 45),  # ✅ Corrigé
+                            "total_days": complexity_data.get('estimated_duration_days', 45),
                             "business_days": complexity_data.get('working_days', 32),
                             "phases": complexity_data.get('duration_analysis', {}).get('phases', {})
                         }
@@ -481,7 +499,11 @@ class ProjectOrchestrator:
                 },
                 "metadata": {
                     "processing_time_seconds": round(processing_time, 2),
-                    "language": language,
+                    "language_info": {
+                        "detected_language": detected_language,
+                        "source": "centralized_detector",  # ✅ Indique la source
+                        "confidence": "high"
+                    },
                     "modules_status": {
                         "industry": "success" if 'error' not in industry_data else "fallback",
                         "complexity": "success" if 'error' not in complexity_data else "fallback",
@@ -499,6 +521,7 @@ class ProjectOrchestrator:
             return {
                 "success": False,
                 "error": f"Erreur d'assemblage: {str(e)}",
+                "detected_language": detected_language,
                 "processing_time_seconds": round(processing_time, 2),
                 "timestamp": datetime.now().isoformat()
             }
@@ -509,7 +532,7 @@ orchestrator = ProjectOrchestrator()
 # Application FastAPI
 app = FastAPI(
     title="AI Project Analyzer",
-    description="API d'analyse intelligente de projets avec 6 modules ML",
+    description="API d'analyse intelligente de projets avec 6 modules ML et détection de langue centralisée",
     version="1.0.0"
 )
 
@@ -527,7 +550,7 @@ async def analyze_project_endpoint(request: ProjectAnalysisRequest):
     """
     Endpoint principal pour l'analyse complète de projet
     
-    Exécute les 6 modules ML en séquence optimisée:
+    Exécute les 6 modules ML en séquence optimisée avec détection de langue centralisée:
     - Parallèle: Classification industrie + Complexité/Durée + Type de projet
     - Séquentiel: Génération tâches + Analyse business + Risques/Opportunités
     """
@@ -540,7 +563,8 @@ async def health_check():
         "status": "healthy",
         "modules_loaded": orchestrator._modules_loaded,
         "stats": orchestrator.stats,
-        "cache_size": len(orchestrator.cache)
+        "cache_size": len(orchestrator.cache),
+        "language_detection": "centralized"  # ✅ Statut détection centralisée
     }
 
 @app.get("/clear-cache")
@@ -553,8 +577,9 @@ async def clear_cache():
 if __name__ == "__main__":
     import uvicorn
     
-    print("🚀 Démarrage de l'API d'analyse de projets...")
-    print("📋 Endpoints disponibles:")
+    print(" Démarrage de l'API d'analyse de projets...")
+    print(" Détection de langue centralisée activée")
+    print(" Endpoints disponibles:")
     print("   POST /analyze - Analyse complète de projet")
     print("   GET /health - État de l'API")
     print("   GET /clear-cache - Vider le cache")

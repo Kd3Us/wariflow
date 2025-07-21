@@ -566,7 +566,7 @@ class MLIndustryClassifier:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def predict_industry(self, text: str) -> Dict[str, Any]:
+    def predict_industry(self, text: str, language: str = None) -> Dict[str, Any]:
         """Prédire l'industrie d'un texte"""
 
         if not text or len(text.strip()) < 10:
@@ -574,6 +574,9 @@ class MLIndustryClassifier:
 
         if not self.is_trained:
             self.train_model()
+
+        if language is None:
+            language = self.detect_language(text)
         
         # Cache
         text_hash = hashlib.md5(text.encode()).hexdigest()

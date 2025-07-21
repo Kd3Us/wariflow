@@ -29,6 +29,7 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem import SnowballStemmer
 from nltk.tag import pos_tag
 from nltk.chunk import ne_chunk
+from difflib import SequenceMatcher
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -323,6 +324,127 @@ class MLTaskFeatureExtractor:
         }
         return boosts.get(industry, 0.5)
 
+class TaskDeduplicator:
+    """Classe pour éliminer les doublons de tâches"""
+    
+    def __init__(self):
+        self.similarity_threshold = 0.80
+        self.name_similarity_threshold = 0.85
+    
+    def calculate_similarity(self, text1: str, text2: str) -> float:
+        """Calcule la similarité entre deux textes"""
+        if not text1 or not text2:
+            return 0.0
+        
+        text1_clean = self._clean_text(text1)
+        text2_clean = self._clean_text(text2)
+        
+        return SequenceMatcher(None, text1_clean, text2_clean).ratio()
+    
+    def _clean_text(self, text: str) -> str:
+        """Nettoie le texte pour la comparaison"""
+        text = text.lower().strip()
+        text = re.sub(r'[^\w\s]', '', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text
+    
+    def are_tasks_duplicate(self, task1: Dict[str, Any], task2: Dict[str, Any]) -> bool:
+        """Vérifie si deux tâches sont des doublons"""
+        name1 = task1.get('name', '')
+        name2 = task2.get('name', '')
+        desc1 = task1.get('description', '')
+        desc2 = task2.get('description', '')
+        
+        name_similarity = self.calculate_similarity(name1, name2)
+        desc_similarity = self.calculate_similarity(desc1, desc2)
+        
+        if name_similarity >= self.name_similarity_threshold:
+            return True
+        
+        if name_similarity >= 0.6 and desc_similarity >= self.similarity_threshold:
+            return True
+        
+        return False
+    
+    def deduplicate_tasks(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Élimine les doublons d'une liste de tâches"""
+        if not tasks:
+            return []
+        
+        unique_tasks = []
+        seen_tasks = []
+        
+        for task in tasks:
+            is_duplicate = False
+            
+            for existing_task in seen_tasks:
+                if self.are_tasks_duplicate(task, existing_task):
+                    print(f"Tâche dupliquée détectée : '{task.get('name', 'Sans nom')}'")
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                unique_tasks.append(task)
+                seen_tasks.append(task)
+        
+        print(f"Déduplication terminée : {len(tasks)} -> {len(unique_tasks)} tâches uniques")
+        return unique_tasks
+
+class TaskNameValidator:
+    """Classe pour valider et améliorer les noms de tâches"""
+    
+    def __init__(self):
+        self.forbidden_patterns = [
+            r'tâche\s*\d+',
+            r'task\s*\d+',
+            r'étape\s*\d+',
+            r'phase\s*\d+',
+            r'sans\s*nom',
+            r'unnamed',
+            r'untitled'
+        ]
+        
+        self.generic_names = {
+            'développement', 'implementation', 'coding', 'programming',
+            'test', 'testing', 'debug', 'debugging', 'fix', 'correction',
+            'design', 'conception', 'analyse', 'analysis', 'research',
+            'documentation', 'doc', 'planning', 'planification'
+        }
+    
+    def is_valid_name(self, name: str) -> bool:
+        """Vérifie si un nom de tâche est valide"""
+        if not name or len(name.strip()) < 3:
+            return False
+        
+        name_lower = name.lower().strip()
+        
+        # Vérifier les patterns interdits
+        for pattern in self.forbidden_patterns:
+            if re.search(pattern, name_lower):
+                return False
+        
+        # Vérifier si le nom n'est pas trop générique
+        if name_lower in self.generic_names:
+            return False
+        
+        return True
+    
+    def improve_task_name(self, name: str, context: str = "") -> str:
+        """Améliore le nom d'une tâche"""
+        if not name:
+            return "Tâche à définir"
+        
+        name = name.strip()
+        
+        # Si le nom est trop générique, ajouter du contexte
+        if name.lower() in self.generic_names and context:
+            name = f"{name} {context}"
+        
+        # Capitaliser proprement
+        if name and not name[0].isupper():
+            name = name[0].upper() + name[1:]
+        
+        return name
 
 class MLTaskGenerator:
     """Générateur de tâches basé entièrement sur ML multilingue"""
@@ -330,6 +452,8 @@ class MLTaskGenerator:
     def __init__(self):
         self.pattern_analyzer = MultilingualTaskPatternAnalyzer()
         self.feature_extractor = MLTaskFeatureExtractor()
+        self.task_validator = TaskNameValidator() 
+        self.task_deduplicator = TaskDeduplicator()
         
         # Modèles ML
         self.task_category_classifier = None
@@ -585,12 +709,16 @@ class MLTaskGenerator:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def generate_tasks_from_description(self, project_description: str, industry: str, complexity: str, max_tasks: int = 5) -> List[Dict[str, Any]]:
+    def generate_tasks_from_description(self, project_description: str, industry: str, complexity: str, max_tasks: int = 5, language: str = None) -> List[Dict[str, Any]]:
         """Générer des tâches ML pure à partir de la description du projet"""
         if not self.is_trained:
             self.train_models()
         
-        detected_language = self.pattern_analyzer.detect_language(project_description)
+        if language is None:
+            detected_language = self.pattern_analyzer.detect_language(project_description)
+        else:
+            detected_language = language
+            
         print(f"Génération de {max_tasks} tâches en {detected_language} pour: {project_description[:50]}...")
         
         # Analyser le projet pour extraire les concepts
@@ -599,13 +727,33 @@ class MLTaskGenerator:
         # Générer un large pool de tâches candidates
         generated_pool = self._generate_large_task_pool(project_concepts, industry, complexity, detected_language)
         
-        # Sélectionner les meilleures tâches
-        top_tasks = self._select_top_tasks(generated_pool, project_description, max_tasks * 3)
+        # ÉTAPE CRUCIALE : Déduplication et validation
+        print(f"Pool initial : {len(generated_pool)} tâches")
         
-        # Finaliser la sélection
+        # 1. Valider et améliorer les noms des tâches
+        validated_pool = []
+        for task in generated_pool:
+            if self.task_validator.is_valid_name(task['name']):
+                task['name'] = self.task_validator.improve_task_name(task['name'], industry)
+                validated_pool.append(task)
+            else:
+                print(f"Tâche rejetée (nom invalide) : '{task['name']}'")
+        
+        print(f"Après validation : {len(validated_pool)} tâches")
+        
+        # 2. Déduplication des tâches
+        unique_tasks = self.task_deduplicator.deduplicate_tasks(validated_pool)
+        
+        # 3. Assurer la diversité
+        diverse_tasks = self._ensure_task_diversity(unique_tasks)
+        
+        # 4. Sélectionner les meilleures tâches
+        top_tasks = self._select_top_tasks(diverse_tasks, project_description, max_tasks * 2)
+        
+        # 5. Finaliser la sélection
         final_tasks = self._select_final_tasks(top_tasks, project_description, max_tasks)
         
-        print(f"Génération terminée: {len(final_tasks)} tâches créées en {detected_language}")
+        print(f"Génération terminée : {len(final_tasks)} tâches créées en {detected_language}")
         return final_tasks
     
     def _extract_project_concepts(self, description: str, industry: str, language: str) -> Dict[str, List[str]]:
@@ -1107,6 +1255,27 @@ class MLTaskGenerator:
             task.pop('final_score', None)
         
         return final_tasks[:max_tasks]
+    
+    def _ensure_task_diversity(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Assurer la diversité des tâches en évitant les doublons conceptuels"""
+        if not tasks:
+            return tasks
+        
+        diverse_tasks = []
+        used_concepts = set()
+        
+        for task in tasks:
+            # Extraire les concepts clés du nom de la tâche
+            task_concepts = set(task['name'].lower().split())
+            
+            # Vérifier si cette tâche apporte de nouveaux concepts
+            new_concepts = task_concepts - used_concepts
+            
+            if new_concepts or len(diverse_tasks) < 3:  # Garder au moins 3 tâches
+                diverse_tasks.append(task)
+                used_concepts.update(task_concepts)
+        
+        return diverse_tasks
     
     def _calculate_relevance_score(self, name: str, concepts: Dict[str, List[str]], industry: str, complexity: str) -> float:
         """Calculer le score de pertinence d'une tâche"""

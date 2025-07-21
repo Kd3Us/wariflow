@@ -828,15 +828,18 @@ class MLRiskOpportunityAnalyzer:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def analyze_project_risks_opportunities(self, project_description: str, industry: str, complexity: str) -> Dict[str, Any]:
+    def analyze_project_risks_opportunities(self, project_description: str, industry: str, complexity: str, language: str = None) -> Dict[str, Any]:
         """Analyser les risques et opportunités d'un projet avec ML"""
         if not self.is_trained:
             self.train_models()
         
-        detected_language = self.analyzer.detect_language(project_description)
-        
-        # Cache
-        cache_key = hashlib.md5(f"{project_description}_{industry}_{complexity}".encode()).hexdigest()
+        if language is None:
+            detected_language = self.analyzer.detect_language(project_description)
+        else:
+            detected_language = language
+   
+        # Cache 
+        cache_key = hashlib.md5(f"{project_description}_{industry}_{complexity}_{detected_language}".encode()).hexdigest()
         if cache_key in self.prediction_cache:
             return self.prediction_cache[cache_key]
         

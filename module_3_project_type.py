@@ -973,13 +973,16 @@ class MLProjectTypeStackPredictor:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def predict_project_type_and_stack(self, text: str, complexity: str = "moyen", industry: str = None) -> Dict[str, Any]:
+    def predict_project_type_and_stack(self, text: str, complexity: str = "moyen", industry: str = None, language: str = None) -> Dict[str, Any]:
         """Prédire le type de projet et recommander une stack technique"""
         if not text or len(text.strip()) < 10:
             return {'error': 'Texte trop court (minimum 10 caractères)'}
         
         if not self.is_trained:
             self.train_model()
+
+        if language is None:
+            language = self.detect_language(text)
         
         # Cache
         cache_key = hashlib.md5(f"{text}_{complexity}_{industry}".encode()).hexdigest()

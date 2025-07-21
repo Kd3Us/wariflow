@@ -590,13 +590,16 @@ class MLComplexityDurationPredictor:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def predict_complexity_and_duration(self, text: str, industry: str = None) -> Dict[str, Any]:
+    def predict_complexity_and_duration(self, text: str, industry: str = None, language: str = None) -> Dict[str, Any]:
         """Prédire la complexité et la durée d'un projet"""
         if not text or len(text.strip()) < 10:
             return {'error': 'Texte trop court (minimum 10 caractères)'}
         
         if not self.is_trained:
             self.train_models()
+
+        if language is None:
+            language = self.detect_language(text)   
         
         # Cache
         cache_key = hashlib.md5(f"{text}_{industry}".encode()).hexdigest()

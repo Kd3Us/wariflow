@@ -1601,13 +1601,16 @@ class MLBusinessProjectGenerator:
         # Cache pour optimiser les performances
         self.generation_cache = {}
     
-    def generate_complete_business_project(self, project_description: str, industry: str, 
-                                          complexity: str, estimated_duration: int, 
-                                          project_type: str = None) -> Dict[str, Any]:
+    def generate_complete_business_project(self, project_description: str, industry: str,
+                                            complexity: str, estimated_duration: int,
+                                            project_type: str = None, language: str = None) -> Dict[str, Any]:
         """Générer un projet business complet"""
         
         # Détecter la langue
-        language = self.business_analyzer.detect_language(project_description)
+        if language is None:
+            detected_language = self.business_analyzer.detect_language(project_description)
+        else:
+            detected_language = language
         
         # Cache key
         cache_key = hashlib.md5(
