@@ -14,12 +14,13 @@ import { ProjectManagementTask } from '../../models/project-management.model';
 })
 export class AiProjectModalComponent implements OnInit {
   @Input() projects: Project[] = [];
+  @Input() selectedProjectId: string = '';
+  @Input() mode: 'project-creation' | 'task-creation' = 'project-creation';
   @Output() close = new EventEmitter<void>();
   @Output() projectsGenerated = new EventEmitter<ChatbotResponse>();
   @Output() tasksGenerated = new EventEmitter<ProjectManagementTask[]>();
 
   generationType: 'new-project' | 'add-tasks' = 'new-project';
-  selectedProjectId = '';
   maxTasks = 5;
 
   request: GenerateProjectRequest = {
@@ -40,6 +41,12 @@ export class AiProjectModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProjects();
+    
+    if (this.mode === 'task-creation' && this.selectedProjectId) {
+      this.generationType = 'add-tasks';
+    } else {
+      this.generationType = 'new-project';
+    }
   }
 
   private loadProjects(): void {
@@ -155,5 +162,11 @@ export class AiProjectModalComponent implements OnInit {
   }
   onCancel(): void {
     this.close.emit();
+  }
+
+  getSelectedProjectName(): string {
+    if (!this.selectedProjectId || !this.projects) return '';
+    const project = this.projects.find(p => p.id === this.selectedProjectId);
+    return project ? project.title : '';
   }
 }

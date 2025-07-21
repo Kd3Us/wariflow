@@ -1,8 +1,11 @@
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="onCancel()">
   <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4" (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-semibold text-gray-900">
+      <h2 *ngIf="generationType === 'new-project'" class="text-2xl font-semibold text-gray-900">
         Génération automatique de projets
+      </h2>
+      <h2 *ngIf="generationType === 'add-tasks'" class="text-2xl font-semibold text-gray-900">
+        Génération automatique de tâche
       </h2>
       <button (click)="onCancel()" class="text-gray-400 hover:text-gray-600">
         <span class="material-icons text-2xl">close</span>
@@ -11,35 +14,23 @@
 
     <form (ngSubmit)="onSubmit()" #form="ngForm">
       <div class="space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-3">
-            Que souhaitez-vous faire ?
+        <!-- Affichage du projet sélectionné si mode task-creation -->
+        <div *ngIf="mode === 'task-creation' && selectedProjectId">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Projet sélectionné
           </label>
-          <div class="space-y-3">
-            <label class="flex items-center">
-              <input 
-                type="radio" 
-                [(ngModel)]="generationType" 
-                name="generationType"
-                value="new-project"
-                class="mr-3 text-blue-600 focus:ring-blue-500"
-              >
-              <span class="text-sm">Créer un nouveau projet avec ses tâches</span>
-            </label>
-            <label class="flex items-center">
-              <input 
-                type="radio" 
-                [(ngModel)]="generationType" 
-                name="generationType"
-                value="add-tasks"
-                class="mr-3 text-blue-600 focus:ring-blue-500"
-              >
-              <span class="text-sm">Ajouter des tâches à un projet existant</span>
-            </label>
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="flex items-center">
+              <span class="material-icons text-blue-600 mr-2">folder</span>
+              <span class="text-blue-800 font-medium">
+                {{ getSelectedProjectName() }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div *ngIf="generationType === 'add-tasks'">
+        <!-- Sélection de projet si mode project-creation et type add-tasks -->
+        <div *ngIf="mode === 'project-creation' && generationType === 'add-tasks'">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Sélectionner le projet
           </label>
@@ -56,8 +47,11 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label *ngIf="generationType === 'new-project'" class="block text-sm font-medium text-gray-700 mb-2">
             Description du projet <span class="text-red-500">*</span>
+          </label>
+          <label *ngIf="generationType === 'add-tasks'" class="block text-sm font-medium text-gray-700 mb-2">
+            Description du tâche <span class="text-red-500">*</span>
           </label>
           <textarea
             name="description"

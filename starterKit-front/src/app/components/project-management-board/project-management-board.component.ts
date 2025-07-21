@@ -44,14 +44,14 @@ import { ChatbotResponse } from '../../services/chatbot.service';
             <span class="material-icons text-lg">help</span>
             Guide
           </button>
-          <!--<button
+          <button
             (click)="openAIProjectForm()"
             [disabled]="!selectedProjectId"
             class="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-purple-700"
           >
             <span class="material-icons text-lg">auto_awesome</span>
             Générer avec IA
-          </button>-->
+          </button>
           <button
             (click)="openTaskForm()"
             class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
@@ -244,6 +244,8 @@ import { ChatbotResponse } from '../../services/chatbot.service';
     <app-ai-project-modal
       *ngIf="showAiProjectModal"
       [projects]="projects"
+      [selectedProjectId]="selectedProjectId"
+      [mode]="'task-creation'"
       (close)="closeAIProjectModal()"
       (projectsGenerated)="onProjectsGenerated($event)"
       (tasksGenerated)="onTasksGenerated($event)"
