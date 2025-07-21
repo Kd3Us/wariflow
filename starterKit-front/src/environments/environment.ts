@@ -8,5 +8,6 @@ export const environment = {
   verifyTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/login",
   jwtSecret: "votre_secret_jwt",
   wariflowDocumentCorrect: "https://api.speedpresta.com/api/v1/wariflow/document/correct",
+  aiApiUrl: 'http://13.38.32.181:3001',
   versionNumber: 1.7
 };

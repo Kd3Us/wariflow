@@ -11,7 +11,7 @@ import { OnboardingComponent } from '../onboarding/onboarding.component';
 import { LoaderComponent } from '../loader/loader.component';
 import { AddUserModalComponent } from '../add-user-modal/add-user-modal.component';
 import { Observable } from 'rxjs';
-import { ChatbotResponse } from '../../services/chatbot.service';
+import { AIAnalysisResponse } from '../../models/ai-models';
 import { TeamMember } from '../../services/teams.service';
 
 @Component({
@@ -128,19 +128,17 @@ export class KanbanBoardComponent implements OnInit {
     this.showAiProjectModal = false;
   }
 
-  onProjectsGenerated(result: ChatbotResponse): void {
+  onProjectsGenerated(result: AIAnalysisResponse): void {
     console.log('[DEBUG] onProjectsGenerated appelé avec:', result);
     this.closeAIProjectModal();
     this.projectService.refreshProjects();
     
     setTimeout(() => {
-      console.log('[DEBUG] Rechargement DIRECT depuis API...');
+      console.log('[DEBUG] Rechargement via ProjectService...');
       
-      // Appel API direct au lieu du BehaviorSubject
-      this.projectService['http'].get<any[]>(this.projectService['apiUrl'] + '/my-organisation', { 
-        headers: this.projectService['getAuthHeaders']() 
-      }).subscribe(projects => {
-        console.log('[DEBUG] Projets reçus directement de l\'API:', projects);
+      // Utiliser getProjects() au lieu de getOrganizationProjects()
+      this.projectService.getProjects().subscribe((projects: Project[]) => {
+        console.log('[DEBUG] Projets reçus via ProjectService:', projects);
         
         const formattedProjects = projects.map(project => ({
           ...project,
@@ -155,14 +153,14 @@ export class KanbanBoardComponent implements OnInit {
         this.tractionProjects = formattedProjects.filter(p => p.stage === ProjectStage.TRACTION);
         this.leveeProjects = formattedProjects.filter(p => p.stage === ProjectStage.LEVEE);
         
-        console.log('[DEBUG] Répartition DIRECTE:');
+        console.log('[DEBUG] Répartition via Service:');
         console.log('- IDEE:', this.ideeProjects.length);
         console.log('- MVP:', this.mvpProjects.length);
         console.log('- TRACTION:', this.tractionProjects.length);
         console.log('- LEVEE:', this.leveeProjects.length);
         
         if (result && result.projects && result.projects.length > 0) {
-          //alert(`${result.projects.length} projet(s) créé(s) avec succès !`);
+          console.log(`${result.projects.length} projet(s) créé(s) avec succès !`);
         }
       });
       

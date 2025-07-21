@@ -4,8 +4,10 @@ import { map, catchError, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { AIClientService } from './ai-client.service';
 import { ProjectStage } from '../models/project.model';
+import { ProjectManagementStage } from '../models/project-management.model';
 import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
+import { ProjectCreationService } from './project-creation.service';
 
 export interface GenerateProjectRequest {
   description: string;
@@ -31,7 +33,8 @@ export class ChatbotService {
   constructor(
     private aiClient: AIClientService,
     private http: HttpClient,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private projectCreationService: ProjectCreationService
   ) {}
 
   private getAuthHeaders() {
@@ -63,13 +66,12 @@ export class ChatbotService {
           console.log('Début de la création du projet avec tâches ML...');
           
           try {
-            // 1. Créer le projet principal
             const projectData = {
               title: response.analysis.project_classification?.project_type || 'Projet IA',
               description: request.description,
-              stage: 'IDEE',
+              stage: ProjectStage.IDEE,
               priority: 'MEDIUM',
-              deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 jours
+              deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
               tags: ['ia-generated'],
               teamIds: [],
               progress: 0
@@ -77,13 +79,10 @@ export class ChatbotService {
 
             console.log('Création du projet:', projectData);
 
-            const savedProject = await this.http.post(`${this.apiUrl}/projects`, projectData, { 
-              headers: this.getAuthHeaders() 
-            }).toPromise() as any;
+            const savedProject = await this.projectCreationService.createProject(projectData);
 
             console.log('Projet créé avec succès:', savedProject);
 
-            // 2. Ajouter les tâches au projet créé
             if (savedProject?.id) {
               console.log(`Ajout de ${tasks.length} tâches au projet ${savedProject.id}`);
               
@@ -93,19 +92,17 @@ export class ChatbotService {
                   const taskData = {
                     title: task.name || 'Tâche IA',
                     description: task.description || 'Tâche générée par IA',
-                    stage: 'PENDING',
+                    stage: ProjectManagementStage.PENDING,
                     priority: task.priority || 'MEDIUM',
                     projectId: savedProject.id,
                     progress: 0,
-                    estimatedHours: task.estimatedHours || null,
-                    deadline: null,
+                    estimatedHours: task.estimatedHours || undefined,
+                    deadline: undefined,
                     assignedTo: [],
                     tags: task.tags || []
                   };
 
-                  const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
-                    headers: this.getAuthHeaders() 
-                  }).toPromise();
+                  const savedTask = await this.projectCreationService.createTask(taskData);
 
                   savedTasks.push(savedTask);
                   console.log(`Tâche ajoutée: ${task.name}`);
@@ -177,19 +174,17 @@ export class ChatbotService {
               const taskData = {
                 title: task.name || task.title || 'Tâche IA',
                 description: task.description || 'Tâche générée par IA',
-                stage: 'PENDING',
+                stage: ProjectManagementStage.PENDING,
                 priority: task.priority || 'MEDIUM',
                 projectId: request.projectId,
                 progress: 0,
-                estimatedHours: task.estimatedHours || null,
-                deadline: task.deadline ? new Date(task.deadline) : null,
+                estimatedHours: task.estimatedHours || undefined,
+                deadline: task.deadline ? new Date(task.deadline) : undefined,
                 assignedTo: [],
                 tags: task.tags || []
               };
 
-              const savedTask = await this.http.post(`${this.apiUrl}/project-management`, taskData, { 
-                headers: this.getAuthHeaders() 
-              }).toPromise();
+              const savedTask = await this.projectCreationService.createTask(taskData);
 
               savedTasks.push(savedTask);
               console.log(`Tâche sauvée: ${task.name || task.title}`);

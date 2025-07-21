@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, retry, map, timeout } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { AIGenerateRequest, AIAnalysisResponse, AIHealthResponse } from '../models/ai-models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AIClientService {
-  private baseUrl = 'http://13.38.32.181:3001';
+  private baseUrl = environment.aiApiUrl;
   
   constructor(private http: HttpClient) {}
 
@@ -18,7 +20,7 @@ export class AIClientService {
     });
   }
 
-  generateProjects(request: any): Observable<any> {
+  generateProjects(request: AIGenerateRequest): Observable<AIAnalysisResponse> {
     console.log('Appel API FastAPI locale:', this.baseUrl + '/analyze');
     console.log('Données envoyées:', request);
     
@@ -52,7 +54,7 @@ export class AIClientService {
             projects: [],
             analysis: analysisData.analysis,
             suggestions: ['Projet généré par IA']
-          };
+          } as AIAnalysisResponse;
         }
         
         return {
@@ -61,7 +63,7 @@ export class AIClientService {
           projects: [],
           analysis: {},
           suggestions: ['Erreur d\'analyse']
-        };
+        } as AIAnalysisResponse;
       }),
       catchError(error => {
         console.error('Erreur détaillée:', error);
@@ -74,16 +76,19 @@ export class AIClientService {
           projects: [],
           analysis: {},
           suggestions: ['Erreur de connexion au microservice']
-        });
+        } as AIAnalysisResponse);
       })
     );
   }
 
-  checkHealth(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/health`).pipe(
+  checkHealth(): Observable<AIHealthResponse> {
+    return this.http.get<any>(`${this.baseUrl}/health`).pipe(
       map(response => {
         console.log('Health check OK:', response);
-        return response;
+        return {
+          status: response.status || 'ok',
+          timestamp: response.timestamp || new Date().toISOString()
+        } as AIHealthResponse;
       }),
       catchError(error => {
         console.error('Health check failed:', error);
