@@ -8,21 +8,7 @@ import { ProjectManagementStage } from '../models/project-management.model';
 import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
 import { ProjectCreationService } from './project-creation.service';
-
-export interface GenerateProjectRequest {
-  description: string;
-  context?: string;
-  targetAudience?: string;
-  maxTasks?: number;
-}
-
-export interface ChatbotResponse {
-  success: boolean;
-  message: string;
-  projects: any[];
-  analysis: any;
-  suggestions: string[];
-}
+import { AIGenerateRequest, AIAnalysisResponse } from '../models/ai-models';
 
 @Injectable({
   providedIn: 'root'
@@ -45,7 +31,7 @@ export class ChatbotService {
     };
   }
 
-  generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
+  generateProject(request: AIGenerateRequest): Observable<AIAnalysisResponse> {
     console.log('Appel du microservice IA:', request);
     
     return this.aiClient.generateProjects({
@@ -119,7 +105,7 @@ export class ChatbotService {
                 projects: [{ ...savedProject, tasks: savedTasks }],
                 analysis: response.analysis,
                 suggestions: ['Projet et tâches créés avec succès']
-              };
+              } as AIAnalysisResponse;
             }
           } catch (error) {
             console.error('Erreur création projet:', error);
@@ -133,7 +119,7 @@ export class ChatbotService {
           projects: [],
           analysis: response.analysis || {},
           suggestions: ['Aucune tâche générée par le ML']
-        };
+        } as AIAnalysisResponse;
       }),
       catchError(error => {
         console.error('Erreur microservice IA:', error);
@@ -143,7 +129,7 @@ export class ChatbotService {
           projects: [],
           analysis: {},
           suggestions: ['Microservice IA indisponible: ' + (error?.message || 'Erreur inconnue')]
-        });
+        } as AIAnalysisResponse);
       })
     );
   }
@@ -159,7 +145,7 @@ export class ChatbotService {
       maxTasks: request.maxTasks || 5,
       taskGeneration: true
     }).pipe(
-      switchMap(async (response: any) => {
+      switchMap(async (response: AIAnalysisResponse) => {
         console.log('Réponse IA pour tâches:', response);
         console.log('Structure détaillée:', response.analysis?.project_tasks);
         console.log('Tâches ML:', response.analysis?.project_tasks?.ml_generated_tasks);
