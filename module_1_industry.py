@@ -42,14 +42,15 @@ class IndustryDetector:
     def __init__(self):
         self.supported_languages = ['french', 'english']
         self.industries = [
-            'Technology',     # Tech générale, SaaS, DevOps
-            'Healthcare',     # Santé, médical, télémédecine
-            'Finance',        # FinTech, banque, assurance
-            'Education',      # EdTech, formation, e-learning
-            'Retail',         # E-commerce, marketplace
-            'Media',          # Streaming, contenu, réseaux sociaux
-            'Logistics',      # Transport, livraison, supply chain
-            'Energy'          # Smart grid, IoT industriel, cleantech
+            'Technology', 'Healthcare', 'Finance', 'Education', 
+            'Retail', 'Media', 'Logistics', 'Energy',
+            'Consulting', 'Legal Services', 'Marketing & Advertising', 'Human Resources',
+            'Real Estate', 'Insurance',
+            'Automotive', 'Aerospace', 'Construction', 'Food & Beverage', 
+            'Textile & Fashion', 'Chemical',
+            'Gaming', 'Sports & Fitness', 'Travel & Tourism', 'Events & Hospitality',
+            'Government', 'Non-profit', 'Environmental', 'Agriculture',
+            'Biotechnology', 'Research & Development', 'Pharmaceutical'
         ]
         
         # Patterns linguistiques par industrie et langue
@@ -165,8 +166,313 @@ class IndustryDetector:
                     'energy efficiency', 'power grid', 'smart meter',
                     'automation', 'greentech', 'cleantech'
                 ]
+            },
+
+            'Consulting': {
+                'french': [
+                    'conseil', 'consultance', 'audit', 'stratégie', 'expertise', 'accompagnement',
+                    'consultant', 'advisory', 'coaching', 'optimisation', 'transformation',
+                    'analyse métier', 'conseil stratégique', 'amélioration processus'
+                ],
+                'english': [
+                    'consulting', 'advisory', 'audit', 'strategy', 'expertise', 'guidance',
+                    'consultant', 'coaching', 'optimization', 'transformation', 'analysis',
+                    'business analysis', 'strategic consulting', 'process improvement'
+                ]
+        },
+    
+            'Legal Services': {
+                'french': [
+                    'juridique', 'droit', 'avocat', 'notaire', 'contrat', 'compliance',
+                    'réglementation', 'contentieux', 'propriété intellectuelle', 'audit légal',
+                    'conseil juridique', 'cabinet avocat', 'service juridique'
+                ],
+                'english': [
+                    'legal', 'law', 'lawyer', 'attorney', 'contract', 'compliance',
+                    'regulation', 'litigation', 'intellectual property', 'legal audit',
+                    'legal counsel', 'law firm', 'legal services'
+                ]
+            },
+            
+            'Marketing & Advertising': {
+                'french': [
+                    'marketing', 'publicité', 'communication', 'brand', 'marque', 'campagne',
+                    'digital marketing', 'seo', 'sem', 'social media', 'content marketing',
+                    'agence communication', 'stratégie marketing', 'growth hacking'
+                ],
+                'english': [
+                    'marketing', 'advertising', 'communication', 'brand', 'campaign', 'promotion',
+                    'digital marketing', 'seo', 'sem', 'social media', 'content marketing',
+                    'marketing agency', 'marketing strategy', 'growth hacking'
+                ]
+            },
+            
+            'Human Resources': {
+                'french': [
+                    'ressources humaines', 'rh', 'recrutement', 'talent', 'formation',
+                    'paie', 'gestion personnel', 'employee', 'workforce', 'hiring',
+                    'talent management', 'hr management', 'employee engagement'
+                ],
+                'english': [
+                    'human resources', 'hr', 'recruitment', 'talent', 'training',
+                    'payroll', 'personnel management', 'employee', 'workforce', 'hiring',
+                    'talent management', 'hr management', 'employee engagement'
+                ]
+            },
+            
+            'Real Estate': {
+                'french': [
+                    'immobilier', 'real estate', 'propriété', 'location', 'vente',
+                    'gestion locative', 'syndic', 'promotion immobilière', 'investissement',
+                    'property management', 'asset management', 'facility management'
+                ],
+                'english': [
+                    'real estate', 'property', 'rental', 'sales', 'leasing',
+                    'property management', 'facility management', 'real estate development',
+                    'investment', 'asset management', 'commercial real estate'
+                ]
+            },
+            
+            'Insurance': {
+                'french': [
+                    'assurance', 'insurance', 'mutuelle', 'couverture', 'sinistre',
+                    'police assurance', 'actuaire', 'risk management', 'souscription',
+                    'assurance vie', 'assurance auto', 'assurance santé'
+                ],
+                'english': [
+                    'insurance', 'coverage', 'claim', 'policy', 'underwriting',
+                    'actuarial', 'risk management', 'life insurance', 'auto insurance',
+                    'health insurance', 'property insurance', 'liability insurance'
+                ]
+            },
+            
+            # === INDUSTRIE & MANUFACTURING ===
+            'Automotive': {
+                'french': [
+                    'automobile', 'automotive', 'véhicule', 'transport', 'voiture',
+                    'constructeur auto', 'pièces auto', 'garage', 'mécanique',
+                    'électrique', 'autonome', 'connected car', 'mobility'
+                ],
+                'english': [
+                    'automotive', 'vehicle', 'car', 'transport', 'automobile',
+                    'automotive manufacturer', 'auto parts', 'garage', 'mechanical',
+                    'electric vehicle', 'autonomous', 'connected car', 'mobility'
+                ]
+            },
+            
+            'Aerospace': {
+                'french': [
+                    'aérospatial', 'aerospace', 'aviation', 'aéronautique', 'spatial',
+                    'avion', 'satellite', 'défense', 'missile', 'drone',
+                    'industry aéronautique', 'space technology', 'flight systems'
+                ],
+                'english': [
+                    'aerospace', 'aviation', 'aeronautics', 'space', 'aircraft',
+                    'satellite', 'defense', 'missile', 'drone', 'flight',
+                    'aerospace industry', 'space technology', 'flight systems'
+                ]
+            },
+            
+            'Construction': {
+                'french': [
+                    'construction', 'btp', 'bâtiment', 'travaux publics', 'génie civil',
+                    'chantier', 'architecture', 'ingénierie', 'infrastructure',
+                    'construction management', 'project management', 'facility'
+                ],
+                'english': [
+                    'construction', 'building', 'civil engineering', 'infrastructure',
+                    'site', 'architecture', 'engineering', 'contractor',
+                    'construction management', 'project management', 'facility'
+                ]
+            },
+            
+            'Food & Beverage': {
+                'french': [
+                    'alimentaire', 'food', 'beverage', 'boisson', 'restaurant',
+                    'cuisine', 'nutrition', 'agroalimentaire', 'food tech',
+                    'delivery', 'catering', 'food service', 'restaurant management'
+                ],
+                'english': [
+                    'food', 'beverage', 'restaurant', 'cuisine', 'nutrition',
+                    'food industry', 'food tech', 'delivery', 'catering',
+                    'food service', 'restaurant management', 'hospitality'
+                ]
+            },
+            
+            'Textile & Fashion': {
+                'french': [
+                    'textile', 'mode', 'fashion', 'vêtement', 'habillement',
+                    'design', 'couture', 'stylisme', 'fashion tech', 'retail mode',
+                    'luxury', 'brand management', 'fashion design'
+                ],
+                'english': [
+                    'textile', 'fashion', 'clothing', 'apparel', 'garment',
+                    'design', 'style', 'fashion tech', 'fashion retail',
+                    'luxury', 'brand management', 'fashion design'
+                ]
+            },
+            
+            'Chemical': {
+                'french': [
+                    'chimique', 'chemical', 'pharmaceutique', 'laboratoire', 'recherche',
+                    'production chimique', 'process', 'matériaux', 'innovation',
+                    'chemical engineering', 'lab management', 'quality control'
+                ],
+                'english': [
+                    'chemical', 'pharmaceutical', 'laboratory', 'research', 'lab',
+                    'chemical production', 'process', 'materials', 'innovation',
+                    'chemical engineering', 'lab management', 'quality control'
+                ]
+            },
+            
+            # === CREATIVE & ENTERTAINMENT ===
+            'Gaming': {
+                'french': [
+                    'jeu', 'gaming', 'game', 'mobile game', 'console', 'pc gaming',
+                    'unity', 'unreal', 'gameplay', 'game design', 'esports',
+                    'game development', 'indie game', 'casual game'
+                ],
+                'english': [
+                    'gaming', 'game', 'mobile game', 'console', 'pc gaming',
+                    'unity', 'unreal', 'gameplay', 'game design', 'esports',
+                    'game development', 'indie game', 'casual game'
+                ]
+            },
+            
+            'Sports & Fitness': {
+                'french': [
+                    'sport', 'fitness', 'entraînement', 'gym', 'coach', 'sportif',
+                    'wellness', 'health', 'performance', 'athlete', 'club sport',
+                    'sports management', 'fitness tracking', 'sports analytics'
+                ],
+                'english': [
+                    'sports', 'fitness', 'training', 'gym', 'coach', 'athletic',
+                    'wellness', 'health', 'performance', 'athlete', 'sports club',
+                    'sports management', 'fitness tracking', 'sports analytics'
+                ]
+            },
+            
+            'Travel & Tourism': {
+                'french': [
+                    'voyage', 'tourism', 'tourisme', 'travel', 'hôtel', 'booking',
+                    'réservation', 'destination', 'vacances', 'tour operator',
+                    'travel tech', 'hospitality', 'tourism management'
+                ],
+                'english': [
+                    'travel', 'tourism', 'hotel', 'booking', 'reservation',
+                    'destination', 'vacation', 'tour operator', 'hospitality',
+                    'travel tech', 'tourism management', 'travel planning'
+                ]
+            },
+            
+            'Events & Hospitality': {
+                'french': [
+                    'événement', 'event', 'conférence', 'meeting', 'wedding',
+                    'organisation événement', 'event management', 'hospitality',
+                    'venue', 'catering', 'event planning', 'event tech'
+                ],
+                'english': [
+                    'event', 'conference', 'meeting', 'wedding', 'gathering',
+                    'event management', 'hospitality', 'venue', 'catering',
+                    'event planning', 'event tech', 'event organization'
+                ]
+            },
+            
+            # === PUBLIC & NON-PROFIT ===
+            'Government': {
+                'french': [
+                    'gouvernement', 'public', 'administration', 'collectivité', 'mairie',
+                    'service public', 'e-government', 'digital government', 'civic tech',
+                    'gov tech', 'public service', 'government digital'
+                ],
+                'english': [
+                    'government', 'public', 'administration', 'municipality', 'city',
+                    'public service', 'e-government', 'digital government', 'civic tech',
+                    'gov tech', 'public sector', 'government digital'
+                ]
+            },
+            
+            'Non-profit': {
+                'french': [
+                    'non-profit', 'association', 'ong', 'charity', 'fondation',
+                    'social impact', 'cause', 'fundraising', 'volunteer',
+                    'nonprofit management', 'social good', 'community'
+                ],
+                'english': [
+                    'non-profit', 'nonprofit', 'ngo', 'charity', 'foundation',
+                    'social impact', 'cause', 'fundraising', 'volunteer',
+                    'nonprofit management', 'social good', 'community'
+                ]
+            },
+            
+            'Environmental': {
+                'french': [
+                    'environnement', 'environmental', 'écologie', 'sustainability',
+                    'green tech', 'clean tech', 'renewable', 'carbon', 'climate',
+                    'environmental management', 'eco-friendly', 'sustainable'
+                ],
+                'english': [
+                    'environmental', 'ecology', 'sustainability', 'green tech',
+                    'clean tech', 'renewable', 'carbon', 'climate', 'eco',
+                    'environmental management', 'eco-friendly', 'sustainable'
+                ]
+            },
+            
+            'Agriculture': {
+                'french': [
+                    'agriculture', 'farm', 'farming', 'agri', 'agricole', 'élevage',
+                    'agtech', 'precision agriculture', 'smart farming', 'crop',
+                    'agricultural management', 'farm tech', 'agribusiness'
+                ],
+                'english': [
+                    'agriculture', 'farm', 'farming', 'agricultural', 'livestock',
+                    'agtech', 'precision agriculture', 'smart farming', 'crop',
+                    'agricultural management', 'farm tech', 'agribusiness'
+                ]
+            },
+            
+            # === SCIENCES & RESEARCH ===
+            'Biotechnology': {
+                'french': [
+                    'biotechnologie', 'biotech', 'bio', 'génétique', 'adn',
+                    'bioinformatique', 'life sciences', 'molecular', 'research',
+                    'biotech research', 'genetic engineering', 'biomedical'
+                ],
+                'english': [
+                    'biotechnology', 'biotech', 'bio', 'genetic', 'dna',
+                    'bioinformatics', 'life sciences', 'molecular', 'research',
+                    'biotech research', 'genetic engineering', 'biomedical'
+                ]
+            },
+            
+            'Research & Development': {
+                'french': [
+                    'recherche', 'développement', 'r&d', 'research', 'innovation',
+                    'laboratoire', 'étude', 'analyse', 'investigation', 'discovery',
+                    'research management', 'scientific research', 'applied research'
+                ],
+                'english': [
+                    'research', 'development', 'r&d', 'innovation', 'laboratory',
+                    'study', 'analysis', 'investigation', 'discovery', 'science',
+                    'research management', 'scientific research', 'applied research'
+                ]
+            },
+            
+            'Pharmaceutical': {
+                'french': [
+                    'pharmaceutique', 'pharma', 'médicament', 'drug', 'clinical',
+                    'essai clinique', 'regulatory', 'fda', 'medical device',
+                    'pharmaceutical research', 'drug development', 'clinical trials'
+                ],
+                'english': [
+                    'pharmaceutical', 'pharma', 'drug', 'medicine', 'clinical',
+                    'clinical trial', 'regulatory', 'fda', 'medical device',
+                    'pharmaceutical research', 'drug development', 'clinical trials'
+                ]
             }
         }
+            
+        
 
         
     def detect_language(self, text: str) -> str:
@@ -494,6 +800,494 @@ class MLIndustryClassifier:
                     "AI-powered energy optimization solution",
                     "Green energy trading platform"
                 ]
+            },
+            
+            # === SERVICES B2B ===
+            'Consulting': {
+                'french': [
+                    "Plateforme de conseil stratégique pour PME avec outils d'analyse métier",
+                    "Application de coaching business en ligne avec suivi personnalisé",
+                    "Système de gestion des missions de consultance avec facturation temps",
+                    "Outil d'audit automatisé pour processus d'entreprise avec reporting",
+                    "Plateforme d'accompagnement transformation digitale avec méthodologie agile",
+                    "Solution d'optimisation des processus métier avec analytics avancées",
+                    "Portail de conseil en stratégie d'innovation avec benchmarking concurrentiel"
+                ],
+                'english': [
+                    "Strategic consulting platform for SMEs with business analysis tools",
+                    "Online business coaching application with personalized tracking",
+                    "Consulting mission management system with time billing",
+                    "Automated audit tool for business processes with reporting",
+                    "Digital transformation coaching platform with agile methodology",
+                    "Business process optimization solution with advanced analytics",
+                    "Innovation strategy consulting portal with competitive benchmarking"
+                ]
+            },
+            
+            'Legal Services': {
+                'french': [
+                    "Application de gestion de cabinet d'avocats avec facturation temps",
+                    "Plateforme de suivi des contrats juridiques avec alertes deadline",
+                    "Système de compliance automatisée avec veille réglementaire",
+                    "Outil de recherche jurisprudentielle intelligent avec IA",
+                    "Application de gestion des contentieux avec workflow automatisé",
+                    "Portail client pour services juridiques avec signature électronique",
+                    "Plateforme de propriété intellectuelle avec gestion brevets"
+                ],
+                'english': [
+                    "Law firm management application with time billing system",
+                    "Legal contract tracking platform with deadline alerts",
+                    "Automated compliance system with regulatory monitoring",
+                    "Intelligent legal research tool with AI-powered search",
+                    "Litigation management application with automated workflow",
+                    "Client portal for legal services with electronic signature",
+                    "Intellectual property platform with patent management"
+                ]
+            },
+            
+            'Marketing & Advertising': {
+                'french': [
+                    "Plateforme de marketing automation multicanal avec lead scoring",
+                    "Outil d'analyse des campagnes publicitaires avec ROI tracking",
+                    "Application de gestion de brand management avec asset library",
+                    "Système de content marketing automatisé avec planning éditorial",
+                    "Dashboard d'analytics marketing avancé avec attribution modeling",
+                    "Plateforme de growth hacking avec A/B testing intégré",
+                    "Solution de social media management avec programmation posts"
+                ],
+                'english': [
+                    "Multi-channel marketing automation platform with lead scoring",
+                    "Advertising campaign analysis tool with ROI tracking",
+                    "Brand management application with digital asset library",
+                    "Automated content marketing system with editorial calendar",
+                    "Advanced marketing analytics dashboard with attribution modeling",
+                    "Growth hacking platform with integrated A/B testing",
+                    "Social media management solution with post scheduling"
+                ]
+            },
+            
+            'Human Resources': {
+                'french': [
+                    "SIRH complet avec gestion des talents et évaluations performance",
+                    "Plateforme de recrutement intelligent avec matching candidats",
+                    "Application de gestion de la paie avec conformité sociale",
+                    "Système de formation et e-learning RH avec tracking progrès",
+                    "Outil d'évaluation des performances avec 360° feedback",
+                    "Portail employé self-service avec demandes congés",
+                    "Solution de talent management avec plans de carrière"
+                ],
+                'english': [
+                    "Complete HRIS with talent management and performance reviews",
+                    "Intelligent recruitment platform with candidate matching",
+                    "Payroll management application with social compliance",
+                    "HR training and e-learning system with progress tracking",
+                    "Performance evaluation tool with 360-degree feedback",
+                    "Employee self-service portal with leave requests",
+                    "Talent management solution with career development plans"
+                ]
+            },
+            
+            'Real Estate': {
+                'french': [
+                    "Plateforme de gestion locative complète avec comptabilité intégrée",
+                    "Application d'estimation immobilière IA avec données marché",
+                    "Système de visite virtuelle 3D avec réalité augmentée",
+                    "Outil de prospection immobilière avec CRM spécialisé",
+                    "Portail de syndic de copropriété avec gestion charges",
+                    "Application de transaction immobilière avec signature électronique",
+                    "Plateforme d'investissement immobilier avec analyse rentabilité"
+                ],
+                'english': [
+                    "Complete rental management platform with integrated accounting",
+                    "AI real estate valuation app with market data integration",
+                    "3D virtual tour system with augmented reality features",
+                    "Real estate prospecting tool with specialized CRM",
+                    "Property management portal with expense tracking",
+                    "Real estate transaction application with electronic signature",
+                    "Real estate investment platform with profitability analysis"
+                ]
+            },
+            
+            'Insurance': {
+                'french': [
+                    "Système de souscription d'assurance digital avec scoring risque",
+                    "Application de déclaration sinistre mobile avec photos géolocalisées",
+                    "Plateforme de courtage en assurance avec comparateur produits",
+                    "Outil d'évaluation des risques avec intelligence artificielle",
+                    "Système de gestion des polices avec renouvellement automatique",
+                    "Application de mutuelle santé avec tiers payant intégré",
+                    "Portail client assurance auto avec assistance dépannage"
+                ],
+                'english': [
+                    "Digital insurance underwriting system with risk scoring",
+                    "Mobile claim reporting application with geolocated photos",
+                    "Insurance brokerage platform with product comparator",
+                    "Risk assessment tool with artificial intelligence",
+                    "Policy management system with automatic renewal",
+                    "Health insurance application with integrated third-party payment",
+                    "Auto insurance client portal with roadside assistance"
+                ]
+            },
+            
+            # === INDUSTRIE & MANUFACTURING ===
+            'Automotive': {
+                'french': [
+                    "Système de diagnostic automobile connecté avec IoT véhicules",
+                    "Application de gestion de flotte avec maintenance prédictive",
+                    "Plateforme de pièces détachées auto avec catalogue interactif",
+                    "Outil de maintenance prédictive véhicules avec capteurs",
+                    "Application de covoiturage entreprise avec optimisation trajets",
+                    "Système de géolocalisation véhicules avec alertes conducteur",
+                    "Plateforme de vente automobile avec configurateur 3D"
+                ],
+                'english': [
+                    "Connected automotive diagnostic system with vehicle IoT",
+                    "Fleet management application with predictive maintenance",
+                    "Auto parts platform with interactive catalog",
+                    "Vehicle predictive maintenance tool with sensor integration",
+                    "Corporate carpooling application with route optimization",
+                    "Vehicle geolocation system with driver alerts",
+                    "Automotive sales platform with 3D configurator"
+                ]
+            },
+            
+            'Aerospace': {
+                'french': [
+                    "Système de maintenance aéronautique avec réalité augmentée",
+                    "Application de gestion de vol avec planification automatique",
+                    "Plateforme de supply chain aérospatiale avec traçabilité pièces",
+                    "Outil de simulation de vol avec environnement virtuel",
+                    "Système de monitoring satellite avec télémétrie temps réel",
+                    "Application de gestion défense avec sécurité renforcée",
+                    "Plateforme de certification aéronautique avec workflow approval"
+                ],
+                'english': [
+                    "Aeronautical maintenance system with augmented reality",
+                    "Flight management application with automatic planning",
+                    "Aerospace supply chain platform with parts traceability",
+                    "Flight simulation tool with virtual environment",
+                    "Satellite monitoring system with real-time telemetry",
+                    "Defense management application with enhanced security",
+                    "Aeronautical certification platform with approval workflow"
+                ]
+            },
+            
+            'Construction': {
+                'french': [
+                    "Plateforme de gestion de chantier avec suivi BIM intégré",
+                    "Application de planification travaux avec gestion ressources",
+                    "Système de sécurité chantier avec IoT et alertes temps réel",
+                    "Outil d'estimation de coûts construction avec base données matériaux",
+                    "Plateforme de collaboration BTP avec partage documents sécurisé",
+                    "Application de gestion qualité avec check-lists digitales",
+                    "Système de facility management avec maintenance préventive"
+                ],
+                'english': [
+                    "Construction site management platform with integrated BIM tracking",
+                    "Work planning application with resource management",
+                    "Construction site safety system with IoT and real-time alerts",
+                    "Construction cost estimation tool with materials database",
+                    "BTP collaboration platform with secure document sharing",
+                    "Quality management application with digital checklists",
+                    "Facility management system with preventive maintenance"
+                ]
+            },
+            
+            'Food & Beverage': {
+                'french': [
+                    "Application de gestion restaurant avec commandes en ligne",
+                    "Plateforme de livraison de repas avec tracking temps réel",
+                    "Système de traçabilité alimentaire avec blockchain",
+                    "Outil de gestion d'inventaire cuisine avec dates péremption",
+                    "Application de réservation restaurant avec gestion tables",
+                    "Plateforme de nutrition personnalisée avec IA",
+                    "Système de catering événementiel avec planification menus"
+                ],
+                'english': [
+                    "Restaurant management application with online ordering",
+                    "Meal delivery platform with real-time tracking",
+                    "Food traceability system with blockchain technology",
+                    "Kitchen inventory management tool with expiration dates",
+                    "Restaurant reservation application with table management",
+                    "Personalized nutrition platform with AI recommendations",
+                    "Event catering system with menu planning"
+                ]
+            },
+            
+            'Textile & Fashion': {
+                'french': [
+                    "Plateforme de design mode avec outils de création collaborative",
+                    "Application de vente vêtements avec essayage virtuel AR",
+                    "Système de gestion de production textile avec supply chain",
+                    "Outil de trend forecasting mode avec intelligence artificielle",
+                    "Plateforme de mode durable avec traçabilité matériaux",
+                    "Application de personal shopping avec recommandations IA",
+                    "Système de gestion collection mode avec planning saisonnier"
+                ],
+                'english': [
+                    "Fashion design platform with collaborative creation tools",
+                    "Clothing sales application with virtual AR try-on",
+                    "Textile production management system with supply chain",
+                    "Fashion trend forecasting tool with artificial intelligence",
+                    "Sustainable fashion platform with materials traceability",
+                    "Personal shopping application with AI recommendations",
+                    "Fashion collection management system with seasonal planning"
+                ]
+            },
+            
+            'Chemical': {
+                'french': [
+                    "Système de gestion laboratoire avec LIMS intégré",
+                    "Application de traçabilité produits chimiques avec sécurité",
+                    "Plateforme de R&D chimie avec simulation moléculaire",
+                    "Outil de compliance réglementaire chimique avec REACH",
+                    "Système de contrôle qualité avec analyses automatisées",
+                    "Application de gestion des déchets chimiques avec tracking",
+                    "Plateforme d'innovation matériaux avec base données propriétés"
+                ],
+                'english': [
+                    "Laboratory management system with integrated LIMS",
+                    "Chemical product traceability application with safety features",
+                    "Chemistry R&D platform with molecular simulation",
+                    "Chemical regulatory compliance tool with REACH integration",
+                    "Quality control system with automated analyses",
+                    "Chemical waste management application with tracking",
+                    "Materials innovation platform with properties database"
+                ]
+            },
+            
+            # === CREATIVE & ENTERTAINMENT ===
+            'Gaming': {
+                'french': [
+                    "Développement de jeu mobile casual avec système de progression",
+                    "Plateforme de game analytics avec métriques comportementales joueurs",
+                    "Moteur de jeu 2D personnalisé avec outils de level design",
+                    "Application de gestion d'équipe esports avec planning tournois",
+                    "Marketplace d'assets de jeux avec système de licensing",
+                    "Système de matchmaking intelligent avec équilibrage skill-based",
+                    "Plateforme de streaming gaming avec interaction communauté temps réel"
+                ],
+                'english': [
+                    "Casual mobile game development with progression system",
+                    "Game analytics platform with player behavioral metrics",
+                    "Custom 2D game engine with level design tools",
+                    "Esports team management application with tournament scheduling",
+                    "Game assets marketplace with licensing system",
+                    "Intelligent matchmaking system with skill-based balancing",
+                    "Gaming streaming platform with real-time community interaction"
+                ]
+            },
+            
+            'Sports & Fitness': {
+                'french': [
+                    "Application de coaching fitness personnalisé avec IA",
+                    "Plateforme de gestion de club sportif avec réservations",
+                    "Système de tracking performance athlète avec wearables",
+                    "Application de réservation cours fitness avec paiement intégré",
+                    "Outil d'analyse de données sportives avec visualisation",
+                    "Portail de nutrition sportive avec plans personnalisés",
+                    "Plateforme de coaching en ligne avec suivi vidéo"
+                ],
+                'english': [
+                    "Personalized fitness coaching app with AI recommendations",
+                    "Sports club management platform with booking system",
+                    "Athlete performance tracking system with wearables integration",
+                    "Fitness class booking application with integrated payment",
+                    "Sports data analysis tool with advanced visualization",
+                    "Sports nutrition portal with personalized meal plans",
+                    "Online coaching platform with video tracking"
+                ]
+            },
+            
+            'Travel & Tourism': {
+                'french': [
+                    "Plateforme de réservation voyage avec recommandations IA",
+                    "Application de guide touristique avec réalité augmentée",
+                    "Système de gestion hôtelière avec channel manager",
+                    "Outil de planification itinéraire avec optimisation coûts",
+                    "Plateforme de location vacances avec système de trust",
+                    "Application de traduction voyage avec reconnaissance vocale",
+                    "Système de gestion tour operator avec packages dynamiques"
+                ],
+                'english': [
+                    "Travel booking platform with AI recommendations",
+                    "Tourist guide application with augmented reality",
+                    "Hotel management system with channel manager",
+                    "Itinerary planning tool with cost optimization",
+                    "Vacation rental platform with trust system",
+                    "Travel translation application with voice recognition",
+                    "Tour operator management system with dynamic packages"
+                ]
+            },
+            
+            'Events & Hospitality': {
+                'french': [
+                    "Plateforme d'organisation événements avec gestion complète",
+                    "Application de billetterie électronique avec contrôle accès",
+                    "Système de gestion venue avec planning disponibilités",
+                    "Outil de catering événementiel avec gestion allergies",
+                    "Plateforme de networking événements avec matching participants",
+                    "Application de feedback événements avec analytics temps réel",
+                    "Système de gestion wedding planner avec timeline interactive"
+                ],
+                'english': [
+                    "Event organization platform with complete management",
+                    "Electronic ticketing application with access control",
+                    "Venue management system with availability scheduling",
+                    "Event catering tool with allergy management",
+                    "Event networking platform with participant matching",
+                    "Event feedback application with real-time analytics",
+                    "Wedding planner management system with interactive timeline"
+                ]
+            },
+            
+            # === PUBLIC & NON-PROFIT ===
+            'Government': {
+                'french': [
+                    "Plateforme de services publics numériques avec authentification citoyenne",
+                    "Application de participation citoyenne avec votes électroniques",
+                    "Système de gestion administrative avec dématérialisation documents",
+                    "Outil de transparence budgétaire avec visualisation données publiques",
+                    "Portail de démarches en ligne avec suivi dossiers",
+                    "Application de signalement citoyen avec géolocalisation",
+                    "Système d'information géographique avec données territoriales"
+                ],
+                'english': [
+                    "Digital public services platform with citizen authentication",
+                    "Citizen participation application with electronic voting",
+                    "Administrative management system with document digitization",
+                    "Budget transparency tool with public data visualization",
+                    "Online procedures portal with case tracking",
+                    "Citizen reporting application with geolocation",
+                    "Geographic information system with territorial data"
+                ]
+            },
+            
+            'Non-profit': {
+                'french': [
+                    "Plateforme de fundraising en ligne avec campagnes crowdfunding",
+                    "Application de gestion bénévoles avec planning missions",
+                    "Système de suivi projets humanitaires avec impact tracking",
+                    "Outil de gestion dons avec reçus fiscaux automatiques",
+                    "Plateforme de matching bénévoles-associations avec skills",
+                    "Application de transparence financière ONG avec reporting",
+                    "Système de gestion événements caritatifs avec billetterie"
+                ],
+                'english': [
+                    "Online fundraising platform with crowdfunding campaigns",
+                    "Volunteer management application with mission scheduling",
+                    "Humanitarian project tracking system with impact monitoring",
+                    "Donation management tool with automatic tax receipts",
+                    "Volunteer-association matching platform with skills matching",
+                    "NGO financial transparency application with reporting",
+                    "Charitable events management system with ticketing"
+                ]
+            },
+            
+            'Environmental': {
+                'french': [
+                    "Plateforme de monitoring environnemental avec capteurs IoT",
+                    "Application de calcul empreinte carbone avec recommandations",
+                    "Système de gestion déchets avec optimisation collecte",
+                    "Outil de certification environnementale avec audit automatique",
+                    "Plateforme de sensibilisation écologique avec gamification",
+                    "Application de covoiturage écologique avec bonus carbone",
+                    "Système de trading carbone avec blockchain"
+                ],
+                'english': [
+                    "Environmental monitoring platform with IoT sensors",
+                    "Carbon footprint calculation app with recommendations",
+                    "Waste management system with collection optimization",
+                    "Environmental certification tool with automatic auditing",
+                    "Ecological awareness platform with gamification",
+                    "Eco-friendly carpooling application with carbon rewards",
+                    "Carbon trading system with blockchain technology"
+                ]
+            },
+            
+            'Agriculture': {
+                'french': [
+                    "Plateforme d'agriculture de précision avec drones et capteurs",
+                    "Application de monitoring des cultures avec prédiction rendement",
+                    "Système de gestion d'exploitation avec comptabilité agricole",
+                    "Outil de traçabilité alimentaire avec QR codes produits",
+                    "Application météo agricole avec alertes personnalisées",
+                    "Plateforme de vente directe producteur avec e-commerce",
+                    "Système d'irrigation intelligent avec optimisation eau"
+                ],
+                'english': [
+                    "Precision agriculture platform with drones and sensors",
+                    "Crop monitoring application with yield prediction",
+                    "Farm management system with agricultural accounting",
+                    "Food traceability tool with product QR codes",
+                    "Agricultural weather application with personalized alerts",
+                    "Direct farm sales platform with e-commerce integration",
+                    "Smart irrigation system with water optimization"
+                ]
+            },
+            
+            # === SCIENCES & RESEARCH ===
+            'Biotechnology': {
+                'french': [
+                    "Plateforme de bioinformatique avancée avec analyse génomique",
+                    "Application de séquençage génétique avec base données mutations",
+                    "Système de gestion laboratoire bio avec traçabilité échantillons",
+                    "Outil d'analyse moléculaire avec visualisation 3D protéines",
+                    "Plateforme de recherche biomédicale avec collaboration internationale",
+                    "Application de diagnostic génétique avec recommandations thérapeutiques",
+                    "Système de biobanque avec gestion cryoconservation"
+                ],
+                'english': [
+                    "Advanced bioinformatics platform with genomic analysis",
+                    "Genetic sequencing application with mutations database",
+                    "Bio laboratory management system with sample traceability",
+                    "Molecular analysis tool with 3D protein visualization",
+                    "Biomedical research platform with international collaboration",
+                    "Genetic diagnostic application with therapeutic recommendations",
+                    "Biobank system with cryopreservation management"
+                ]
+            },
+            
+            'Research & Development': {
+                'french': [
+                    "Plateforme de gestion projets R&D avec collaboration chercheurs",
+                    "Application de veille scientifique avec IA analyse publications",
+                    "Système de gestion laboratoire avec équipements partagés",
+                    "Outil de simulation expérimentale avec modélisation avancée",
+                    "Plateforme de publication scientifique avec peer review",
+                    "Application de gestion brevets avec analyse antériorité",
+                    "Système de financement recherche avec matching investisseurs"
+                ],
+                'english': [
+                    "R&D project management platform with researcher collaboration",
+                    "Scientific intelligence application with AI publication analysis",
+                    "Laboratory management system with shared equipment",
+                    "Experimental simulation tool with advanced modeling",
+                    "Scientific publication platform with peer review",
+                    "Patent management application with prior art analysis",
+                    "Research funding system with investor matching"
+                ]
+            },
+            
+            'Pharmaceutical': {
+                'french': [
+                    "Système de gestion d'essais cliniques avec conformité FDA",
+                    "Application de pharmacovigilance avec détection effets indésirables",
+                    "Plateforme de développement de médicaments avec pipeline management",
+                    "Outil de compliance réglementaire avec audit trail complet",
+                    "Système de traçabilité pharmaceutique avec blockchain sérialisation",
+                    "Application de recherche clinique avec randomisation patients",
+                    "Portail patient essais thérapeutiques avec consentement éclairé électronique"
+                ],
+                'english': [
+                    "Clinical trial management system with FDA compliance",
+                    "Pharmacovigilance application with adverse event detection",
+                    "Drug development platform with pipeline management",
+                    "Regulatory compliance tool with complete audit trail",
+                    "Pharmaceutical traceability system with blockchain serialization",
+                    "Clinical research application with patient randomization",
+                    "Patient portal for therapeutic trials with electronic informed consent"
+                ]
             }
         }
         
@@ -506,23 +1300,24 @@ class MLIndustryClassifier:
                         'industry': industry,
                         'language': language
                     })
-        
+    
         df = pd.DataFrame(training_data)
         print(f"Dataset d'entraînement créé : {len(df)} échantillons pour {len(self.industry_detector.industries)} industries")
+        print(f"Répartition : {len(df[df['language'] == 'french'])} français, {len(df[df['language'] == 'english'])} anglais")
         return df
     
     def train_model(self):
-        """Entraîner le modèle de classification d'industrie"""
+        """Entraîner le modèle de classification d'industrie sur 33 industries"""
         if self.is_trained:
             return
         
-        print("Entraînement du classificateur d'industrie ML...")
+        print("Entraînement du classificateur d'industrie ML étendu...")
         
-        # Charger les données
+        # Charger les données étendues (462 échantillons)
         df = self.load_training_dataset()
         
         # Extraire les features
-        print("Extraction des features...")
+        print("Extraction des features pour 33 industries...")
         feature_matrix = []
         for text in df['description']:
             features = self.feature_extractor.extract_industry_features(text)
@@ -531,20 +1326,34 @@ class MLIndustryClassifier:
         X = np.array(feature_matrix)
         y = self.label_encoder.fit_transform(df['industry'])
         
-        # Entraîner le modèle ensemble
+        # Modèle optimisé pour 33 classes
         self.classifier = VotingClassifier([
-            ('rf', RandomForestClassifier(n_estimators=150, random_state=42, class_weight='balanced')),
-            ('svm', SVC(probability=True, random_state=42, class_weight='balanced', kernel='rbf')),
-            ('nb', MultinomialNB(alpha=0.1))
+            ('rf', RandomForestClassifier(
+                n_estimators=200, 
+                random_state=42, 
+                class_weight='balanced', 
+                max_depth=20,
+                min_samples_split=5
+            )),
+            ('svm', SVC(
+                probability=True, 
+                random_state=42, 
+                class_weight='balanced', 
+                kernel='rbf',
+                C=2.0,
+                gamma='scale'
+            )),
+            ('nb', MultinomialNB(alpha=0.01))  # Alpha réduit pour plus de classes
         ], voting='soft')
-        
+    
+        print(f"Entraînement sur {len(X)} échantillons, {len(np.unique(y))} industries...")
         self.classifier.fit(X, y)
         
         # Évaluation
         self._evaluate_model(X, y)
         
         self.is_trained = True
-        print("Classificateur d'industrie entraîné avec succès!")
+        print(f"Classificateur entraîné avec succès sur {len(self.industry_detector.industries)} industries!")
     
     def _evaluate_model(self, X, y):
         """Évaluer les performances du modèle"""
@@ -799,7 +1608,7 @@ def get_model_info():
             'supported_industries': industry_classifier.industry_detector.industries,
             'supported_languages': industry_classifier.industry_detector.supported_languages,
             'training_samples_per_industry': 14,  # 7 français + 7 anglais
-            'total_training_samples': 112,  # 8 industries × 14 échantillons
+            'total_training_samples': 462,
             'feature_types': [
                 'keyword_density_per_industry',
                 'linguistic_features',
@@ -874,7 +1683,7 @@ if __name__ == '__main__':
     print(f"Industries supportees : {len(industry_classifier.industry_detector.industries)}")
     print(f"Langues supportees : {industry_classifier.industry_detector.supported_languages}")
     print(f"Algorithme : Voting Classifier (RF + SVM + NB)")
-    print(f"Dataset : 112 echantillons d'entrainement")
+    print(f"Dataset : 462 echantillons d'entrainement")
     print("=" * 60)
     print("ENDPOINTS DISPONIBLES :")
     print(f"  - Health check    : http://localhost:{port}/health")

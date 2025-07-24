@@ -70,7 +70,31 @@ class MultilingualTaskPatternAnalyzer:
                     'Retail': ['produit', 'commande', 'inventaire', 'client', 'promotion'],
                     'Media': ['contenu', 'streaming', 'publication', 'commentaire', 'partage'],
                     'Logistics': ['livraison', 'tracking', 'entrepôt', 'transport', 'route'],
-                    'Energy': ['capteur', 'consommation', 'smart grid', 'maintenance', 'monitoring']
+                    'Energy': ['capteur', 'consommation', 'smart grid', 'maintenance', 'monitoring'],
+                    'Gaming': ['joueur', 'gameplay', 'progression', 'matchmaking', 'monétisation'],
+                    'Legal Services': ['contrat', 'dossier', 'client', 'deadline', 'compliance'],
+                    'Consulting': ['conseil', 'audit', 'stratégie', 'accompagnement', 'expertise'],
+                    'Human Resources': ['employé', 'recrutement', 'talent', 'formation', 'paie'],
+                    'Real Estate': ['propriété', 'location', 'transaction', 'estimation', 'visite'],
+                    'Insurance': ['police', 'sinistre', 'souscription', 'risque', 'claim'],
+                    'Automotive': ['véhicule', 'maintenance', 'diagnostic', 'flotte', 'géolocalisation'],
+                    'Aerospace': ['vol', 'maintenance', 'certification', 'satellite', 'sécurité'],
+                    'Construction': ['chantier', 'BIM', 'planification', 'ressources', 'sécurité'],
+                    'Food & Beverage': ['restaurant', 'commande', 'livraison', 'inventaire', 'nutrition'],
+                    'Textile & Fashion': ['collection', 'design', 'production', 'trend', 'vente'],
+                    'Chemical': ['laboratoire', 'produit', 'qualité', 'compliance', 'sécurité'],
+                    'Sports & Fitness': ['entraînement', 'performance', 'réservation', 'coaching', 'nutrition'],
+                    'Travel & Tourism': ['voyage', 'réservation', 'itinéraire', 'hôtel', 'guide'],
+                    'Events & Hospitality': ['événement', 'venue', 'catering', 'billetterie', 'planning'],
+                    'Government': ['citoyen', 'administration', 'dématérialisation', 'transparence', 'service public'],
+                    'Non-profit': ['bénévole', 'don', 'projet', 'fundraising', 'impact'],
+                    'Environmental': ['monitoring', 'carbone', 'déchets', 'certification', 'durabilité'],
+                    'Agriculture': ['culture', 'capteur', 'rendement', 'météo', 'traçabilité'],
+                    'Biotechnology': ['échantillon', 'analyse', 'séquençage', 'génétique', 'recherche'],
+                    'Research & Development': ['recherche', 'publication', 'brevet', 'collaboration', 'financement'],
+                    'Pharmaceutical': ['essai clinique', 'médicament', 'compliance', 'patient', 'régulateur'],
+                    'Marketing & Advertising': ['campagne', 'lead', 'ROI', 'brand', 'analytics'],
+                    'Aerospace': ['maintenance', 'vol', 'certification', 'sécurité', 'télémétrie']
                 },
                 'complexity_modifiers': {
                     'simple': ['basique', 'simple', 'standard'],
@@ -91,14 +115,41 @@ class MultilingualTaskPatternAnalyzer:
                     'search', 'chat', 'profile', 'settings', 'backup', 'logs'
                 ],
                 'domain_contexts': {
-                    'Healthcare': ['patient', 'medical', 'hospital', 'prescription', 'diagnosis'],
-                    'Finance': ['payment', 'transaction', 'portfolio', 'trading', 'fraud'],
-                    'Education': ['course', 'student', 'assessment', 'certificate', 'learning'],
+                    # 8 ORIGINALES (garder)
+                    'Healthcare': ['patient', 'médical', 'hôpital', 'prescription', 'diagnostic'],
+                    'Finance': ['paiement', 'transaction', 'portefeuille', 'trading', 'fraude'],
+                    'Education': ['cours', 'étudiant', 'évaluation', 'certificat', 'apprentissage'],
                     'Technology': ['cloud', 'microservice', 'container', 'ci/cd', 'monitoring'],
-                    'Retail': ['product', 'order', 'inventory', 'customer', 'promotion'],
-                    'Media': ['content', 'streaming', 'publication', 'comment', 'sharing'],
-                    'Logistics': ['delivery', 'tracking', 'warehouse', 'transport', 'route'],
-                    'Energy': ['sensor', 'consumption', 'smart grid', 'maintenance', 'monitoring']
+                    'Retail': ['produit', 'commande', 'inventaire', 'client', 'promotion'],
+                    'Media': ['contenu', 'streaming', 'publication', 'commentaire', 'partage'],
+                    'Logistics': ['livraison', 'tracking', 'entrepôt', 'transport', 'route'],
+                    'Energy': ['capteur', 'consommation', 'smart grid', 'maintenance', 'monitoring'],
+                    
+                    # 25 NOUVELLES À AJOUTER:
+                    'Gaming': ['joueur', 'gameplay', 'progression', 'matchmaking', 'monétisation'],
+                    'Legal Services': ['contrat', 'dossier', 'client', 'deadline', 'compliance'],
+                    'Consulting': ['conseil', 'audit', 'stratégie', 'accompagnement', 'expertise'],
+                    'Human Resources': ['employé', 'recrutement', 'talent', 'formation', 'paie'],
+                    'Real Estate': ['propriété', 'location', 'transaction', 'estimation', 'visite'],
+                    'Insurance': ['police', 'sinistre', 'souscription', 'risque', 'claim'],
+                    'Automotive': ['véhicule', 'maintenance', 'diagnostic', 'flotte', 'géolocalisation'],
+                    'Aerospace': ['vol', 'maintenance', 'certification', 'satellite', 'sécurité'],
+                    'Construction': ['chantier', 'BIM', 'planification', 'ressources', 'sécurité'],
+                    'Food & Beverage': ['restaurant', 'commande', 'livraison', 'inventaire', 'nutrition'],
+                    'Textile & Fashion': ['collection', 'design', 'production', 'trend', 'vente'],
+                    'Chemical': ['laboratoire', 'produit', 'qualité', 'compliance', 'sécurité'],
+                    'Sports & Fitness': ['entraînement', 'performance', 'réservation', 'coaching', 'nutrition'],
+                    'Travel & Tourism': ['voyage', 'réservation', 'itinéraire', 'hôtel', 'guide'],
+                    'Events & Hospitality': ['événement', 'venue', 'catering', 'billetterie', 'planning'],
+                    'Government': ['citoyen', 'administration', 'dématérialisation', 'transparence', 'service public'],
+                    'Non-profit': ['bénévole', 'don', 'projet', 'fundraising', 'impact'],
+                    'Environmental': ['monitoring', 'carbone', 'déchets', 'certification', 'durabilité'],
+                    'Agriculture': ['culture', 'capteur', 'rendement', 'météo', 'traçabilité'],
+                    'Biotechnology': ['échantillon', 'analyse', 'séquençage', 'génétique', 'recherche'],
+                    'Research & Development': ['recherche', 'publication', 'brevet', 'collaboration', 'financement'],
+                    'Pharmaceutical': ['essai clinique', 'médicament', 'compliance', 'patient', 'régulateur'],
+                    'Marketing & Advertising': ['campagne', 'lead', 'ROI', 'brand', 'analytics'],
+                    'Aerospace': ['maintenance', 'vol', 'certification', 'sécurité', 'télémétrie']
                 },
                 'complexity_modifiers': {
                     'simple': ['basic', 'simple', 'standard'],
@@ -328,8 +379,21 @@ class TaskDeduplicator:
     """Classe pour éliminer les doublons de tâches"""
     
     def __init__(self):
-        self.similarity_threshold = 0.80
+        self.similarity_threshold = 0.90
         self.name_similarity_threshold = 0.85
+
+    def is_too_generic(self, task_name: str) -> bool:
+        """Détecter les tâches trop génériques"""
+        generic_patterns = [
+            r'^(développer|créer|implémenter|configurer)\s+(interface|service|module|système)$',
+            r'^(develop|create|implement|configure)\s+(interface|service|module|system)$'
+        ]
+        
+        for pattern in generic_patterns:
+            if re.match(pattern, task_name.lower().strip()):
+                return True
+        
+        return False
     
     def calculate_similarity(self, text1: str, text2: str) -> float:
         """Calcule la similarité entre deux textes"""
@@ -375,6 +439,11 @@ class TaskDeduplicator:
         seen_tasks = []
         
         for task in tasks:
+            
+            if self.is_too_generic(task.get('name', '')):
+                print(f"Tâche générique rejetée : '{task.get('name', 'Sans nom')}'")
+                continue
+
             is_duplicate = False
             
             for existing_task in seen_tasks:
@@ -412,8 +481,8 @@ class TaskNameValidator:
         }
     
     def is_valid_name(self, name: str) -> bool:
-        """Vérifie si un nom de tâche est valide"""
-        if not name or len(name.strip()) < 3:
+        """Vérifie si un nom de tâche est valide avec critères stricts"""
+        if not name or len(name.strip()) < 5:  # Minimum 5 caractères
             return False
         
         name_lower = name.lower().strip()
@@ -423,8 +492,20 @@ class TaskNameValidator:
             if re.search(pattern, name_lower):
                 return False
         
-        # Vérifier si le nom n'est pas trop générique
-        if name_lower in self.generic_names:
+        words = name.split()
+        if len(words) < 1:
+            return False
+        if len(words) == 1 and len(name) < 6:  # Mot unique doit être assez long
+            return False
+
+        # Rejeter seulement les très génériques
+        very_generic = {'test', 'dev', 'config', 'setup', 'task', 'tâche'}
+        if name_lower in very_generic:
+            return False
+        
+        # Rejeter les tâches avec des mots répétés
+        words = name_lower.split()
+        if len(words) != len(set(words)):  # Mots dupliqués
             return False
         
         return True
@@ -608,7 +689,7 @@ class MLTaskGenerator:
         print(f"Dataset d'entraînement de tâches créé : {len(df)} échantillons")
         return df
     
-    def train_models(self):
+    def train_model(self):
         """Entraîner les modèles ML de génération de tâches"""
         if self.is_trained:
             return
@@ -748,65 +829,93 @@ class MLTaskGenerator:
         diverse_tasks = self._ensure_task_diversity(unique_tasks)
         
         # 4. Sélectionner les meilleures tâches
-        top_tasks = self._select_top_tasks(diverse_tasks, project_description, max_tasks * 2)
+        candidate_count = max(max_tasks * 3, 25)  # Au moins 25 candidats
+        top_tasks = self._select_top_tasks(diverse_tasks, project_description, candidate_count)
         
-        # 5. Finaliser la sélection
+        # 5. Finaliser la sélection avec garantie du nombre
         final_tasks = self._select_final_tasks(top_tasks, project_description, max_tasks)
-        
+
+        # 6. Si pas assez, compléter avec les meilleures restantes
+        if len(final_tasks) < max_tasks and len(diverse_tasks) > len(final_tasks):
+            remaining = [t for t in diverse_tasks if t not in final_tasks]
+            remaining.sort(key=lambda x: x.get('relevance_score', 0), reverse=True)
+            needed = max_tasks - len(final_tasks)
+            final_tasks.extend(remaining[:needed])
+                
         print(f"Génération terminée : {len(final_tasks)} tâches créées en {detected_language}")
         return final_tasks
     
     def _extract_project_concepts(self, description: str, industry: str, language: str) -> Dict[str, List[str]]:
-        """Extraire les concepts clés du projet"""
+        """Extraire les concepts clés du projet avec analyse contextuelle améliorée"""
         tokens = word_tokenize(description.lower())
-        pos_tags = pos_tag(tokens)
-        
-        patterns = self.pattern_analyzer.language_patterns[language]
         
         concepts = {
             'actions': [],
             'objects': [],
             'technologies': [],
             'features': [],
-            'domain_specifics': []
+            'domain_specifics': [],
+            'main_keywords': []  # NOUVEAU
         }
         
-        # Extraire les actions
-        for word in tokens:
-            if word in patterns['action_verbs']:
-                concepts['actions'].append(word)
-        
-        # Extraire les objets de tâches
-        for word in tokens:
-            if word in patterns['task_objects']:
-                concepts['objects'].append(word)
-        
-        # Extraire les technologies
+        # NOUVEAU: Dictionnaires contextuels spécifiques
         if language == 'french':
-            tech_keywords = ['api', 'web', 'mobile', 'base', 'données', 'ia', 'ml', 'blockchain', 'cloud', 'iot']
-        else:
-            tech_keywords = ['api', 'web', 'mobile', 'database', 'ai', 'ml', 'blockchain', 'cloud', 'iot']
+            context_mappings = {
+                'calories': ['nutrition', 'alimentation', 'santé', 'fitness', 'régime'],
+                'rpg': ['personnage', 'quête', 'combat', 'niveau', 'inventaire', 'sorts'],
+                'médiéval': ['château', 'chevalier', 'magie', 'dragon', 'royaume'],
+                'mobile': ['application', 'smartphone', 'interface', 'utilisateur'],
+                'jeu': ['gameplay', 'joueur', 'score', 'niveau', 'progression']
+            }
+            
+            # Extraire les mots-clés principaux du projet
+            for keyword, related in context_mappings.items():
+                if keyword in description.lower():
+                    concepts['main_keywords'].append(keyword)
+                    concepts['domain_specifics'].extend(related[:3])  # Limiter à 3
         
-        for word in tokens:
-            if word in tech_keywords:
-                concepts['technologies'].append(word)
+        # Analyser le type de projet basé sur les mots-clés
+        project_indicators = {
+            'french': {
+                'mobile_app': ['application', 'mobile', 'smartphone', 'app'],
+                'web_platform': ['site', 'web', 'plateforme', 'navigateur'],
+                'game': ['jeu', 'gaming', 'rpg', 'joueur'],
+                'health_app': ['santé', 'médical', 'calories', 'fitness', 'nutrition'],
+                'business_tool': ['gestion', 'entreprise', 'professionnel', 'outil']
+            }
+        }
         
-        # Extraire les features
-        if language == 'french':
-            feature_keywords = ['authentification', 'paiement', 'notification', 'recherche', 'chat', 'dashboard']
-        else:
-            feature_keywords = ['authentication', 'payment', 'notification', 'search', 'chat', 'dashboard']
+        # NOUVEAU: Détecter le type de projet
+        for project_type, keywords in project_indicators.get(language, {}).items():
+            if any(kw in description.lower() for kw in keywords):
+                concepts['project_type'] = project_type
+                break
         
-        for word in tokens:
-            if word in feature_keywords:
-                concepts['features'].append(word)
+        # Extraction des technologies basée sur le contexte
+        tech_detection = {
+            'mobile': ['react native', 'flutter', 'swift', 'kotlin', 'ionic'],
+            'web': ['react', 'vue', 'angular', 'html', 'css', 'javascript'],
+            'backend': ['node.js', 'python', 'java', 'php', 'api', 'base de données'],
+            'game': ['unity', 'unreal', 'c#', 'c++', 'game engine']
+        }
         
-        # Extraire les spécificités du domaine
-        if industry in patterns['domain_contexts']:
-            domain_keywords = patterns['domain_contexts'][industry]
-            for word in tokens:
-                if word in domain_keywords:
-                    concepts['domain_specifics'].append(word)
+        for tech_category, tech_list in tech_detection.items():
+            if any(tech in description.lower() for tech in tech_list):
+                concepts['technologies'].append(tech_category)
+        
+        # Extraction des actions contextuelles
+        action_patterns = {
+            'french': {
+                'développer': ['créer', 'construire', 'programmer'],
+                'concevoir': ['designer', 'architecturer', 'planifier'],
+                'implémenter': ['intégrer', 'configurer', 'déployer'],
+                'optimiser': ['améliorer', 'accélérer', 'optimiser']
+            }
+        }
+        
+        for base_action, variations in action_patterns.get(language, {}).items():
+            if any(action in description.lower() for action in [base_action] + variations):
+                concepts['actions'].append(base_action)
         
         return concepts
     
@@ -868,7 +977,73 @@ class MLTaskGenerator:
         category_tasks = self._generate_category_based_tasks(concepts, industry, complexity, language)
         task_pool.extend(category_tasks)
         
-        return task_pool[:60]  # Limiter à 60 tâches candidates
+        print(f"Pool généré : {len(task_pool)} tâches brutes")
+        return task_pool[:80]
+    
+    def _optimize_task_pool(self, task_pool: List[Dict[str, Any]], concepts: Dict[str, List[str]]) -> List[Dict[str, Any]]:
+        """Optimiser le pool de tâches pour éviter les doublons dès la génération"""
+        optimized_pool = []
+        seen_names = set()
+        
+        # Priorités selon le contexte du projet
+        priority_categories = ['architecture', 'development', 'ui_ux', 'testing', 'deployment', 
+                      'security', 'integration', 'backend', 'frontend', 'devops', 
+                      'analytics', 'documentation', 'other']
+        category_counts = {cat: 0 for cat in priority_categories}
+        max_per_category = 3  
+        
+        # Trier par score de pertinence
+        sorted_tasks = sorted(task_pool, key=lambda x: x.get('relevance_score', 0), reverse=True)
+        
+        for task in sorted_tasks:
+            task_name = task['name'].lower().strip()
+            
+            # Éviter les doublons exacts
+            if task_name in seen_names:
+                continue
+            
+            # Éviter les noms trop génériques
+            if len(task_name.split()) < 2:
+                continue
+            
+            # Limiter par catégorie
+            task_category = task.get('category', 'other')
+            if len(optimized_pool) >= 15 and category_counts.get(task_category, 0) >= max_per_category:
+                continue
+            
+            # Vérifier la pertinence contextuelle
+            if self._is_contextually_relevant(task, concepts):
+                optimized_pool.append(task)
+                seen_names.add(task_name)
+                category_counts[task_category] = category_counts.get(task_category, 0) + 1
+        
+        return optimized_pool
+
+    def _is_contextually_relevant(self, task: Dict[str, Any], concepts: Dict[str, List[str]]) -> bool:
+        """Vérifier si une tâche est contextuellemen pertinente"""
+        task_name = task['name'].lower()
+        
+        # Vérifier la présence de mots-clés du projet
+        main_keywords = concepts.get('main_keywords', [])
+        domain_specifics = concepts.get('domain_specifics', [])
+        
+        # Score de pertinence basé sur les mots-clés
+        relevance_score = 0
+        
+        for keyword in main_keywords:
+            if keyword in task_name:
+                relevance_score += 3
+        
+        for domain_word in domain_specifics:
+            if domain_word in task_name:
+                relevance_score += 2
+        
+        # Les tâches génériques ont un score minimum
+        generic_tasks = ['api', 'base de données', 'interface', 'test', 'déploiement']
+        if any(generic in task_name for generic in generic_tasks):
+            relevance_score += 1
+        
+        return relevance_score > 0
     
     def _create_ml_task(self, name: str, concepts: Dict[str, List[str]], industry: str, complexity: str, language: str) -> Dict[str, Any]:
         """Créer une tâche avec prédictions ML"""
@@ -915,133 +1090,1293 @@ class MLTaskGenerator:
         }
     
     def _generate_domain_specific_tasks(self, industry: str, complexity: str, language: str) -> List[Dict[str, Any]]:
-        """Générer des tâches spécifiques au domaine"""
+        """Générer des tâches spécifiques au domaine avec templates étendus pour 33 industries"""
         domain_tasks = []
+        patterns = self.pattern_analyzer.language_patterns.get(language, {})
+        domain_context = patterns.get('domain_contexts', {}).get(industry, [])
         
-        if language == 'french':
-            domain_patterns = {
-                'Healthcare': [
-                    'Valider conformité HIPAA',
-                    'Sécuriser données patients',
-                    'Implémenter télémédecine',
-                    'Créer dossier médical électronique',
-                    'Développer prescription électronique'
+        # Templates dynamiques COMPLETS pour les 33 industries
+        industry_templates = {
+            # === TECH & DIGITAL ===
+            'Technology': {
+                'french': [
+                    'Développer architecture {concept} scalable',
+                    'Implémenter système {concept} haute performance',
+                    'Créer API RESTful pour {concept}',
+                    'Configurer infrastructure {concept} cloud',
+                    'Optimiser algorithmes {concept}',
+                    'Intégrer service {concept} tiers',
+                    'Développer SDK {concept}',
+                    'Implémenter cache distribué {concept}',
+                    'Créer monitoring {concept} temps réel',
+                    'Configurer CI/CD pour {concept}',
+                    'Développer interface admin {concept}',
+                    'Implémenter sécurité {concept} avancée',
+                    'Créer documentation technique {concept}',
+                    'Optimiser performance {concept}',
+                    'Développer tests automatisés {concept}'
                 ],
-                'Finance': [
-                    'Implémenter détection fraude',
-                    'Développer algorithme trading',
-                    'Sécuriser transactions',
-                    'Créer rapport financier',
-                    'Configurer conformité PCI-DSS'
+                'english': [
+                    'Develop scalable {concept} architecture',
+                    'Implement high-performance {concept} system',
+                    'Create RESTful API for {concept}',
+                    'Configure cloud {concept} infrastructure',
+                    'Optimize {concept} algorithms',
+                    'Integrate third-party {concept} service',
+                    'Develop {concept} SDK',
+                    'Implement distributed {concept} cache',
+                    'Create real-time {concept} monitoring',
+                    'Configure CI/CD for {concept}',
+                    'Develop {concept} admin interface',
+                    'Implement advanced {concept} security',
+                    'Create {concept} technical documentation',
+                    'Optimize {concept} performance',
+                    'Develop automated {concept} tests'
+                ]
+            },
+            
+            # === SANTÉ ===
+            'Healthcare': {
+                'french': [
+                    'Développer système suivi {concept} patient',
+                    'Implémenter calcul automatique {concept}',
+                    'Créer interface saisie {concept} médecin',
+                    'Configurer base données {concept} sécurisée',
+                    'Développer recommandations {concept}',
+                    'Implémenter alertes {concept} médicales',
+                    'Créer rapport {concept} personnalisé',
+                    'Développer synchronisation {concept}',
+                    'Implémenter historique {concept} patient',
+                    'Créer dashboard {concept} professionnel',
+                    'Développer export {concept} format standard',
+                    'Implémenter validation {concept} médicale',
+                    'Créer système notification {concept}',
+                    'Développer analytics {concept} santé',
+                    'Implémenter conformité RGPD {concept}'
                 ],
-                'Education': [
-                    'Développer parcours adaptatif',
-                    'Créer système évaluation',
-                    'Implémenter classe virtuelle',
-                    'Générer certificats',
-                    'Suivre progression étudiants'
+                'english': [
+                    'Develop patient {concept} tracking system',
+                    'Implement automatic {concept} calculation',
+                    'Create doctor {concept} input interface',
+                    'Configure secure {concept} database',
+                    'Develop {concept} recommendations',
+                    'Implement medical {concept} alerts',
+                    'Create personalized {concept} reports',
+                    'Develop {concept} synchronization',
+                    'Implement patient {concept} history',
+                    'Create professional {concept} dashboard',
+                    'Develop standard format {concept} export',
+                    'Implement medical {concept} validation',
+                    'Create {concept} notification system',
+                    'Develop health {concept} analytics',
+                    'Implement GDPR compliant {concept}'
+                ]
+            },
+            
+            # === GAMING ===
+            'Gaming': {
+                'french': [
+                    'Concevoir système {concept} équilibré',
+                    'Implémenter mécaniques {concept} innovantes',
+                    'Développer interface {concept} intuitive',
+                    'Créer progression {concept} engageante',
+                    'Optimiser rendu {concept} temps réel',
+                    'Implémenter sauvegarde {concept} cloud',
+                    'Développer système {concept} multijoueur',
+                    'Créer économie {concept} virtuelle',
+                    'Implémenter intelligence artificielle {concept}',
+                    'Développer système quête {concept}',
+                    'Créer interface inventaire {concept}',
+                    'Implémenter système combat {concept}',
+                    'Développer générateur {concept} procédural',
+                    'Créer système classement {concept}',
+                    'Implémenter analytics {concept} joueur'
                 ],
-                'Technology': [
-                    'Optimiser performance système',
-                    'Implémenter microservices',
-                    'Développer pipeline CI/CD',
-                    'Créer monitoring',
-                    'Configurer infrastructure cloud'
+                'english': [
+                    'Design balanced {concept} system',
+                    'Implement innovative {concept} mechanics',
+                    'Develop intuitive {concept} interface',
+                    'Create engaging {concept} progression',
+                    'Optimize real-time {concept} rendering',
+                    'Implement cloud {concept} save system',
+                    'Develop multiplayer {concept} system',
+                    'Create virtual {concept} economy',
+                    'Implement {concept} artificial intelligence',
+                    'Develop {concept} quest system',
+                    'Create {concept} inventory interface',
+                    'Implement {concept} combat system',
+                    'Develop procedural {concept} generator',
+                    'Create {concept} leaderboard system',
+                    'Implement player {concept} analytics'
+                ]
+            },
+            
+            # === FINANCE ===
+            'Finance': {
+                'french': [
+                    'Développer système {concept} sécurisé PCI-DSS',
+                    'Implémenter détection fraude {concept}',
+                    'Créer interface {concept} trading',
+                    'Configurer chiffrement {concept} bout-en-bout',
+                    'Développer analyse risque {concept}',
+                    'Implémenter conformité {concept} réglementaire',
+                    'Créer rapport {concept} financier',
+                    'Développer API {concept} bancaire',
+                    'Implémenter audit trail {concept}',
+                    'Créer dashboard {concept} temps réel',
+                    'Développer système {concept} haute fréquence',
+                    'Implémenter validation {concept} KYC',
+                    'Créer alertes {concept} automatiques',
+                    'Développer backup {concept} sécurisé',
+                    'Implémenter réconciliation {concept}'
                 ],
-                'Retail': [
-                    'Développer panier achat',
-                    'Implémenter paiement',
-                    'Créer gestion stock',
-                    'Développer recommandations',
-                    'Configurer livraison'
+                'english': [
+                    'Develop PCI-DSS secure {concept} system',
+                    'Implement {concept} fraud detection',
+                    'Create {concept} trading interface',
+                    'Configure end-to-end {concept} encryption',
+                    'Develop {concept} risk analysis',
+                    'Implement regulatory {concept} compliance',
+                    'Create financial {concept} reports',
+                    'Develop banking {concept} API',
+                    'Implement {concept} audit trail',
+                    'Create real-time {concept} dashboard',
+                    'Develop high-frequency {concept} system',
+                    'Implement KYC {concept} validation',
+                    'Create automatic {concept} alerts',
+                    'Develop secure {concept} backup',
+                    'Implement {concept} reconciliation'
+                ]
+            },
+            
+            # === EDUCATION ===
+            'Education': {
+                'french': [
+                    'Développer plateforme {concept} adaptive',
+                    'Implémenter {concept} avec gamification',
+                    'Créer système évaluation {concept}',
+                    'Configurer {concept} collaboratif',
+                    'Développer suivi progression {concept}',
+                    'Implémenter recommandations {concept}',
+                    'Créer contenu interactif {concept}',
+                    'Développer certification {concept}',
+                    'Implémenter forum discussion {concept}',
+                    'Créer analytics apprentissage {concept}',
+                    'Développer mobile learning {concept}',
+                    'Implémenter accessibilité {concept}',
+                    'Créer système notation {concept}',
+                    'Développer calendrier {concept}',
+                    'Implémenter vidéo conférence {concept}'
                 ],
-                'Media': [
-                    'Développer streaming',
-                    'Créer gestion contenu',
-                    'Implémenter commentaires',
-                    'Configurer CDN',
-                    'Développer recommandations'
+                'english': [
+                    'Develop adaptive {concept} platform',
+                    'Implement {concept} with gamification',
+                    'Create {concept} assessment system',
+                    'Configure collaborative {concept}',
+                    'Develop {concept} progress tracking',
+                    'Implement {concept} recommendations',
+                    'Create interactive {concept} content',
+                    'Develop {concept} certification',
+                    'Implement {concept} discussion forum',
+                    'Create learning {concept} analytics',
+                    'Develop mobile {concept} learning',
+                    'Implement {concept} accessibility',
+                    'Create {concept} grading system',
+                    'Develop {concept} calendar',
+                    'Implement video conference {concept}'
+                ]
+            },
+            
+            # === E-COMMERCE ===
+            'Retail': {
+                'french': [
+                    'Développer catalogue {concept} dynamique',
+                    'Implémenter moteur recherche {concept}',
+                    'Créer panier {concept} intelligent',
+                    'Configurer paiement {concept} sécurisé',
+                    'Développer gestion stock {concept}',
+                    'Implémenter recommandations {concept}',
+                    'Créer interface admin {concept}',
+                    'Développer système livraison {concept}',
+                    'Implémenter programme fidélité {concept}',
+                    'Créer analytics vente {concept}',
+                    'Développer app mobile {concept}',
+                    'Implémenter avis client {concept}',
+                    'Créer système promotion {concept}',
+                    'Développer chat support {concept}',
+                    'Implémenter retour produit {concept}'
                 ],
-                'Logistics': [
-                    'Développer tracking',
-                    'Optimiser routes',
-                    'Créer gestion entrepôt',
-                    'Implémenter GPS',
-                    'Configurer alerts'
+                'english': [
+                    'Develop dynamic {concept} catalog',
+                    'Implement {concept} search engine',
+                    'Create intelligent {concept} cart',
+                    'Configure secure {concept} payment',
+                    'Develop {concept} inventory management',
+                    'Implement {concept} recommendations',
+                    'Create {concept} admin interface',
+                    'Develop {concept} delivery system',
+                    'Implement {concept} loyalty program',
+                    'Create sales {concept} analytics',
+                    'Develop mobile {concept} app',
+                    'Implement customer {concept} reviews',
+                    'Create {concept} promotion system',
+                    'Develop {concept} support chat',
+                    'Implement product {concept} returns'
+                ]
+            },
+            
+            # === MEDIA ===
+            'Media': {
+                'french': [
+                    'Développer plateforme {concept} streaming',
+                    'Implémenter système {concept} publication',
+                    'Créer éditeur {concept} collaboratif',
+                    'Configurer CDN {concept} global',
+                    'Développer système {concept} modération',
+                    'Implémenter analytics {concept} contenu',
+                    'Créer workflow {concept} éditorial',
+                    'Développer app mobile {concept}',
+                    'Implémenter live streaming {concept}',
+                    'Créer système monétisation {concept}',
+                    'Développer CMS {concept} avancé',
+                    'Implémenter SEO {concept} automatique',
+                    'Créer système commentaires {concept}',
+                    'Développer newsletter {concept}',
+                    'Implémenter partage social {concept}'
                 ],
-                'Energy': [
-                    'Développer monitoring IoT',
-                    'Créer smart grid',
-                    'Implémenter capteurs',
-                    'Optimiser consommation',
-                    'Configurer maintenance'
+                'english': [
+                    'Develop {concept} streaming platform',
+                    'Implement {concept} publishing system',
+                    'Create collaborative {concept} editor',
+                    'Configure global {concept} CDN',
+                    'Develop {concept} moderation system',
+                    'Implement {concept} content analytics',
+                    'Create editorial {concept} workflow',
+                    'Develop mobile {concept} app',
+                    'Implement {concept} live streaming',
+                    'Create {concept} monetization system',
+                    'Develop advanced {concept} CMS',
+                    'Implement automatic {concept} SEO',
+                    'Create {concept} comment system',
+                    'Develop {concept} newsletter',
+                    'Implement social {concept} sharing'
+                ]
+            },
+            
+            # === LOGISTICS ===
+            'Logistics': {
+                'french': [
+                    'Développer système {concept} tracking',
+                    'Implémenter optimisation {concept} route',
+                    'Créer interface {concept} transport',
+                    'Configurer API {concept} livraison',
+                    'Développer gestion {concept} entrepôt',
+                    'Implémenter prédiction {concept} délais',
+                    'Créer dashboard {concept} logistique',
+                    'Développer app {concept} chauffeur',
+                    'Implémenter géolocalisation {concept}',
+                    'Créer système {concept} facturation',
+                    'Développer planning {concept} automatique',
+                    'Implémenter IoT {concept} fleet',
+                    'Créer rapport {concept} performance',
+                    'Développer intégration {concept} ERP',
+                    'Implémenter maintenance {concept} prédictive'
+                ],
+                'english': [
+                    'Develop {concept} tracking system',
+                    'Implement {concept} route optimization',
+                    'Create {concept} transport interface',
+                    'Configure {concept} delivery API',
+                    'Develop {concept} warehouse management',
+                    'Implement {concept} delay prediction',
+                    'Create logistics {concept} dashboard',
+                    'Develop {concept} driver app',
+                    'Implement {concept} geolocation',
+                    'Create {concept} billing system',
+                    'Develop automatic {concept} planning',
+                    'Implement {concept} fleet IoT',
+                    'Create {concept} performance reports',
+                    'Develop {concept} ERP integration',
+                    'Implement predictive {concept} maintenance'
+                ]
+            },
+            
+            # === ENERGY ===
+            'Energy': {
+                'french': [
+                    'Développer monitoring {concept} intelligent',
+                    'Implémenter IoT {concept} capteurs',
+                    'Créer dashboard {concept} énergétique',
+                    'Configurer smart grid {concept}',
+                    'Développer prédiction {concept} consommation',
+                    'Implémenter optimisation {concept} réseau',
+                    'Créer système {concept} maintenance',
+                    'Développer app {concept} gestionnaire',
+                    'Implémenter analytics {concept} usage',
+                    'Créer interface {concept} renouvelable',
+                    'Développer stockage {concept} données',
+                    'Implémenter alertes {concept} anomalies',
+                    'Créer rapport {concept} efficacité',
+                    'Développer API {concept} tarification',
+                    'Implémenter blockchain {concept} trading'
+                ],
+                'english': [
+                    'Develop intelligent {concept} monitoring',
+                    'Implement {concept} sensor IoT',
+                    'Create energy {concept} dashboard',
+                    'Configure {concept} smart grid',
+                    'Develop {concept} consumption prediction',
+                    'Implement {concept} network optimization',
+                    'Create {concept} maintenance system',
+                    'Develop {concept} manager app',
+                    'Implement {concept} usage analytics',
+                    'Create renewable {concept} interface',
+                    'Develop {concept} data storage',
+                    'Implement {concept} anomaly alerts',
+                    'Create {concept} efficiency reports',
+                    'Develop {concept} pricing API',
+                    'Implement {concept} blockchain trading'
+                ]
+            },
+            
+            # === LEGAL SERVICES ===
+            'Legal Services': {
+                'french': [
+                    'Développer gestion {concept} dossier',
+                    'Implémenter recherche {concept} jurisprudence',
+                    'Créer workflow {concept} validation',
+                    'Configurer signature {concept} électronique',
+                    'Développer calendrier {concept} échéances',
+                    'Implémenter facturation {concept} automatique',
+                    'Créer base {concept} documents',
+                    'Développer CRM {concept} clients',
+                    'Implémenter conformité {concept} RGPD',
+                    'Créer système {concept} archivage',
+                    'Développer timesheet {concept} avocats',
+                    'Implémenter collaboration {concept} équipe',
+                    'Créer reporting {concept} activité',
+                    'Développer app mobile {concept}',
+                    'Implémenter sécurité {concept} renforcée'
+                ],
+                'english': [
+                    'Develop {concept} case management',
+                    'Implement {concept} legal research',
+                    'Create {concept} validation workflow',
+                    'Configure electronic {concept} signature',
+                    'Develop {concept} deadline calendar',
+                    'Implement automatic {concept} billing',
+                    'Create {concept} document database',
+                    'Develop {concept} client CRM',
+                    'Implement {concept} GDPR compliance',
+                    'Create {concept} archiving system',
+                    'Develop lawyer {concept} timesheet',
+                    'Implement team {concept} collaboration',
+                    'Create {concept} activity reporting',
+                    'Develop mobile {concept} app',
+                    'Implement enhanced {concept} security'
+                ]
+            },
+            
+            # === CONSULTING ===
+            'Consulting': {
+                'french': [
+                    'Développer CRM {concept} consulting',
+                    'Implémenter gestion {concept} projets',
+                    'Créer système {concept} facturation',
+                    'Configurer planning {concept} consultants',
+                    'Développer knowledge base {concept}',
+                    'Implémenter timetracking {concept}',
+                    'Créer dashboard {concept} performance',
+                    'Développer proposition {concept} automatique',
+                    'Implémenter collaboration {concept} client',
+                    'Créer système {concept} reporting',
+                    'Développer app mobile {concept}',
+                    'Implémenter analytics {concept} business',
+                    'Créer workflow {concept} validation',
+                    'Développer intégration {concept} ERP',
+                    'Implémenter sécurité {concept} données'
+                ],
+                'english': [
+                    'Develop consulting {concept} CRM',
+                    'Implement {concept} project management',
+                    'Create {concept} billing system',
+                    'Configure consultant {concept} planning',
+                    'Develop {concept} knowledge base',
+                    'Implement {concept} timetracking',
+                    'Create {concept} performance dashboard',
+                    'Develop automatic {concept} proposals',
+                    'Implement client {concept} collaboration',
+                    'Create {concept} reporting system',
+                    'Develop mobile {concept} app',
+                    'Implement business {concept} analytics',
+                    'Create {concept} validation workflow',
+                    'Develop {concept} ERP integration',
+                    'Implement {concept} data security'
+                ]
+            },
+            
+            # === HUMAN RESOURCES ===
+            'Human Resources': {
+                'french': [
+                    'Développer SIRH {concept} complet',
+                    'Implémenter recrutement {concept} intelligent',
+                    'Créer évaluation {concept} performance',
+                    'Configurer paie {concept} automatique',
+                    'Développer formation {concept} en ligne',
+                    'Implémenter gestion {concept} talents',
+                    'Créer onboarding {concept} digital',
+                    'Développer analytics {concept} RH',
+                    'Implémenter self-service {concept}',
+                    'Créer planning {concept} congés',
+                    'Développer app mobile {concept} RH',
+                    'Implémenter signature {concept} numérique',
+                    'Créer dashboard {concept} management',
+                    'Développer enquête {concept} satisfaction',
+                    'Implémenter conformité {concept} sociale'
+                ],
+                'english': [
+                    'Develop complete {concept} HRIS',
+                    'Implement intelligent {concept} recruitment',
+                    'Create {concept} performance evaluation',
+                    'Configure automatic {concept} payroll',
+                    'Develop online {concept} training',
+                    'Implement {concept} talent management',
+                    'Create digital {concept} onboarding',
+                    'Develop HR {concept} analytics',
+                    'Implement {concept} self-service',
+                    'Create {concept} leave planning',
+                    'Develop mobile HR {concept} app',
+                    'Implement digital {concept} signature',
+                    'Create {concept} management dashboard',
+                    'Develop {concept} satisfaction survey',
+                    'Implement social {concept} compliance'
+                ]
+            },
+            
+            # === REAL ESTATE ===
+            'Real Estate': {
+                'french': [
+                    'Développer plateforme {concept} immobilier',
+                    'Implémenter recherche {concept} avancée',
+                    'Créer visite {concept} virtuelle',
+                    'Configurer estimation {concept} automatique',
+                    'Développer CRM {concept} agents',
+                    'Implémenter géolocalisation {concept}',
+                    'Créer système {concept} mandats',
+                    'Développer app mobile {concept}',
+                    'Implémenter signature {concept} électronique',
+                    'Créer analytics {concept} marché',
+                    'Développer portail {concept} client',
+                    'Implémenter facturation {concept}',
+                    'Créer alerte {concept} biens',
+                    'Développer rapport {concept} expertise',
+                    'Implémenter blockchain {concept} transaction'
+                ],
+                'english': [
+                    'Develop real estate {concept} platform',
+                    'Implement advanced {concept} search',
+                    'Create virtual {concept} tour',
+                    'Configure automatic {concept} valuation',
+                    'Develop {concept} agent CRM',
+                    'Implement {concept} geolocation',
+                    'Create {concept} mandate system',
+                    'Develop mobile {concept} app',
+                    'Implement electronic {concept} signature',
+                    'Create market {concept} analytics',
+                    'Develop {concept} client portal',
+                    'Implement {concept} billing',
+                    'Create {concept} property alerts',
+                    'Develop {concept} expertise reports',
+                    'Implement {concept} blockchain transaction'
+                ]
+            },
+            
+            # === INSURANCE ===
+            'Insurance': {
+                'french': [
+                    'Développer souscription {concept} digitale',
+                    'Implémenter gestion {concept} sinistres',
+                    'Créer tarification {concept} dynamique',
+                    'Configurer fraude {concept} détection',
+                    'Développer app mobile {concept}',
+                    'Implémenter télémétrie {concept}',
+                    'Créer dashboard {concept} courtier',
+                    'Développer API {concept} partenaires',
+                    'Implémenter analytics {concept} risque',
+                    'Créer workflow {concept} validation',
+                    'Développer chatbot {concept} service',
+                    'Implémenter signature {concept} numérique',
+                    'Créer rapport {concept} actuariel',
+                    'Développer conformité {concept} Solvency',
+                    'Implémenter blockchain {concept} claims'
+                ],
+                'english': [
+                    'Develop digital {concept} underwriting',
+                    'Implement {concept} claims management',
+                    'Create dynamic {concept} pricing',
+                    'Configure {concept} fraud detection',
+                    'Develop mobile {concept} app',
+                    'Implement {concept} telematics',
+                    'Create broker {concept} dashboard',
+                    'Develop partner {concept} API',
+                    'Implement {concept} risk analytics',
+                    'Create {concept} validation workflow',
+                    'Develop {concept} service chatbot',
+                    'Implement digital {concept} signature',
+                    'Create actuarial {concept} reports',
+                    'Develop Solvency {concept} compliance',
+                    'Implement {concept} blockchain claims'
+                ]
+            },
+            
+            # === AUTOMOTIVE ===
+            'Automotive': {
+                'french': [
+                    'Développer diagnostic {concept} connecté',
+                    'Implémenter maintenance {concept} prédictive',
+                    'Créer configurateur {concept} véhicule',
+                    'Configurer télématique {concept} flotte',
+                    'Développer app {concept} conducteur',
+                    'Implémenter IoT {concept} véhicule',
+                    'Créer marketplace {concept} pièces',
+                    'Développer géolocalisation {concept}',
+                    'Implémenter covoiturage {concept}',
+                    'Créer système {concept} leasing',
+                    'Développer e-commerce {concept} auto',
+                    'Implémenter réalité {concept} augmentée',
+                    'Créer analytics {concept} usage',
+                    'Développer blockchain {concept} historique',
+                    'Implémenter assistant {concept} vocal'
+                ],
+                'english': [
+                    'Develop connected {concept} diagnostics',
+                    'Implement predictive {concept} maintenance',
+                    'Create vehicle {concept} configurator',
+                    'Configure fleet {concept} telematics',
+                    'Develop {concept} driver app',
+                    'Implement vehicle {concept} IoT',
+                    'Create {concept} parts marketplace',
+                    'Develop {concept} geolocation',
+                    'Implement {concept} carpooling',
+                    'Create {concept} leasing system',
+                    'Develop automotive {concept} e-commerce',
+                    'Implement augmented {concept} reality',
+                    'Create {concept} usage analytics',
+                    'Develop {concept} blockchain history',
+                    'Implement voice {concept} assistant'
+                ]
+            },
+            
+            # === AEROSPACE ===
+            'Aerospace': {
+                'french': [
+                    'Développer maintenance {concept} aéronautique',
+                    'Implémenter simulation {concept} vol',
+                    'Créer gestion {concept} flotte',
+                    'Configurer IoT {concept} satellite',
+                    'Développer planification {concept} vol',
+                    'Implémenter traçabilité {concept} pièces',
+                    'Créer système {concept} navigation',
+                    'Développer monitoring {concept} moteur',
+                    'Implémenter réalité {concept} augmentée',
+                    'Créer certification {concept} process',
+                    'Développer app {concept} pilote',
+                    'Implémenter télémétrie {concept}',
+                    'Créer supply chain {concept}',
+                    'Développer cybersécurité {concept}',
+                    'Implémenter blockchain {concept} parts'
+                ],
+                'english': [
+                    'Develop aeronautical {concept} maintenance',
+                    'Implement {concept} flight simulation',
+                    'Create {concept} fleet management',
+                    'Configure satellite {concept} IoT',
+                    'Develop {concept} flight planning',
+                    'Implement {concept} parts traceability',
+                    'Create {concept} navigation system',
+                    'Develop {concept} engine monitoring',
+                    'Implement augmented {concept} reality',
+                    'Create {concept} certification process',
+                    'Develop {concept} pilot app',
+                    'Implement {concept} telemetry',
+                    'Create {concept} supply chain',
+                    'Develop {concept} cybersecurity',
+                    'Implement {concept} blockchain parts'
+                ]
+            },
+            
+            # === CONSTRUCTION ===
+            'Construction': {
+                'french': [
+                    'Développer gestion {concept} chantier',
+                    'Implémenter BIM {concept} collaboratif',
+                    'Créer planification {concept} travaux',
+                    'Configurer IoT {concept} sécurité',
+                    'Développer estimation {concept} coûts',
+                    'Implémenter drone {concept} inspection',
+                    'Créer app mobile {concept} terrain',
+                    'Développer réalité {concept} augmentée',
+                    'Implémenter gestion {concept} ressources',
+                    'Créer qualité {concept} contrôle',
+                    'Développer facility {concept} management',
+                    'Implémenter analytics {concept} performance',
+                    'Créer workflow {concept} validation',
+                    'Développer maintenance {concept} prédictive',
+                    'Implémenter blockchain {concept} contrats'
+                ],
+                'english': [
+                    'Develop {concept} site management',
+                    'Implement collaborative {concept} BIM',
+                    'Create {concept} work planning',
+                    'Configure {concept} safety IoT',
+                    'Develop {concept} cost estimation',
+                    'Implement {concept} drone inspection',
+                    'Create mobile {concept} field app',
+                    'Develop augmented {concept} reality',
+                    'Implement {concept} resource management',
+                    'Create {concept} quality control',
+                    'Develop {concept} facility management',
+                    'Implement {concept} performance analytics',
+                    'Create {concept} validation workflow',
+                    'Develop predictive {concept} maintenance',
+                    'Implement {concept} blockchain contracts'
+                ]
+            },
+            
+            # === FOOD & BEVERAGE ===
+            'Food & Beverage': {
+                'french': [
+                    'Développer plateforme {concept} livraison',
+                    'Implémenter gestion {concept} restaurant',
+                    'Créer système {concept} commande',
+                    'Configurer paiement {concept} mobile',
+                    'Développer gestion {concept} inventaire',
+                    'Implémenter traçabilité {concept} aliments',
+                    'Créer app {concept} loyalty',
+                    'Développer menu {concept} digital',
+                    'Implémenter nutrition {concept} tracking',
+                    'Créer réservation {concept} table',
+                    'Développer caisse {concept} intelligente',
+                    'Implémenter analytics {concept} vente',
+                    'Créer système {concept} franchise',
+                    'Développer formation {concept} personnel',
+                    'Implémenter IoT {concept} cuisine'
+                ],
+                'english': [
+                    'Develop {concept} delivery platform',
+                    'Implement {concept} restaurant management',
+                    'Create {concept} ordering system',
+                    'Configure mobile {concept} payment',
+                    'Develop {concept} inventory management',
+                    'Implement {concept} food traceability',
+                    'Create {concept} loyalty app',
+                    'Develop digital {concept} menu',
+                    'Implement {concept} nutrition tracking',
+                    'Create {concept} table reservation',
+                    'Develop intelligent {concept} POS',
+                    'Implement {concept} sales analytics',
+                    'Create {concept} franchise system',
+                    'Develop {concept} staff training',
+                    'Implement kitchen {concept} IoT'
+                ]
+            },
+            
+            # === TEXTILE & FASHION ===
+            'Textile & Fashion': {
+                'french': [
+                    'Développer e-commerce {concept} mode',
+                    'Implémenter try-on {concept} virtuel',
+                    'Créer gestion {concept} collection',
+                    'Configurer supply chain {concept}',
+                    'Développer app {concept} styliste',
+                    'Implémenter recommandation {concept} IA',
+                    'Créer système {concept} tailles',
+                    'Développer marketplace {concept}',
+                    'Implémenter traçabilité {concept} éthique',
+                    'Créer design {concept} collaboratif',
+                    'Développer analytics {concept} trends',
+                    'Implémenter réalité {concept} augmentée',
+                    'Créer planning {concept} production',
+                    'Développer loyalty {concept} program',
+                    'Implémenter blockchain {concept} authenticité'
+                ],
+                'english': [
+                    'Develop fashion {concept} e-commerce',
+                    'Implement virtual {concept} try-on',
+                    'Create {concept} collection management',
+                    'Configure {concept} supply chain',
+                    'Develop {concept} stylist app',
+                    'Implement AI {concept} recommendation',
+                    'Create {concept} sizing system',
+                    'Develop {concept} marketplace',
+                    'Implement ethical {concept} traceability',
+                    'Create collaborative {concept} design',
+                    'Develop {concept} trends analytics',
+                    'Implement augmented {concept} reality',
+                    'Create {concept} production planning',
+                    'Develop {concept} loyalty program',
+                    'Implement {concept} authenticity blockchain'
+                ]
+            },
+            
+                # === CHEMICAL (suite) ===
+            'Chemical': {
+                'french': [
+                    'Développer LIMS {concept} laboratoire',
+                    'Implémenter contrôle {concept} qualité',
+                    'Créer gestion {concept} formules',
+                    'Configurer traçabilité {concept} batch',
+                    'Développer sécurité {concept} chimique',
+                    'Implémenter conformité {concept} REACH',
+                    'Créer système {concept} R&D',
+                    'Développer monitoring {concept} process',
+                    'Implémenter gestion {concept} déchets',
+                    'Créer documentation {concept} technique',
+                    'Développer app mobile {concept} terrain',
+                    'Implémenter analytics {concept} production',
+                    'Créer workflow {concept} validation',
+                    'Développer maintenance {concept} équipements',
+                    'Implémenter blockchain {concept} traçabilité'
+                ],
+                'english': [
+                    'Develop laboratory {concept} LIMS',
+                    'Implement {concept} quality control',
+                    'Create {concept} formula management',
+                    'Configure {concept} batch traceability',
+                    'Develop chemical {concept} safety',
+                    'Implement {concept} REACH compliance',
+                    'Create {concept} R&D system',
+                    'Develop {concept} process monitoring',
+                    'Implement {concept} waste management',
+                    'Create technical {concept} documentation',
+                    'Develop mobile {concept} field app',
+                    'Implement {concept} production analytics',
+                    'Create {concept} validation workflow',
+                    'Develop {concept} equipment maintenance',
+                    'Implement {concept} traceability blockchain'
+                ]
+            },
+            
+            # === SPORTS & FITNESS ===
+            'Sports & Fitness': {
+                'french': [
+                    'Développer app {concept} fitness',
+                    'Implémenter tracking {concept} performance',
+                    'Créer réservation {concept} cours',
+                    'Configurer wearables {concept} IoT',
+                    'Développer coaching {concept} virtuel',
+                    'Implémenter nutrition {concept} planning',
+                    'Créer communauté {concept} sportive',
+                    'Développer gestion {concept} salle',
+                    'Implémenter analytics {concept} santé',
+                    'Créer programme {concept} personnalisé',
+                    'Développer streaming {concept} cours',
+                    'Implémenter gamification {concept}',
+                    'Créer marketplace {concept} équipements',
+                    'Développer événements {concept} sportifs',
+                    'Implémenter blockchain {concept} records'
+                ],
+                'english': [
+                    'Develop fitness {concept} app',
+                    'Implement {concept} performance tracking',
+                    'Create {concept} class booking',
+                    'Configure {concept} wearables IoT',
+                    'Develop virtual {concept} coaching',
+                    'Implement {concept} nutrition planning',
+                    'Create sports {concept} community',
+                    'Develop {concept} gym management',
+                    'Implement health {concept} analytics',
+                    'Create personalized {concept} program',
+                    'Develop {concept} class streaming',
+                    'Implement {concept} gamification',
+                    'Create {concept} equipment marketplace',
+                    'Develop sports {concept} events',
+                    'Implement {concept} blockchain records'
+                ]
+            },
+            
+            # === TRAVEL & TOURISM ===
+            'Travel & Tourism': {
+                'french': [
+                    'Développer plateforme {concept} voyage',
+                    'Implémenter réservation {concept} multi-services',
+                    'Créer guide {concept} interactif',
+                    'Configurer paiement {concept} multi-devises',
+                    'Développer app mobile {concept} voyage',
+                    'Implémenter recommandation {concept} IA',
+                    'Créer gestion {concept} itinéraires',
+                    'Développer check-in {concept} digital',
+                    'Implémenter géolocalisation {concept}',
+                    'Créer système {concept} avis',
+                    'Développer chat {concept} support',
+                    'Implémenter réalité {concept} virtuelle',
+                    'Créer marketplace {concept} activités',
+                    'Développer loyalty {concept} program',
+                    'Implémenter blockchain {concept} booking'
+                ],
+                'english': [
+                    'Develop travel {concept} platform',
+                    'Implement multi-service {concept} booking',
+                    'Create interactive {concept} guide',
+                    'Configure multi-currency {concept} payment',
+                    'Develop mobile travel {concept} app',
+                    'Implement AI {concept} recommendation',
+                    'Create {concept} itinerary management',
+                    'Develop digital {concept} check-in',
+                    'Implement {concept} geolocation',
+                    'Create {concept} review system',
+                    'Develop {concept} support chat',
+                    'Implement virtual {concept} reality',
+                    'Create {concept} activities marketplace',
+                    'Develop {concept} loyalty program',
+                    'Implement {concept} blockchain booking'
+                ]
+            },
+            
+            # === EVENTS & HOSPITALITY ===
+            'Events & Hospitality': {
+                'french': [
+                    'Développer gestion {concept} événements',
+                    'Implémenter billetterie {concept} digitale',
+                    'Créer planning {concept} venues',
+                    'Configurer paiement {concept} sécurisé',
+                    'Développer app {concept} participants',
+                    'Implémenter check-in {concept} NFC',
+                    'Créer gestion {concept} catering',
+                    'Développer streaming {concept} live',
+                    'Implémenter networking {concept} app',
+                    'Créer analytics {concept} événement',
+                    'Développer CRM {concept} exposants',
+                    'Implémenter réalité {concept} augmentée',
+                    'Créer système {concept} feedback',
+                    'Développer marketplace {concept} services',
+                    'Implémenter blockchain {concept} tickets'
+                ],
+                'english': [
+                    'Develop {concept} event management',
+                    'Implement digital {concept} ticketing',
+                    'Create {concept} venue planning',
+                    'Configure secure {concept} payment',
+                    'Develop {concept} attendee app',
+                    'Implement NFC {concept} check-in',
+                    'Create {concept} catering management',
+                    'Develop live {concept} streaming',
+                    'Implement {concept} networking app',
+                    'Create {concept} event analytics',
+                    'Develop {concept} exhibitor CRM',
+                    'Implement augmented {concept} reality',
+                    'Create {concept} feedback system',
+                    'Develop {concept} services marketplace',
+                    'Implement {concept} blockchain tickets'
+                ]
+            },
+            
+            # === GOVERNMENT ===
+            'Government': {
+                'french': [
+                    'Développer portail citoyen {concept}',
+                    'Implémenter dématérialisation {concept}',
+                    'Créer interface agent {concept}',
+                    'Configurer authentification {concept} forte',
+                    'Développer workflow {concept} administratif',
+                    'Implémenter transparence {concept} données',
+                    'Créer système notification {concept}',
+                    'Développer tableau bord {concept}',
+                    'Implémenter archivage {concept} légal',
+                    'Créer API {concept} interopérable',
+                    'Développer mobile gov {concept}',
+                    'Implémenter signature électronique {concept}',
+                    'Créer système rendez-vous {concept}',
+                    'Développer reporting {concept} réglementaire',
+                    'Implémenter accessibilité {concept} numérique'
+                ],
+                'english': [
+                    'Develop citizen {concept} portal',
+                    'Implement {concept} digitalization',
+                    'Create agent {concept} interface',
+                    'Configure strong {concept} authentication',
+                    'Develop administrative {concept} workflow',
+                    'Implement {concept} data transparency',
+                    'Create {concept} notification system',
+                    'Develop {concept} dashboard',
+                    'Implement legal {concept} archiving',
+                    'Create interoperable {concept} API',
+                    'Develop mobile gov {concept}',
+                    'Implement electronic {concept} signature',
+                    'Create {concept} appointment system',
+                    'Develop regulatory {concept} reporting',
+                    'Implement digital {concept} accessibility'
+                ]
+            },
+            
+            # === NON-PROFIT ===
+            'Non-profit': {
+                'french': [
+                    'Développer plateforme {concept} dons',
+                    'Implémenter gestion {concept} bénévoles',
+                    'Créer CRM {concept} donateurs',
+                    'Configurer campagne {concept} fundraising',
+                    'Développer app mobile {concept} engagement',
+                    'Implémenter transparence {concept} financière',
+                    'Créer système {concept} événements',
+                    'Développer communication {concept} impact',
+                    'Implémenter gestion {concept} projets',
+                    'Créer marketplace {concept} services',
+                    'Développer analytics {concept} social',
+                    'Implémenter blockchain {concept} traçabilité',
+                    'Créer système {concept} partenariats',
+                    'Développer formation {concept} bénévoles',
+                    'Implémenter conformité {concept} légale'
+                ],
+                'english': [
+                    'Develop {concept} donation platform',
+                    'Implement {concept} volunteer management',
+                    'Create {concept} donor CRM',
+                    'Configure {concept} fundraising campaign',
+                    'Develop mobile {concept} engagement app',
+                    'Implement financial {concept} transparency',
+                    'Create {concept} events system',
+                    'Develop {concept} impact communication',
+                    'Implement {concept} project management',
+                    'Create {concept} services marketplace',
+                    'Develop social {concept} analytics',
+                    'Implement {concept} traceability blockchain',
+                    'Create {concept} partnerships system',
+                    'Develop {concept} volunteer training',
+                    'Implement legal {concept} compliance'
+                ]
+            },
+            
+            # === ENVIRONMENTAL ===
+            'Environmental': {
+                'french': [
+                    'Développer monitoring {concept} environnemental',
+                    'Implémenter IoT {concept} capteurs',
+                    'Créer système {concept} alertes',
+                    'Configurer analytics {concept} données',
+                    'Développer app mobile {concept} terrain',
+                    'Implémenter prédiction {concept} modèles',
+                    'Créer dashboard {concept} impact',
+                    'Développer reporting {concept} carbone',
+                    'Implémenter traçabilité {concept} déchets',
+                    'Créer marketplace {concept} vert',
+                    'Développer certification {concept} écologique',
+                    'Implémenter blockchain {concept} crédits',
+                    'Créer système {concept} compliance',
+                    'Développer éducation {concept} environnementale',
+                    'Implémenter API {concept} satellite'
+                ],
+                'english': [
+                    'Develop environmental {concept} monitoring',
+                    'Implement {concept} sensor IoT',
+                    'Create {concept} alert system',
+                    'Configure {concept} data analytics',
+                    'Develop mobile {concept} field app',
+                    'Implement {concept} prediction models',
+                    'Create {concept} impact dashboard',
+                    'Develop {concept} carbon reporting',
+                    'Implement {concept} waste traceability',
+                    'Create green {concept} marketplace',
+                    'Develop ecological {concept} certification',
+                    'Implement {concept} credits blockchain',
+                    'Create {concept} compliance system',
+                    'Develop environmental {concept} education',
+                    'Implement satellite {concept} API'
+                ]
+            },
+            
+            # === AGRICULTURE ===
+            'Agriculture': {
+                'french': [
+                    'Développer agriculture {concept} précision',
+                    'Implémenter IoT {concept} capteurs',
+                    'Créer gestion {concept} exploitations',
+                    'Configurer irrigation {concept} intelligente',
+                    'Développer app mobile {concept} agriculteur',
+                    'Implémenter prédiction {concept} récoltes',
+                    'Créer marketplace {concept} produits',
+                    'Développer traçabilité {concept} alimentaire',
+                    'Implémenter drone {concept} surveillance',
+                    'Créer système {concept} météo',
+                    'Développer analytics {concept} sol',
+                    'Implémenter blockchain {concept} supply',
+                    'Créer gestion {concept} bétail',
+                    'Développer formation {concept} agriculteurs',
+                    'Implémenter certification {concept} bio'
+                ],
+                'english': [
+                    'Develop precision {concept} agriculture',
+                    'Implement {concept} sensor IoT',
+                    'Create {concept} farm management',
+                    'Configure smart {concept} irrigation',
+                    'Develop {concept} farmer mobile app',
+                    'Implement {concept} crop prediction',
+                    'Create {concept} products marketplace',
+                    'Develop food {concept} traceability',
+                    'Implement {concept} drone surveillance',
+                    'Create {concept} weather system',
+                    'Develop {concept} soil analytics',
+                    'Implement {concept} supply blockchain',
+                    'Create {concept} livestock management',
+                    'Develop {concept} farmer training',
+                    'Implement organic {concept} certification'
+                ]
+            },
+            
+            # === BIOTECHNOLOGY ===
+            'Biotechnology': {
+                'french': [
+                    'Développer LIMS {concept} biotechnologie',
+                    'Implémenter gestion {concept} échantillons',
+                    'Créer workflow {concept} recherche',
+                    'Configurer séquençage {concept} données',
+                    'Développer analyse {concept} génomique',
+                    'Implémenter compliance {concept} GMP',
+                    'Créer système {concept} essais',
+                    'Développer collaboration {concept} recherche',
+                    'Implémenter analytics {concept} biomarqueurs',
+                    'Créer gestion {concept} propriété',
+                    'Développer app mobile {concept} clinique',
+                    'Implémenter blockchain {concept} données',
+                    'Créer système {concept} publication',
+                    'Développer formation {concept} personnel',
+                    'Implémenter sécurité {concept} laboratoire'
+                ],
+                'english': [
+                    'Develop biotechnology {concept} LIMS',
+                    'Implement {concept} sample management',
+                    'Create {concept} research workflow',
+                    'Configure {concept} sequencing data',
+                    'Develop {concept} genomic analysis',
+                    'Implement {concept} GMP compliance',
+                    'Create {concept} trials system',
+                    'Develop {concept} research collaboration',
+                    'Implement {concept} biomarkers analytics',
+                    'Create {concept} IP management',
+                    'Develop mobile {concept} clinical app',
+                    'Implement {concept} data blockchain',
+                    'Create {concept} publication system',
+                    'Develop {concept} staff training',
+                    'Implement {concept} lab security'
+                ]
+            },
+            
+            # === RESEARCH & DEVELOPMENT ===
+            'Research & Development': {
+                'french': [
+                    'Développer gestion {concept} projets R&D',
+                    'Implémenter collaboration {concept} recherche',
+                    'Créer base {concept} connaissances',
+                    'Configurer publication {concept} scientifique',
+                    'Développer analytics {concept} innovation',
+                    'Implémenter propriété {concept} intellectuelle',
+                    'Créer workflow {concept} validation',
+                    'Développer lab {concept} management',
+                    'Implémenter grant {concept} management',
+                    'Créer système {concept} peer-review',
+                    'Développer app mobile {concept} chercheur',
+                    'Implémenter blockchain {concept} publications',
+                    'Créer réseau {concept} collaboration',
+                    'Développer formation {concept} recherche',
+                    'Implémenter compliance {concept} éthique'
+                ],
+                'english': [
+                    'Develop R&D {concept} project management',
+                    'Implement {concept} research collaboration',
+                    'Create {concept} knowledge base',
+                    'Configure scientific {concept} publishing',
+                    'Develop {concept} innovation analytics',
+                    'Implement intellectual {concept} property',
+                    'Create {concept} validation workflow',
+                    'Develop {concept} lab management',
+                    'Implement {concept} grant management',
+                    'Create {concept} peer-review system',
+                    'Develop {concept} researcher mobile app',
+                    'Implement {concept} publications blockchain',
+                    'Create {concept} collaboration network',
+                    'Develop {concept} research training',
+                    'Implement ethical {concept} compliance'
+                ]
+            },
+            
+            # === PHARMACEUTICAL ===
+            'Pharmaceutical': {
+                'french': [
+                    'Développer gestion {concept} essais cliniques',
+                    'Implémenter pharmacovigilance {concept}',
+                    'Créer système {concept} regulatory',
+                    'Configurer traçabilité {concept} médicaments',
+                    'Développer LIMS {concept} pharma',
+                    'Implémenter compliance {concept} FDA',
+                    'Créer workflow {concept} validation',
+                    'Développer supply chain {concept}',
+                    'Implémenter analytics {concept} effets',
+                    'Créer gestion {concept} brevets',
+                    'Développer app mobile {concept} patients',
+                    'Implémenter blockchain {concept} supply',
+                    'Créer système {concept} adverse events',
+                    'Développer formation {concept} personnel',
+                    'Implémenter sécurité {concept} données'
+                ],
+                'english': [
+                    'Develop clinical {concept} trials management',
+                    'Implement {concept} pharmacovigilance',
+                    'Create regulatory {concept} system',
+                    'Configure {concept} drug traceability',
+                    'Develop pharma {concept} LIMS',
+                    'Implement {concept} FDA compliance',
+                    'Create {concept} validation workflow',
+                    'Develop {concept} supply chain',
+                    'Implement {concept} effects analytics',
+                    'Create {concept} patent management',
+                    'Develop mobile {concept} patient app',
+                    'Implement {concept} supply blockchain',
+                    'Create {concept} adverse events system',
+                    'Develop {concept} staff training',
+                    'Implement {concept} data security'
+                ]
+            },
+            
+            # === MARKETING & ADVERTISING ===
+            'Marketing & Advertising': {
+                'french': [
+                    'Développer plateforme {concept} marketing',
+                    'Implémenter automation {concept} campaigns',
+                    'Créer analytics {concept} performance',
+                    'Configurer attribution {concept} multi-touch',
+                    'Développer CRM {concept} prospects',
+                    'Implémenter personnalisation {concept} IA',
+                    'Créer système {concept} A/B testing',
+                    'Développer social media {concept}',
+                    'Implémenter SEO {concept} automatique',
+                    'Créer dashboard {concept} ROI',
+                    'Développer app mobile {concept} marketeur',
+                    'Implémenter programmatic {concept} advertising',
+                    'Créer système {concept} lead scoring',
+                    'Développer content {concept} management',
+                    'Implémenter blockchain {concept} attribution'
+                ],
+                'english': [
+                    'Develop marketing {concept} platform',
+                    'Implement {concept} campaign automation',
+                    'Create {concept} performance analytics',
+                    'Configure multi-touch {concept} attribution',
+                    'Develop {concept} prospect CRM',
+                    'Implement AI {concept} personalization',
+                    'Create {concept} A/B testing system',
+                    'Develop social media {concept}',
+                    'Implement automatic {concept} SEO',
+                    'Create {concept} ROI dashboard',
+                    'Develop mobile {concept} marketer app',
+                    'Implement programmatic {concept} advertising',
+                    'Create {concept} lead scoring system',
+                    'Develop {concept} content management',
+                    'Implement {concept} attribution blockchain'
+                ]
+            },
+            
+            # === PUBLIC RELATIONS ===
+            'Public Relations': {
+                'french': [
+                    'Développer gestion {concept} médias',
+                    'Implémenter monitoring {concept} réputation',
+                    'Créer système {concept} communiqués',
+                    'Configurer analytics {concept} mention',
+                    'Développer CRM {concept} journalistes',
+                    'Implémenter gestion {concept} crise',
+                    'Créer calendrier {concept} éditorial',
+                    'Développer app mobile {concept} PR',
+                    'Implémenter sentiment {concept} analysis',
+                    'Créer dashboard {concept} influence',
+                    'Développer workflow {concept} approbation',
+                    'Implémenter social {concept} listening',
+                    'Créer système {concept} événements',
+                    'Développer reporting {concept} impact',
+                    'Implémenter blockchain {concept} authentification'
+                ],
+                'english': [
+                    'Develop {concept} media management',
+                    'Implement {concept} reputation monitoring',
+                    'Create {concept} press release system',
+                    'Configure {concept} mention analytics',
+                    'Develop {concept} journalist CRM',
+                    'Implement {concept} crisis management',
+                    'Create editorial {concept} calendar',
+                    'Develop mobile {concept} PR app',
+                    'Implement {concept} sentiment analysis',
+                    'Create {concept} influence dashboard',
+                    'Develop {concept} approval workflow',
+                    'Implement social {concept} listening',
+                    'Create {concept} events system',
+                    'Develop {concept} impact reporting',
+                    'Implement {concept} authentication blockchain'
+                ]
+            },
+            
+            # === CREATIVE & ENTERTAINMENT ===
+            'Creative & Entertainment': {
+                'french': [
+                    'Développer plateforme {concept} créative',
+                    'Implémenter collaboration {concept} artistique',
+                    'Créer gestion {concept} projets créatifs',
+                    'Configurer streaming {concept} contenu',
+                    'Développer marketplace {concept} talents',
+                    'Implémenter droits {concept} auteur',
+                    'Créer système {concept} production',
+                    'Développer app mobile {concept} créateur',
+                    'Implémenter analytics {concept} audience',
+                    'Créer monétisation {concept} contenu',
+                    'Développer workflow {concept} post-production',
+                    'Implémenter NFT {concept} créations',
+                    'Créer système {concept} feedback',
+                    'Développer formation {concept} créative',
+                    'Implémenter blockchain {concept} royalties'
+                ],
+                'english': [
+                    'Develop creative {concept} platform',
+                    'Implement artistic {concept} collaboration',
+                    'Create creative {concept} project management',
+                    'Configure {concept} content streaming',
+                    'Develop {concept} talent marketplace',
+                    'Implement {concept} copyright management',
+                    'Create {concept} production system',
+                    'Develop mobile {concept} creator app',
+                    'Implement {concept} audience analytics',
+                    'Create {concept} content monetization',
+                    'Develop {concept} post-production workflow',
+                    'Implement {concept} NFT creations',
+                    'Create {concept} feedback system',
+                    'Develop creative {concept} training',
+                    'Implement {concept} royalties blockchain'
                 ]
             }
-        else:
-            domain_patterns = {
-                'Healthcare': [
-                    'Validate HIPAA compliance',
-                    'Secure patient data',
-                    'Implement telemedicine',
-                    'Create electronic medical record',
-                    'Develop electronic prescription'
-                ],
-                'Finance': [
-                    'Implement fraud detection',
-                    'Develop trading algorithm',
-                    'Secure transactions',
-                    'Create financial report',
-                    'Configure PCI-DSS compliance'
-                ],
-                'Education': [
-                    'Develop adaptive learning',
-                    'Create evaluation system',
-                    'Implement virtual classroom',
-                    'Generate certificates',
-                    'Track student progress'
-                ],
-                'Technology': [
-                    'Optimize system performance',
-                    'Implement microservices',
-                    'Develop CI/CD pipeline',
-                    'Create monitoring',
-                    'Configure cloud infrastructure'
-                ],
-                'Retail': [
-                    'Develop shopping cart',
-                    'Implement payment',
-                    'Create inventory management',
-                    'Develop recommendations',
-                    'Configure delivery'
-                ],
-                'Media': [
-                    'Develop streaming',
-                    'Create content management',
-                    'Implement comments',
-                    'Configure CDN',
-                    'Develop recommendations'
-                ],
-                'Logistics': [
-                    'Develop tracking',
-                    'Optimize routes',
-                    'Create warehouse management',
-                    'Implement GPS',
-                    'Configure alerts'
-                ],
-                'Energy': [
-                    'Develop IoT monitoring',
-                    'Create smart grid',
-                    'Implement sensors',
-                    'Optimize consumption',
-                    'Configure maintenance'
-                ]
-            }
+        }
         
-        if industry in domain_patterns:
-            for task_name in domain_patterns[industry][:6]:
+        # Sélection des templates selon l'industrie
+        templates = industry_templates.get(industry, {}).get(language, [])
+        
+        if templates and domain_context:
+            # Générer jusqu'à 15 tâches (8 templates × 2 concepts max)
+            used_templates = set()
+            for template in templates[:8]:  # Prendre 8 templates
+                for concept in domain_context[:2]:  # 2 concepts par template
+                    if template not in used_templates:
+                        task_name = template.format(concept=concept)
+                        domain_tasks.append(self._create_ml_task(task_name, {}, industry, complexity, language))
+                        used_templates.add(template)
+                        if len(domain_tasks) >= 15:  # Limite à 15 tâches
+                            break
+                if len(domain_tasks) >= 15:
+                    break
+        elif not domain_context:
+            # Fallback générique si pas de contexte spécifique
+            fallback_templates = templates[:5] if templates else []
+            for template in fallback_templates:
+                generic_concept = industry.lower()
+                task_name = template.format(concept=generic_concept)
                 domain_tasks.append(self._create_ml_task(task_name, {}, industry, complexity, language))
         
-        return domain_tasks
+        return domain_tasks[:15]  # Garantir max 15 tâches
     
     def _generate_complexity_based_tasks(self, complexity: str, industry: str, language: str) -> List[Dict[str, Any]]:
         """Générer des tâches selon la complexité"""
@@ -1227,34 +2562,98 @@ class MLTaskGenerator:
         task_pool.sort(key=lambda x: x['final_score'], reverse=True)
         return task_pool[:target_count]
     
+    def _eliminate_similar_tasks(self, tasks: List[Dict[str, Any]], similarity_threshold: float = 0.7) -> List[Dict[str, Any]]:
+        """Éliminer les tâches trop similaires avec analyse sémantique"""
+        unique_tasks = []
+        
+        for task in tasks:
+            is_similar = False
+            task_words = set(task['name'].lower().split())
+            
+            for existing_task in unique_tasks:
+                existing_words = set(existing_task['name'].lower().split())
+                
+                # Calcul de similarité Jaccard
+                intersection = task_words.intersection(existing_words)
+                union = task_words.union(existing_words)
+                similarity = len(intersection) / len(union) if union else 0
+                
+                if similarity > similarity_threshold:
+                    # Garder la tâche avec le meilleur score
+                    if task.get('final_score', 0) <= existing_task.get('final_score', 0):
+                        is_similar = True
+                        break
+                    else:
+                        # Remplacer la tâche existante
+                        unique_tasks.remove(existing_task)
+                        break
+            
+            if not is_similar:
+                unique_tasks.append(task)
+        
+        return unique_tasks
+    
     def _select_final_tasks(self, top_tasks: List[Dict[str, Any]], project_description: str, max_tasks: int) -> List[Dict[str, Any]]:
-        """Sélection finale avec diversité"""
-        final_tasks = []
-        used_categories = set()
+        """Sélection finale garantissant le nombre demandé de tâches logiques"""
+        if len(top_tasks) <= max_tasks:
+            return top_tasks
         
-        # Priorité aux tâches HIGH avec diversité de catégories
-        for task in top_tasks:
-            if len(final_tasks) >= max_tasks:
-                break
+        # Étape 1: Éliminer seulement les vrais doublons (seuil très strict)
+        unique_tasks = []
+        seen_names = set()
+        
+        for task in sorted(top_tasks, key=lambda x: x.get('final_score', 0), reverse=True):
+            task_name_clean = task['name'].lower().strip()
             
-            if task['priority'] == 'HIGH' and task['category'] not in used_categories:
-                final_tasks.append(task)
-                used_categories.add(task['category'])
-        
-        # Compléter avec les meilleures tâches restantes
-        for task in top_tasks:
-            if len(final_tasks) >= max_tasks:
-                break
+            # Vérifier les doublons exacts seulement
+            is_exact_duplicate = False
+            for seen_name in seen_names:
+                similarity = self._calculate_exact_similarity(task_name_clean, seen_name)
+                if similarity > 0.95:  # Seulement les quasi-identiques
+                    is_exact_duplicate = True
+                    break
             
-            if task not in final_tasks:
-                final_tasks.append(task)
+            if not is_exact_duplicate:
+                unique_tasks.append(task)
+                seen_names.add(task_name_clean)
         
-        # Nettoyer les champs internes
-        for task in final_tasks:
-            task.pop('relevance_score', None)
-            task.pop('final_score', None)
+        # Étape 2: Si on a encore trop, diversifier intelligemment
+        if len(unique_tasks) > max_tasks:
+            return self._smart_diversification(unique_tasks, max_tasks)
         
-        return final_tasks[:max_tasks]
+        return unique_tasks
+
+    def _calculate_exact_similarity(self, name1: str, name2: str) -> float:
+        """Calculer similarité exacte entre deux noms"""
+        from difflib import SequenceMatcher
+        return SequenceMatcher(None, name1, name2).ratio()
+
+    def _smart_diversification(self, tasks: List[Dict[str, Any]], max_tasks: int) -> List[Dict[str, Any]]:
+        """Diversification intelligente garantissant max_tasks"""
+        # Grouper par catégorie
+        by_category = {}
+        for task in tasks:
+            category = task.get('category', 'other')
+            if category not in by_category:
+                by_category[category] = []
+            by_category[category].append(task)
+        
+        # Trier chaque catégorie par score
+        for category in by_category:
+            by_category[category].sort(key=lambda x: x.get('final_score', 0), reverse=True)
+        
+        selected = []
+        categories = list(by_category.keys())
+        
+        # Distribution en rond-robin pour garantir la diversité
+        while len(selected) < max_tasks and any(by_category.values()):
+            for category in categories:
+                if len(selected) >= max_tasks:
+                    break
+                if by_category[category]:  # Si il reste des tâches dans cette catégorie
+                    selected.append(by_category[category].pop(0))
+        
+        return selected[:max_tasks]
     
     def _ensure_task_diversity(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Assurer la diversité des tâches en évitant les doublons conceptuels"""
@@ -1439,8 +2838,12 @@ def health():
         'version': '1.0.0',
         'supported_languages': ['français', 'english'],
         'supported_industries': [
-            'Technology', 'Healthcare', 'Finance', 'Education',
-            'Retail', 'Media', 'Logistics', 'Energy'
+            'Technology', 'Healthcare', 'Finance', 'Education', 'Retail', 'Media', 'Logistics', 'Energy',
+            'Gaming', 'Legal Services', 'Consulting', 'Human Resources', 'Real Estate', 'Insurance',
+            'Automotive', 'Aerospace', 'Construction', 'Food & Beverage', 'Textile & Fashion', 'Chemical',
+            'Sports & Fitness', 'Travel & Tourism', 'Events & Hospitality', 'Government', 'Non-profit',
+            'Environmental', 'Agriculture', 'Biotechnology', 'Research & Development', 'Pharmaceutical',
+            'Marketing & Advertising', 'Public Relations', 'Creative & Entertainment'
         ],
         'supported_complexities': ['simple', 'moyen', 'complexe', 'expert'],
         'task_categories': [
@@ -1478,7 +2881,12 @@ def generate_tasks():
         if not description or len(description.strip()) < 10:
             return jsonify({'error': 'Description trop courte (minimum 10 caractères)'}), 400
         
-        if industry not in ['Technology', 'Healthcare', 'Finance', 'Education', 'Retail', 'Media', 'Logistics', 'Energy']:
+        if industry not in ['Technology', 'Healthcare', 'Finance', 'Education', 'Retail', 'Media', 'Logistics', 'Energy',
+                            'Gaming', 'Legal Services', 'Consulting', 'Human Resources', 'Real Estate', 'Insurance',
+                            'Automotive', 'Aerospace', 'Construction', 'Food & Beverage', 'Textile & Fashion', 'Chemical',
+                            'Sports & Fitness', 'Travel & Tourism', 'Events & Hospitality', 'Government', 'Non-profit',
+                            'Environmental', 'Agriculture', 'Biotechnology', 'Research & Development', 'Pharmaceutical',
+                            'Marketing & Advertising']:
             return jsonify({'error': 'Industrie non supportée'}), 400
         
         if complexity not in ['simple', 'moyen', 'complexe', 'expert']:

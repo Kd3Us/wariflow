@@ -727,68 +727,113 @@ class MLRiskOpportunityAnalyzer:
         return df
     
     def train_models(self):
-        """Entraîner les modèles ML de risques et opportunités"""
+        """Entraîner les modèles ML de risques et opportunités - VERSION CORRIGÉE"""
         if self.is_trained:
             return
-        
+    
         print("Entraînement des modèles ML de risques et opportunités...")
-        
-        # Charger les données
+    
         df = self.load_training_dataset()
+    
+        print(f"Colonnes du DataFrame: {df.columns.tolist()}")
         
-        # Extraire les features
+        if 'project_description' in df.columns:
+            description_col = 'project_description'
+        elif 'description' in df.columns:
+            description_col = 'description'
+        else:
+            print("Structure de colonnes non standard détectée...")
+            if len(df.columns) >= 7:
+                df.columns = ['project_description', 'industry', 'complexity', 'risk_level', 'opportunity_level', 'mitigation_strategy', 'language']
+                description_col = 'project_description'
+                print("✅ Colonnes renommées automatiquement")
+            else:
+                raise ValueError(f"Structure de dataset incorrecte. Colonnes trouvées: {df.columns.tolist()}")
+    
         print("Extraction des features...")
         feature_matrix = []
-        for _, row in df.iterrows():
-            features = self.feature_extractor.extract_risk_opportunity_features(
-                row['project_description'], 
-                row['industry'], 
-                row['complexity']
-            )
-            feature_matrix.append(list(features.values()))
+        valid_rows = []
         
+        for idx, row in df.iterrows():
+            try:
+                features = self.feature_extractor.extract_risk_opportunity_features(
+                    row[description_col],  
+                    row['industry'], 
+                    row['complexity']
+                )
+                feature_matrix.append(list(features.values()))
+                valid_rows.append(row)
+            except Exception as e:
+                print(f"Erreur extraction features ligne {idx}: {e}")
+                continue
+        
+        if len(feature_matrix) == 0:
+            print(" Aucune feature extraite, impossible d'entraîner les modèles")
+            return
+        
+        print(f"{len(feature_matrix)} échantillons valides pour l'entraînement")
+    
         X = np.array(feature_matrix)
+        valid_df = pd.DataFrame(valid_rows)
+    
+        try:
+            print("Entraînement du classificateur de niveau de risque...")
+            y_risk = self.risk_encoder.fit_transform(valid_df['risk_level'])
         
-        # Entraîner le classificateur de niveau de risque
-        print("Entraînement du classificateur de niveau de risque...")
-        y_risk = self.risk_encoder.fit_transform(df['risk_level'])
+            self.risk_level_classifier = VotingClassifier([
+                ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
+                ('svm', SVC(probability=True, random_state=42, class_weight='balanced')),
+                ('nb', MultinomialNB())
+            ], voting='soft')
         
-        self.risk_level_classifier = VotingClassifier([
-            ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
-            ('svm', SVC(probability=True, random_state=42, class_weight='balanced')),
-            ('nb', MultinomialNB())
-        ], voting='soft')
+            self.risk_level_classifier.fit(X, y_risk)
+            print(" Classificateur de risque entraîné")
+        except Exception as e:
+            print(f" Erreur entraînement classificateur risque: {e}")
+            return
+    
+        try:
+            print("Entraînement du classificateur de niveau d'opportunité...")
+            y_opportunity = self.opportunity_encoder.fit_transform(valid_df['opportunity_level'])
         
-        self.risk_level_classifier.fit(X, y_risk)
+            self.opportunity_level_classifier = VotingClassifier([
+                ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
+                ('svm', SVC(probability=True, random_state=42, class_weight='balanced')),
+                ('nb', MultinomialNB())
+            ], voting='soft')
         
-        # Entraîner le classificateur de niveau d'opportunité
-        print("Entraînement du classificateur de niveau d'opportunité...")
-        y_opportunity = self.opportunity_encoder.fit_transform(df['opportunity_level'])
+            self.opportunity_level_classifier.fit(X, y_opportunity)
+            print(" Classificateur d'opportunité entraîné")
+        except Exception as e:
+            print(f" Erreur entraînement classificateur opportunité: {e}")
+            return
+    
+        try:
+            print("Entraînement du prédicteur de stratégie...")
+            y_strategy = self.strategy_encoder.fit_transform(valid_df['mitigation_strategy'])
         
-        self.opportunity_level_classifier = VotingClassifier([
-            ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
-            ('svm', SVC(probability=True, random_state=42, class_weight='balanced')),
-            ('nb', MultinomialNB())
-        ], voting='soft')
-        
-        self.opportunity_level_classifier.fit(X, y_opportunity)
-        
-        # Entraîner le prédicteur de stratégie de mitigation
-        print("Entraînement du prédicteur de stratégie...")
-        y_strategy = self.strategy_encoder.fit_transform(df['mitigation_strategy'])
-        
-        self.mitigation_strategy_predictor = RandomForestClassifier(
-            n_estimators=100, 
-            random_state=42,
-            class_weight='balanced'
-        )
-        self.mitigation_strategy_predictor.fit(X, y_strategy)
-        
-        # Évaluation
-        self._evaluate_models(X, y_risk, y_opportunity, y_strategy)
-        
+            self.mitigation_strategy_predictor = RandomForestClassifier(
+                n_estimators=100,
+                random_state=42,
+                class_weight='balanced'
+            )
+            self.mitigation_strategy_predictor.fit(X, y_strategy)
+            print(" Prédicteur de stratégie entraîné")
+        except Exception as e:
+            print(f" Erreur entraînement prédicteur stratégie: {e}")
+            return
+    
+        try:
+            self._evaluate_models(X, y_risk, y_opportunity, y_strategy)
+        except Exception as e:
+            print(f" Erreur lors de l'évaluation (non bloquante): {e}")
+    
         self.is_trained = True
-        print("Modèles ML de risques et opportunités entraînés avec succès!")
+        print(" Modèles ML de risques et opportunités entraînés avec succès!")
+
+    def train_model(self):
+        """Alias pour train_models pour compatibilité"""
+        return self.train_models()
     
     def _evaluate_models(self, X, y_risk, y_opportunity, y_strategy):
         """Évaluer les performances des modèles"""
@@ -828,29 +873,29 @@ class MLRiskOpportunityAnalyzer:
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
     
-    def analyze_project_risks_opportunities(self, project_description: str, industry: str, complexity: str, language: str = None) -> Dict[str, Any]:
+    def analyze_project_risks_opportunities(self, description: str, industry: str, complexity: str, language: str = 'french') -> Dict[str, Any]:
         """Analyser les risques et opportunités d'un projet avec ML"""
         if not self.is_trained:
             self.train_models()
         
         if language is None:
-            detected_language = self.analyzer.detect_language(project_description)
+            detected_language = self.analyzer.detect_language(description)  # ✅ Changer 'text' en 'description'
         else:
             detected_language = language
    
         # Cache 
-        cache_key = hashlib.md5(f"{project_description}_{industry}_{complexity}_{detected_language}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"{description}_{industry}_{complexity}_{detected_language}".encode()).hexdigest()
         if cache_key in self.prediction_cache:
             return self.prediction_cache[cache_key]
         
         try:
             # Analyses de base
-            risk_analysis = self.analyzer.analyze_project_risks(project_description, industry, complexity)
-            opportunity_analysis = self.analyzer.analyze_project_opportunities(project_description, industry, complexity)
+            risk_analysis = self.analyzer.analyze_project_risks(description, industry, complexity)
+            opportunity_analysis = self.analyzer.analyze_project_opportunities(description, industry, complexity)
             
             # Extraire les features
             features = self.feature_extractor.extract_risk_opportunity_features(
-                project_description, industry, complexity
+                description, industry, complexity
             )
             X = np.array([list(features.values())])
             
@@ -888,7 +933,7 @@ class MLRiskOpportunityAnalyzer:
             global_opportunity_score = self._calculate_global_opportunity_score(opportunity_analysis, predicted_opportunity_level)
             
             result = {
-                'project_description': project_description[:100] + '...' if len(project_description) > 100 else project_description,
+                'project_description': description[:100] + '...' if len(description) > 100 else description,
                 'industry': industry,
                 'complexity': complexity,
                 'language': detected_language,
@@ -2106,6 +2151,7 @@ def detect_language():
                 return jsonify({'error': 'Texte requis'}), 400
             
             text = data['text']
+            
             detected_language = risk_opportunity_predictor.analyzer.detect_language(text)
             
             return jsonify({

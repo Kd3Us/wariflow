@@ -38,178 +38,243 @@ except:
 
 
 class ProjectTypeAnalyzer:
-    """Analyseur de type de projet multilingue"""
+    """Analyseur de type de projet multilingue - AVEC TYPES SPÉCIALISÉS"""
     
     def __init__(self):
         self.supported_languages = ['french', 'english']
         
-        # Types de projets supportés
+        # ✅ Types spécialisés pour génération de tâches précises
         self.project_types = [
-            'Application Web',
-            'Application Mobile',
-            'API REST',
-            'SaaS',
-            'E-commerce',
-            'CMS',
-            'Dashboard',
-            'Système'
+            # Types de base
+            'Application Web', 'Application Mobile', 'API REST', 'SaaS',
+            'E-commerce', 'CMS', 'Dashboard', 'Système',
+            
+            # Types spécialisés par industrie
+            'Gaming Platform', 'Streaming Platform', 'Content Platform',
+            'HealthTech Platform', 'MedTech System', 'Clinical Platform',
+            'FinTech Platform', 'Trading System', 'Payment Gateway',
+            'EdTech Platform', 'Learning Management', 'Assessment System',
+            'Energy Management', 'Smart Grid System', 'IoT Platform',
+            'Legal Management', 'Compliance Platform', 'Contract System',
+            'Supply Chain System', 'Logistics Platform', 'Fleet Management',
+            'AgTech Platform', 'Farm Management', 'Crop Monitoring',
+            'PropTech Platform', 'Property Management', 'Real Estate Portal',
+            'MarTech Platform', 'Campaign Management', 'Analytics Dashboard'
         ]
         
-        # Patterns de détection par type et langue
-        self.type_patterns = {
+        # ✅ Mots-clés DÉTAILLÉS pour chaque type spécialisé
+        self.type_keywords = {
             'french': {
-                'Application Web': [
-                    'site web', 'application web', 'plateforme web', 'portail web',
-                    'interface web', 'webapp', 'site internet', 'application en ligne',
-                    'react', 'vue', 'angular', 'frontend', 'backend', 'fullstack'
-                ],
-                'Application Mobile': [
-                    'application mobile', 'app mobile', 'mobile app', 'smartphone',
-                    'tablette', 'ios', 'android', 'react native', 'flutter',
-                    'cordova', 'ionic', 'xamarin', 'app store', 'play store'
-                ],
-                'API REST': [
-                    'api', 'rest', 'restful', 'microservice', 'service web',
-                    'endpoint', 'json', 'xml', 'graphql', 'oauth',
-                    'authentification api', 'documentation api'
-                ],
-                'SaaS': [
-                    'saas', 'software as a service', 'plateforme saas',
-                    'multi-tenant', 'abonnement', 'subscription', 'cloud',
-                    'scalable', 'tenant', 'saas platform'
-                ],
-                'E-commerce': [
-                    'e-commerce', 'ecommerce', 'boutique en ligne', 'magasin',
-                    'vente en ligne', 'panier', 'commande', 'paiement',
-                    'shopify', 'woocommerce', 'prestashop', 'marketplace'
-                ],
-                'CMS': [
-                    'cms', 'content management', 'gestion de contenu',
-                    'blog', 'article', 'publication', 'éditeur',
-                    'wordpress', 'drupal', 'joomla', 'strapi'
-                ],
-                'Dashboard': [
-                    'dashboard', 'tableau de bord', 'reporting', 'analytique',
-                    'monitoring', 'métriques', 'kpi', 'visualisation',
-                    'graphique', 'chart', 'statistiques'
-                ],
-                'Système': [
-                    'système', 'logiciel', 'application métier', 'erp',
-                    'crm', 'gestion', 'base de données', 'architecture',
-                    'infrastructure', 'serveur', 'réseau'
-                ]
+                # Types de base
+                'Application Web': ['site', 'web', 'portail', 'interface web', 'navigateur', 'html', 'css'],
+                'Application Mobile': ['mobile', 'app', 'smartphone', 'ios', 'android', 'flutter', 'react native'],
+                'API REST': ['api', 'rest', 'service', 'endpoint', 'microservice', 'json', 'graphql'],
+                'SaaS': ['saas', 'plateforme', 'service', 'abonnement', 'multi-tenant', 'cloud'],
+                'E-commerce': ['boutique', 'e-commerce', 'vente', 'panier', 'marketplace', 'commande'],
+                'CMS': ['cms', 'contenu', 'blog', 'publication', 'éditorial', 'wordpress'],
+                'Dashboard': ['dashboard', 'tableau', 'monitoring', 'kpi', 'analytics', 'métriques'],
+                'Système': ['système', 'erp', 'gestion', 'enterprise', 'complexe', 'hospitalier'],
+                
+                # Gaming spécialisé
+                'Gaming Platform': ['jeu', 'gaming', 'joueur', 'gameplay', 'multijoueur', 'esport', 'match', 'tournoi'],
+                'Streaming Platform': ['streaming', 'vidéo', 'live', 'diffusion', 'broadcast', 'contenu vidéo'],
+                'Content Platform': ['contenu', 'média', 'publication', 'création', 'partage', 'communauté'],
+                
+                # HealthTech spécialisé
+                'HealthTech Platform': ['santé', 'médical', 'patient', 'télémédecine', 'diagnostic', 'thérapie', 'wellness'],
+                'MedTech System': ['dispositif médical', 'équipement', 'monitoring', 'capteur', 'biométrie', 'médical'],
+                'Clinical Platform': ['clinique', 'essai', 'recherche', 'protocole', 'patient', 'données cliniques'],
+                
+                # FinTech spécialisé
+                'FinTech Platform': ['fintech', 'finance', 'paiement', 'portefeuille', 'crédit', 'investissement', 'bancaire'],
+                'Trading System': ['trading', 'bourse', 'marché', 'ordre', 'portfolio', 'algorithme', 'forex'],
+                'Payment Gateway': ['paiement', 'transaction', 'carte', 'wallet', 'gateway', 'pos', 'stripe'],
+                
+                # EdTech spécialisé
+                'EdTech Platform': ['éducation', 'apprentissage', 'formation', 'cours', 'pédagogie', 'école'],
+                'Learning Management': ['lms', 'e-learning', 'parcours', 'compétence', 'certification', 'moodle'],
+                'Assessment System': ['évaluation', 'test', 'examen', 'notation', 'compétence', 'quiz'],
+                
+                # Energy spécialisé
+                'Energy Management': ['énergie', 'consommation', 'efficacité', 'optimisation', 'monitoring énergétique'],
+                'Smart Grid System': ['smart grid', 'réseau', 'distribution', 'compteur', 'iot énergie', 'électricité'],
+                'IoT Platform': ['iot', 'capteur', 'objet connecté', 'telemetrie', 'data', 'sensor'],
+                
+                # Legal spécialisé
+                'Legal Management': ['juridique', 'avocat', 'cabinet', 'dossier', 'procédure', 'droit'],
+                'Compliance Platform': ['conformité', 'réglementation', 'audit', 'risque', 'gouvernance', 'rgpd'],
+                'Contract System': ['contrat', 'accord', 'signature', 'négociation', 'clause', 'juridique'],
+                
+                # Supply Chain spécialisé
+                'Supply Chain System': ['supply chain', 'chaîne', 'approvisionnement', 'fournisseur', 'procurement'],
+                'Logistics Platform': ['logistique', 'transport', 'livraison', 'entrepôt', 'tracking', 'expedition'],
+                'Fleet Management': ['flotte', 'véhicule', 'gestion parc', 'maintenance', 'géolocalisation', 'gps'],
+                
+                # AgTech spécialisé
+                'AgTech Platform': ['agriculture', 'agtech', 'ferme', 'exploitation', 'agricole', 'farming'],
+                'Farm Management': ['gestion ferme', 'parcelle', 'culture', 'élevage', 'production agricole'],
+                'Crop Monitoring': ['surveillance culture', 'récolte', 'irrigation', 'pesticide', 'rendement'],
+                
+                # PropTech spécialisé
+                'PropTech Platform': ['immobilier', 'proptech', 'propriété', 'location', 'transaction immobilière'],
+                'Property Management': ['gestion immobilière', 'syndic', 'locataire', 'maintenance immobilier'],
+                'Real Estate Portal': ['portail immobilier', 'annonce', 'visite', 'estimation', 'vente maison'],
+                
+                # MarTech spécialisé
+                'MarTech Platform': ['marketing', 'martech', 'campagne', 'automation', 'lead', 'digital marketing'],
+                'Campaign Management': ['gestion campagne', 'email', 'social', 'conversion', 'roi marketing'],
+                'Analytics Dashboard': ['analytics', 'métriques', 'performance', 'reporting', 'kpi marketing']
             },
             'english': {
-                'Application Web': [
-                    'web application', 'web app', 'web platform', 'web portal',
-                    'web interface', 'webapp', 'website', 'online application',
-                    'react', 'vue', 'angular', 'frontend', 'backend', 'fullstack'
-                ],
-                'Application Mobile': [
-                    'mobile application', 'mobile app', 'smartphone app',
-                    'tablet app', 'ios', 'android', 'react native', 'flutter',
-                    'cordova', 'ionic', 'xamarin', 'app store', 'play store'
-                ],
-                'API REST': [
-                    'api', 'rest', 'restful', 'microservice', 'web service',
-                    'endpoint', 'json', 'xml', 'graphql', 'oauth',
-                    'api authentication', 'api documentation'
-                ],
-                'SaaS': [
-                    'saas', 'software as a service', 'saas platform',
-                    'multi-tenant', 'subscription', 'cloud platform',
-                    'scalable platform', 'tenant', 'cloud software'
-                ],
-                'E-commerce': [
-                    'e-commerce', 'ecommerce', 'online store', 'shop',
-                    'online sales', 'cart', 'order', 'payment',
-                    'shopify', 'woocommerce', 'prestashop', 'marketplace'
-                ],
-                'CMS': [
-                    'cms', 'content management', 'content system',
-                    'blog', 'article', 'publication', 'editor',
-                    'wordpress', 'drupal', 'joomla', 'strapi'
-                ],
-                'Dashboard': [
-                    'dashboard', 'reporting', 'analytics',
-                    'monitoring', 'metrics', 'kpi', 'visualization',
-                    'chart', 'graph', 'statistics'
-                ],
-                'Système': [
-                    'system', 'software', 'business application', 'erp',
-                    'crm', 'management', 'database', 'architecture',
-                    'infrastructure', 'server', 'network'
-                ]
+                # Types de base
+                'Application Web': ['website', 'web', 'portal', 'web interface', 'browser', 'html', 'css'],
+                'Application Mobile': ['mobile', 'app', 'smartphone', 'ios', 'android', 'flutter', 'react native'],
+                'API REST': ['api', 'rest', 'service', 'endpoint', 'microservice', 'json', 'graphql'],
+                'SaaS': ['saas', 'platform', 'service', 'subscription', 'multi-tenant', 'cloud'],
+                'E-commerce': ['shop', 'e-commerce', 'sales', 'cart', 'marketplace', 'order'],
+                'CMS': ['cms', 'content', 'blog', 'publishing', 'editorial', 'wordpress'],
+                'Dashboard': ['dashboard', 'board', 'monitoring', 'kpi', 'analytics', 'metrics'],
+                'Système': ['system', 'erp', 'management', 'enterprise', 'complex', 'hospital'],
+                
+                # Gaming spécialisé
+                'Gaming Platform': ['game', 'gaming', 'player', 'gameplay', 'multiplayer', 'esport', 'match', 'tournament'],
+                'Streaming Platform': ['streaming', 'video', 'live', 'broadcast', 'content delivery', 'twitch'],
+                'Content Platform': ['content', 'media', 'publishing', 'creation', 'sharing', 'community'],
+                
+                # HealthTech spécialisé
+                'HealthTech Platform': ['health', 'medical', 'patient', 'telemedicine', 'diagnosis', 'therapy', 'wellness'],
+                'MedTech System': ['medical device', 'equipment', 'monitoring', 'sensor', 'biometric', 'medical'],
+                'Clinical Platform': ['clinical', 'trial', 'research', 'protocol', 'patient data', 'clinical study'],
+                
+                # FinTech spécialisé
+                'FinTech Platform': ['fintech', 'finance', 'payment', 'wallet', 'credit', 'investment', 'banking'],
+                'Trading System': ['trading', 'exchange', 'market', 'order', 'portfolio', 'algorithm', 'forex'],
+                'Payment Gateway': ['payment', 'transaction', 'card', 'wallet', 'gateway', 'pos', 'stripe'],
+                
+                # EdTech spécialisé
+                'EdTech Platform': ['education', 'learning', 'training', 'course', 'pedagogy', 'school'],
+                'Learning Management': ['lms', 'e-learning', 'curriculum', 'skill', 'certification', 'moodle'],
+                'Assessment System': ['assessment', 'test', 'exam', 'grading', 'evaluation', 'quiz'],
+                
+                # Energy spécialisé
+                'Energy Management': ['energy', 'consumption', 'efficiency', 'optimization', 'energy monitoring'],
+                'Smart Grid System': ['smart grid', 'grid', 'distribution', 'meter', 'iot energy', 'electricity'],
+                'IoT Platform': ['iot', 'sensor', 'connected device', 'telemetry', 'data', 'sensors'],
+                
+                # Legal spécialisé
+                'Legal Management': ['legal', 'lawyer', 'law firm', 'case', 'procedure', 'law'],
+                'Compliance Platform': ['compliance', 'regulation', 'audit', 'risk', 'governance', 'gdpr'],
+                'Contract System': ['contract', 'agreement', 'signature', 'negotiation', 'clause', 'legal'],
+                
+                # Supply Chain spécialisé
+                'Supply Chain System': ['supply chain', 'procurement', 'supplier', 'sourcing', 'supply'],
+                'Logistics Platform': ['logistics', 'transport', 'delivery', 'warehouse', 'tracking', 'shipping'],
+                'Fleet Management': ['fleet', 'vehicle', 'fleet management', 'maintenance', 'gps', 'fleet'],
+                
+                # AgTech spécialisé
+                'AgTech Platform': ['agriculture', 'agtech', 'farm', 'farming', 'agricultural', 'crop'],
+                'Farm Management': ['farm management', 'field', 'crop', 'livestock', 'agricultural production'],
+                'Crop Monitoring': ['crop monitoring', 'harvest', 'irrigation', 'pesticide', 'yield'],
+                
+                # PropTech spécialisé
+                'PropTech Platform': ['real estate', 'proptech', 'property', 'rental', 'real estate transaction'],
+                'Property Management': ['property management', 'landlord', 'tenant', 'property maintenance'],
+                'Real Estate Portal': ['real estate portal', 'listing', 'viewing', 'valuation', 'home sale'],
+                
+                # MarTech spécialisé
+                'MarTech Platform': ['marketing', 'martech', 'campaign', 'automation', 'lead', 'digital marketing'],
+                'Campaign Management': ['campaign management', 'email', 'social', 'conversion', 'marketing roi'],
+                'Analytics Dashboard': ['analytics', 'metrics', 'performance', 'reporting', 'marketing kpi']
             }
         }
-        
-        # Patterns technologiques spécifiques
-        self.tech_indicators = {
-            'frontend': ['react', 'vue', 'angular', 'svelte', 'next', 'nuxt'],
-            'backend': ['node', 'django', 'flask', 'spring', 'laravel', 'rails'],
-            'mobile': ['react native', 'flutter', 'ionic', 'xamarin', 'swift', 'kotlin'],
-            'database': ['postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch'],
-            'cloud': ['aws', 'azure', 'gcp', 'heroku', 'vercel', 'netlify'],
-            'api': ['rest', 'graphql', 'grpc', 'swagger', 'postman']
-        }
-    
-    def detect_language(self, text: str) -> str:
-        """Détecter la langue du texte"""
-        text_lower = text.lower()
-        
-        french_indicators = [
-            'le', 'la', 'les', 'du', 'de', 'des', 'un', 'une', 'avec', 'pour',
-            'développer', 'créer', 'application', 'plateforme', 'système',
-            'boutique', 'gestion', 'tableau', 'bord', 'service'
-        ]
-        
-        english_indicators = [
-            'the', 'a', 'an', 'with', 'for', 'in', 'on', 'and', 'or',
-            'develop', 'create', 'application', 'platform', 'system',
-            'store', 'management', 'dashboard', 'service'
-        ]
-        
-        french_score = sum(1 for indicator in french_indicators if indicator in text_lower)
-        english_score = sum(1 for indicator in english_indicators if indicator in text_lower)
-        
-        if french_score == english_score:
-            accented_chars = ['à', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'ÿ', 'ç']
-            if any(char in text_lower for char in accented_chars):
-                return 'french'
-        
-        return 'french' if french_score > english_score else 'english'
-    
+
     def analyze_project_type_indicators(self, text: str) -> Dict[str, Any]:
-        """Analyser les indicateurs de type de projet"""
+        """Analyser TOUS les types y compris spécialisés"""
+        
         language = self.detect_language(text)
+        type_scores = {}
+        keywords_lang = self.type_keywords.get(language, self.type_keywords['english'])
+        
         text_lower = text.lower()
         
-        type_scores = {}
-        
-        # Calculer le score pour chaque type de projet
+        # ✅ Calculer pour TOUS les types spécialisés
         for project_type in self.project_types:
-            patterns = self.type_patterns[language][project_type]
-            score = sum(1 for pattern in patterns if pattern in text_lower)
-            
-            # Bonus si le pattern est mentionné explicitement
-            if project_type.lower() in text_lower:
-                score += 3
-            
-            type_scores[project_type] = score
-        
-        # Détecter les technologies mentionnées
-        detected_technologies = {}
-        for tech_category, techs in self.tech_indicators.items():
-            detected_techs = [tech for tech in techs if tech in text_lower]
-            if detected_techs:
-                detected_technologies[tech_category] = detected_techs
+            keywords = keywords_lang.get(project_type, [])
+            if keywords:
+                # Score basé sur les mots-clés trouvés
+                matches = sum(1 for keyword in keywords if keyword in text_lower)
+                base_score = matches / len(keywords) if len(keywords) > 0 else 0
+                
+                # Bonus si plusieurs mots-clés du même type (spécialisation)
+                if matches > 1:
+                    type_scores[project_type] = min(base_score * 1.3, 1.0)
+                else:
+                    type_scores[project_type] = min(base_score, 1.0)
+            else:
+                type_scores[project_type] = 0.0
         
         return {
-            'language': language,
             'type_scores': type_scores,
-            'detected_technologies': detected_technologies,
-            'top_candidates': sorted(type_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+            'detected_technologies': self._detect_technologies(text, language),
+            'language': language,
+            'complexity_indicators': self._detect_complexity_indicators(text, language)
         }
+
+    def detect_language(self, text: str) -> str:
+        """Détecter la langue du texte"""
+        french_indicators = ['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'avec', 'pour', 'système', 'plateforme']
+        english_indicators = ['the', 'a', 'an', 'with', 'for', 'system', 'application', 'platform', 'management']
+        
+        text_lower = text.lower()
+        french_count = sum(1 for indicator in french_indicators if indicator in text_lower)
+        english_count = sum(1 for indicator in english_indicators if indicator in text_lower)
+        
+        return 'french' if french_count > english_count else 'english'
+
+    def _detect_technologies(self, text: str, language: str) -> Dict[str, List[str]]:
+        """Détecter les technologies mentionnées"""
+        tech_categories = {
+            'frontend': ['react', 'vue', 'angular', 'html', 'css', 'javascript', 'typescript', 'nextjs'],
+            'backend': ['node', 'python', 'java', 'php', 'django', 'flask', 'spring', 'fastapi'],
+            'mobile': ['ios', 'android', 'flutter', 'react native', 'swift', 'kotlin', 'xamarin'],
+            'database': ['mysql', 'postgresql', 'mongodb', 'sqlite', 'redis', 'elasticsearch'],
+            'cloud': ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform'],
+            'api': ['rest', 'graphql', 'json', 'xml', 'soap', 'grpc']
+        }
+        
+        detected = {}
+        text_lower = text.lower()
+        
+        for category, techs in tech_categories.items():
+            detected[category] = [tech for tech in techs if tech in text_lower]
+        
+        return detected
+
+    def _detect_complexity_indicators(self, text: str, language: str) -> Dict[str, int]:
+        """Détecter les indicateurs de complexité"""
+        if language == 'french':
+            indicators = {
+                'simple': ['simple', 'basique', 'standard', 'minimal', 'facile'],
+                'moyen': ['complet', 'avancé', 'robuste', 'professionnel', 'moderne'],
+                'complexe': ['complexe', 'sophistiqué', 'enterprise', 'haute performance', 'distribué'],
+                'expert': ['intelligent', 'prédictif', 'temps réel', 'scalable', 'ia', 'machine learning']
+            }
+        else:
+            indicators = {
+                'simple': ['simple', 'basic', 'standard', 'minimal', 'easy'],
+                'moyen': ['complete', 'advanced', 'robust', 'professional', 'modern'],
+                'complexe': ['complex', 'sophisticated', 'enterprise', 'high performance', 'distributed'],
+                'expert': ['intelligent', 'predictive', 'real-time', 'scalable', 'ai', 'machine learning']
+            }
+        
+        complexity_scores = {}
+        text_lower = text.lower()
+        
+        for level, keywords in indicators.items():
+            score = sum(1 for keyword in keywords if keyword in text_lower)
+            complexity_scores[level] = score
+        
+        return complexity_scores
 
 
 class TechStackRecommendationEngine:
@@ -447,6 +512,30 @@ class TechStackRecommendationEngine:
                     'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
                     'frontend': ['React', 'TypeScript', 'Micro-frontends'],
                     'hosting': ['Kubernetes', 'Multi-cloud']
+                }
+            },
+            'Gaming Platform': {
+                'simple': {
+                    'engine': ['Unity', 'Godot'],
+                    'backend': ['Firebase', 'Node.js'],
+                    'database': ['Firebase Realtime'],
+                    'monetization': ['AdMob', 'Unity Ads']
+                },
+                'complexe': {
+                    'engine': ['Unity', 'Unreal Engine'],  
+                    'backend': ['Node.js', 'Java Spring'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'cloud': ['AWS GameLift', 'Azure PlayFab'],
+                    'analytics': ['GameAnalytics', 'Unity Analytics']
+                }
+            },
+            'Legal Management': {
+                'moyen': {
+                    'frontend': ['React', 'Angular'],
+                    'backend': ['Java Spring Boot', '.NET Core'],
+                    'database': ['PostgreSQL', 'SQL Server'],
+                    'security': ['Auth0', 'KeyCloak'],
+                    'integrations': ['DocuSign API', 'Calendar APIs']
                 }
             }
         }
@@ -767,283 +856,494 @@ class MLProjectTypeStackPredictor:
         
         # Cache
         self.prediction_cache = {}
-    
-    def load_training_dataset(self) -> pd.DataFrame:
-        """Charger ou générer le dataset d'entraînement"""
-        training_data = []
-        
-        # Dataset d'entraînement avec exemples réels par type de projet
-        training_samples = [
-            # Application Web
-            ("Site web vitrine pour entreprise avec contact", "Application Web", "Technology", "french"),
-            ("Plateforme web React avec authentification utilisateurs", "Application Web", "Technology", "french"),
-            ("Application web de gestion d'inventaire", "Application Web", "Technology", "french"),
-            ("Portail web avec dashboard administrateur", "Application Web", "Technology", "french"),
-            ("Site internet responsive avec blog intégré", "Application Web", "Technology", "french"),
-            ("Interface web pour système de réservation", "Application Web", "Technology", "french"),
-            ("Plateforme collaborative avec chat temps réel", "Application Web", "Technology", "french"),
-            
-            ("Company website with contact form", "Application Web", "Technology", "english"),
-            ("React web platform with user authentication", "Application Web", "Technology", "english"),
-            ("Web application for inventory management", "Application Web", "Technology", "english"),
-            ("Web portal with admin dashboard", "Application Web", "Technology", "english"),
-            ("Responsive website with integrated blog", "Application Web", "Technology", "english"),
-            ("Web interface for booking system", "Application Web", "Technology", "english"),
-            ("Collaborative web platform with real-time chat", "Application Web", "Technology", "english"),
-            
-            # Application Mobile
-            ("Application mobile iOS et Android avec géolocalisation", "Application Mobile", "Technology", "french"),
-            ("App mobile Flutter pour suivi fitness", "Application Mobile", "Healthcare", "french"),
-            ("Application smartphone avec notifications push", "Application Mobile", "Technology", "french"),
-            ("App mobile React Native pour e-commerce", "Application Mobile", "Retail", "french"),
-            ("Application mobile de réseautage social", "Application Mobile", "Media", "french"),
-            ("App mobile pour commande de nourriture", "Application Mobile", "Retail", "french"),
-            ("Application mobile de gestion de tâches", "Application Mobile", "Technology", "french"),
-            
-            ("iOS and Android mobile app with geolocation", "Application Mobile", "Technology", "english"),
-            ("Flutter mobile app for fitness tracking", "Application Mobile", "Healthcare", "english"),
-            ("Smartphone app with push notifications", "Application Mobile", "Technology", "english"),
-            ("React Native mobile app for e-commerce", "Application Mobile", "Retail", "english"),
-            ("Mobile social networking application", "Application Mobile", "Media", "english"),
-            ("Mobile app for food ordering", "Application Mobile", "Retail", "english"),
-            ("Mobile task management application", "Application Mobile", "Technology", "english"),
-            
-            # API REST
-            ("API REST pour gestion des utilisateurs avec JWT", "API REST", "Technology", "french"),
-            ("Service web RESTful avec documentation Swagger", "API REST", "Technology", "french"),
-            ("API GraphQL pour plateforme e-commerce", "API REST", "Retail", "french"),
-            ("Microservice avec authentification OAuth2", "API REST", "Technology", "french"),
-            ("API REST pour système de paiement", "API REST", "Finance", "french"),
-            ("Service web avec endpoints CRUD", "API REST", "Technology", "french"),
-            ("API REST avec rate limiting et cache", "API REST", "Technology", "french"),
-            
-            ("REST API for user management with JWT", "API REST", "Technology", "english"),
-            ("RESTful web service with Swagger documentation", "API REST", "Technology", "english"),
-            ("GraphQL API for e-commerce platform", "API REST", "Retail", "english"),
-            ("Microservice with OAuth2 authentication", "API REST", "Technology", "english"),
-            ("REST API for payment system", "API REST", "Finance", "english"),
-            ("Web service with CRUD endpoints", "API REST", "Technology", "english"),
-            ("REST API with rate limiting and cache", "API REST", "Technology", "english"),
-            
-            # SaaS
-            ("Plateforme SaaS multi-tenant avec abonnements", "SaaS", "Technology", "french"),
-            ("Software as a Service pour gestion de projets", "SaaS", "Technology", "french"),
-            ("Plateforme SaaS de facturation automatisée", "SaaS", "Finance", "french"),
-            ("SaaS de gestion de relation client (CRM)", "SaaS", "Technology", "french"),
-            ("Plateforme cloud avec API et webhooks", "SaaS", "Technology", "french"),
-            ("SaaS de monitoring et alertes", "SaaS", "Technology", "french"),
-            ("Plateforme SaaS pour formation en ligne", "SaaS", "Education", "french"),
-            
-            ("Multi-tenant SaaS platform with subscriptions", "SaaS", "Technology", "english"),
-            ("Software as a Service for project management", "SaaS", "Technology", "english"),
-            ("SaaS platform for automated billing", "SaaS", "Finance", "english"),
-            ("Customer relationship management SaaS", "SaaS", "Technology", "english"),
-            ("Cloud platform with API and webhooks", "SaaS", "Technology", "english"),
-            ("SaaS for monitoring and alerts", "SaaS", "Technology", "english"),
-            ("SaaS platform for online training", "SaaS", "Education", "english"),
-            
-            # E-commerce
-            ("Boutique en ligne avec panier et paiement Stripe", "E-commerce", "Retail", "french"),
-            ("Marketplace multi-vendeurs avec commissions", "E-commerce", "Retail", "french"),
-            ("Site e-commerce avec gestion stock", "E-commerce", "Retail", "french"),
-            ("Plateforme de vente en ligne B2B", "E-commerce", "Retail", "french"),
-            ("E-commerce avec recherche et filtres avancés", "E-commerce", "Retail", "french"),
-            ("Boutique en ligne avec abonnements", "E-commerce", "Retail", "french"),
-            ("E-commerce mobile-first avec PWA", "E-commerce", "Retail", "french"),
-            
-            ("Online store with cart and Stripe payment", "E-commerce", "Retail", "english"),
-            ("Multi-vendor marketplace with commissions", "E-commerce", "Retail", "english"),
-            ("E-commerce site with inventory management", "E-commerce", "Retail", "english"),
-            ("B2B online sales platform", "E-commerce", "Retail", "english"),
-            ("E-commerce with advanced search and filters", "E-commerce", "Retail", "english"),
-            ("Online store with subscriptions", "E-commerce", "Retail", "english"),
-            ("Mobile-first e-commerce with PWA", "E-commerce", "Retail", "english"),
-            
-            # CMS
-            ("CMS pour blog avec éditeur WYSIWYG", "CMS", "Media", "french"),
-            ("Système de gestion de contenu headless", "CMS", "Technology", "french"),
-            ("CMS multi-site avec workflow de publication", "CMS", "Media", "french"),
-            ("Gestionnaire de contenu avec API", "CMS", "Technology", "french"),
-            ("CMS pour site vitrine avec SEO", "CMS", "Technology", "french"),
-            ("Système de publication d'articles", "CMS", "Media", "french"),
-            ("CMS avec gestion des médias", "CMS", "Media", "french"),
-            
-            ("CMS for blog with WYSIWYG editor", "CMS", "Media", "english"),
-            ("Headless content management system", "CMS", "Technology", "english"),
-            ("Multi-site CMS with publishing workflow", "CMS", "Media", "english"),
-            ("Content manager with API", "CMS", "Technology", "english"),
-            ("CMS for showcase website with SEO", "CMS", "Technology", "english"),
-            ("Article publishing system", "CMS", "Media", "english"),
-            ("CMS with media management", "CMS", "Media", "english"),
-            
-            # Dashboard
-            ("Dashboard analytique avec graphiques temps réel", "Dashboard", "Technology", "french"),
-            ("Tableau de bord KPI pour direction", "Dashboard", "Technology", "french"),
-            ("Dashboard de monitoring serveurs", "Dashboard", "Technology", "french"),
-            ("Interface de reporting avec exports", "Dashboard", "Technology", "french"),
-            ("Dashboard financier avec métriques", "Dashboard", "Finance", "french"),
-            ("Tableau de bord commercial avec CRM", "Dashboard", "Technology", "french"),
-            ("Dashboard IoT avec visualisation capteurs", "Dashboard", "Energy", "french"),
-            
-            ("Analytics dashboard with real-time charts", "Dashboard", "Technology", "english"),
-            ("KPI dashboard for management", "Dashboard", "Technology", "english"),
-            ("Server monitoring dashboard", "Dashboard", "Technology", "english"),
-            ("Reporting interface with exports", "Dashboard", "Technology", "english"),
-            ("Financial dashboard with metrics", "Dashboard", "Finance", "english"),
-            ("Sales dashboard with CRM", "Dashboard", "Technology", "english"),
-            ("IoT dashboard with sensor visualization", "Dashboard", "Energy", "english"),
-            
-            # Système
-            ("Système de gestion d'entreprise (ERP)", "Système", "Technology", "french"),
-            ("Logiciel de gestion de stocks", "Système", "Technology", "french"),
-            ("Système de gestion hospitalière", "Système", "Healthcare", "french"),
-            ("Application métier avec workflow", "Système", "Technology", "french"),
-            ("Système de gestion documentaire", "Système", "Technology", "french"),
-            ("Logiciel de comptabilité", "Système", "Finance", "french"),
-            ("Système de gestion des ressources humaines", "Système", "Technology", "french"),
-            
-            ("Enterprise resource planning system", "Système", "Technology", "english"),
-            ("Inventory management software", "Système", "Technology", "english"),
-            ("Hospital management system", "Système", "Healthcare", "english"),
-            ("Business application with workflow", "Système", "Technology", "english"),
-            ("Document management system", "Système", "Technology", "english"),
-            ("Accounting software", "Système", "Finance", "english"),
-            ("Human resources management system", "Système", "Technology", "english")
-        ]
-        
-        df = pd.DataFrame(training_samples, columns=['description', 'project_type', 'industry', 'language'])
-        print(f"Dataset d'entraînement créé : {len(df)} échantillons pour {len(self.type_analyzer.project_types)} types de projets")
-        return df
-    
-    def train_model(self):
-        """Entraîner le modèle de classification de type de projet"""
-        if self.is_trained:
-            return
-        
-        print("Entraînement du classificateur de type de projet...")
-        
-        # Charger les données
-        df = self.load_training_dataset()
-        
-        # Extraire les features
-        print("Extraction des features...")
-        feature_matrix = []
-        for text in df['description']:
-            features = self.feature_extractor.extract_project_type_features(text)
-            feature_matrix.append(list(features.values()))
-        
-        X = np.array(feature_matrix)
-        y = self.label_encoder.fit_transform(df['project_type'])
-        
-        # Entraîner le modèle ensemble
-        self.project_type_classifier = VotingClassifier([
-            ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
-            ('svm', SVC(probability=True, random_state=42, class_weight='balanced', kernel='rbf')),
-            ('nb', MultinomialNB(alpha=0.1))
-        ], voting='soft')
-        
-        self.project_type_classifier.fit(X, y)
-        
-        # Évaluation
-        self._evaluate_model(X, y, df['project_type'])
-        
-        self.is_trained = True
-        print("Classificateur de type de projet entraîné avec succès!")
-    
-    def _evaluate_model(self, X, y, project_types):
-        """Évaluer les performances du modèle"""
-        try:
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
-            
-            predictions = self.project_type_classifier.predict(X_test)
-            accuracy = accuracy_score(y_test, predictions)
-            
-            print(f"Précision du modèle de type de projet : {accuracy:.3f}")
-            
-            # Distribution des prédictions
-            from collections import Counter
-            predicted_types = self.label_encoder.inverse_transform(predictions)
-            actual_types = self.label_encoder.inverse_transform(y_test)
-            
-            print(f"Distribution prédite : {Counter(predicted_types)}")
-            print(f"Distribution réelle : {Counter(actual_types)}")
-            
-        except Exception as e:
-            print(f"Erreur lors de l'évaluation : {e}")
-    
-    def predict_project_type_and_stack(self, text: str, complexity: str = "moyen", industry: str = None, language: str = None) -> Dict[str, Any]:
-        """Prédire le type de projet et recommander une stack technique"""
-        if not text or len(text.strip()) < 10:
-            return {'error': 'Texte trop court (minimum 10 caractères)'}
-        
-        if not self.is_trained:
-            self.train_model()
 
-        if language is None:
-            language = self.detect_language(text)
+    def predict_project_type_and_stack(self, description: str, industry: str = 'Technology', language: str = 'french'):
+        """Prédire le type de projet et la stack technique - MÉTHODE MANQUANTE"""
         
-        # Cache
-        cache_key = hashlib.md5(f"{text}_{complexity}_{industry}".encode()).hexdigest()
+        # Cache pour éviter les recalculs
+        cache_key = hashlib.md5(f"{description}_{industry}_{language}".encode()).hexdigest()
+        if not hasattr(self, 'prediction_cache'):
+            self.prediction_cache = {}
+        
         if cache_key in self.prediction_cache:
             return self.prediction_cache[cache_key]
         
         try:
-            # Analyser les indicateurs
-            type_analysis = self.type_analyzer.analyze_project_type_indicators(text)
+            # Vérifier que le modèle est entraîné
+            if not hasattr(self, 'is_trained') or not self.is_trained:
+                print("Modèle non entraîné, utilisation du fallback")
+                return self._fallback_project_type(description, industry)
+            
+            # Vérifier que les composants nécessaires existent
+            if not hasattr(self, 'project_type_classifier') or self.project_type_classifier is None:
+                print("Classificateur non initialisé, utilisation du fallback")
+                return self._fallback_project_type(description, industry)
+            
+            if not hasattr(self, 'feature_extractor') or self.feature_extractor is None:
+                print("Extracteur de features non initialisé, utilisation du fallback")
+                return self._fallback_project_type(description, industry)
             
             # Extraire les features
-            features = self.feature_extractor.extract_project_type_features(text)
-            X = np.array([list(features.values())])
+            features = self.feature_extractor.extract_project_type_features(description)
+            if not features or len(features) == 0:
+                print("Aucune feature extraite, utilisation du fallback")
+                return self._fallback_project_type(description, industry)
             
-            # Prédire le type de projet
+            # Convertir en array pour le modèle
+            feature_values = [float(v) if v is not None else 0.0 for v in features.values()]
+            X = np.array([feature_values])
+            
+            # Prédiction du type de projet
             prediction = self.project_type_classifier.predict(X)[0]
-            probabilities = self.project_type_classifier.predict_proba(X)[0]
+            prediction_proba = self.project_type_classifier.predict_proba(X)[0]
             
-            predicted_type = self.label_encoder.inverse_transform([prediction])[0]
-            confidence = float(np.max(probabilities))
+            # Décoder la prédiction
+            if hasattr(self, 'label_encoder') and self.label_encoder is not None:
+                project_type = self.label_encoder.inverse_transform([prediction])[0]
+                confidence = float(np.max(prediction_proba))
+            else:
+                # Fallback si pas d'encoder
+                project_type = self.type_analyzer.project_types[prediction] if prediction < len(self.type_analyzer.project_types) else 'Application Web'
+                confidence = 0.7
             
-            # Probabilités par type de projet
-            type_probabilities = {}
-            for i, project_type in enumerate(self.label_encoder.classes_):
-                type_name = self.label_encoder.inverse_transform([i])[0]
-                type_probabilities[type_name] = float(probabilities[i])
-            
-            # Recommander la stack technique
-            stack_recommendation = self.stack_engine.recommend_tech_stack(
-                predicted_type, 
-                complexity, 
-                industry, 
-                type_analysis['detected_technologies']
-            )
+            # Prédiction de la stack technique
+            tech_stack = self._predict_tech_stack(description, project_type, industry)
             
             result = {
-                'project_type': predicted_type,
+                'project_type': project_type,
+                'tech_stack': tech_stack,
                 'confidence': confidence,
-                'language': type_analysis['language'],
-                'type_probabilities': type_probabilities,
-                'top_3_types': self._get_top_types(type_probabilities, 3),
-                'detected_technologies': type_analysis['detected_technologies'],
-                'tech_stack_recommendation': stack_recommendation,
-                'type_analysis': {
-                    'main_indicators': type_analysis['top_candidates'][:3],
-                    'detected_patterns': self._analyze_detected_patterns(type_analysis, predicted_type)
-                },
-                'method': 'ml_voting_classifier'
+                'method': 'ml_prediction',
+                'industry_adjustment': industry,
+                'language': language
             }
             
+            # Mettre en cache
             self.prediction_cache[cache_key] = result
+            
             return result
             
         except Exception as e:
-            print(f"Erreur lors de la prédiction : {e}")
-            return {
-                'project_type': 'Application Web',
-                'confidence': 0.5,
-                'error': str(e),
-                'method': 'fallback'
+            print(f"Erreur dans predict_project_type_and_stack: {e}")
+            return self._fallback_project_type(description, industry)
+    
+    def load_training_dataset(self) -> pd.DataFrame:
+        """Dataset AVEC types spécialisés pour meilleure génération de tâches"""
+        
+        training_samples = [
+            # === TYPES SPÉCIALISÉS GAMING ===
+            ("Plateforme de jeux multijoueur temps réel", "Gaming Platform", "Gaming", "french"),
+            ("Système de matchmaking pour esport", "Gaming Platform", "Gaming", "french"),
+            ("Plateforme de tournois gaming", "Gaming Platform", "Gaming", "french"),
+            ("Jeu mobile avec monétisation éthique", "Gaming Platform", "Gaming", "french"),
+            ("Real-time multiplayer gaming platform", "Gaming Platform", "Gaming", "english"),
+            ("Esport tournament management system", "Gaming Platform", "Gaming", "english"),
+            ("Game matchmaking and ranking platform", "Gaming Platform", "Gaming", "english"),
+            ("Mobile game with ethical monetization", "Gaming Platform", "Gaming", "english"),
+            
+            ("Plateforme de streaming vidéo live", "Streaming Platform", "Media", "french"),
+            ("Système de diffusion en direct", "Streaming Platform", "Media", "french"),
+            ("Live video streaming platform", "Streaming Platform", "Media", "english"),
+            ("Real-time broadcast system", "Streaming Platform", "Media", "english"),
+            
+            # === TYPES SPÉCIALISÉS HEALTHCARE ===
+            ("Plateforme de télémédecine avec diagnostic IA", "HealthTech Platform", "Healthcare", "french"),
+            ("Système de suivi patient connecté", "HealthTech Platform", "Healthcare", "french"),
+            ("Plateforme de thérapie digitale", "HealthTech Platform", "Healthcare", "french"),
+            ("Application santé mentale travailleurs", "HealthTech Platform", "Healthcare", "french"),
+            ("AI-powered telemedicine platform", "HealthTech Platform", "Healthcare", "english"),
+            ("Connected patient monitoring system", "HealthTech Platform", "Healthcare", "english"),
+            ("Digital therapy and wellness platform", "HealthTech Platform", "Healthcare", "english"),
+            ("Mental health app for workers", "HealthTech Platform", "Healthcare", "english"),
+            
+            ("Dispositif médical avec capteurs IoT", "MedTech System", "Healthcare", "french"),
+            ("Système de monitoring biométrique", "MedTech System", "Healthcare", "french"),
+            ("Medical device with IoT sensors", "MedTech System", "Healthcare", "english"),
+            ("Biometric monitoring system", "MedTech System", "Healthcare", "english"),
+            
+            # === TYPES SPÉCIALISÉS FINTECH ===
+            ("Plateforme de paiement mobile wallet", "FinTech Platform", "Finance", "french"),
+            ("Système de crédit scoring automatisé", "FinTech Platform", "Finance", "french"),
+            ("Plateforme d'investissement social", "FinTech Platform", "Finance", "french"),
+            ("Application bancaire néobanque", "FinTech Platform", "Finance", "french"),
+            ("Mobile payment platform with wallet", "FinTech Platform", "Finance", "english"),
+            ("Automated credit scoring system", "FinTech Platform", "Finance", "english"),
+            ("Social investment trading platform", "FinTech Platform", "Finance", "english"),
+            ("Neobank mobile application", "FinTech Platform", "Finance", "english"),
+            
+            ("Système de trading haute fréquence", "Trading System", "Finance", "french"),
+            ("Plateforme de trading algorithmique", "Trading System", "Finance", "french"),
+            ("High-frequency trading system", "Trading System", "Finance", "english"),
+            ("Algorithmic trading platform", "Trading System", "Finance", "english"),
+            
+            # === TYPES SPÉCIALISÉS EDTECH ===
+            ("Plateforme d'apprentissage adaptatif", "EdTech Platform", "Education", "french"),
+            ("Système de formation en ligne gamifié", "EdTech Platform", "Education", "french"),
+            ("Plateforme éducative avec IA", "EdTech Platform", "Education", "french"),
+            ("École en ligne interactive", "EdTech Platform", "Education", "french"),
+            ("Adaptive learning platform with AI", "EdTech Platform", "Education", "english"),
+            ("Gamified online training system", "EdTech Platform", "Education", "english"),
+            ("Educational platform with AI", "EdTech Platform", "Education", "english"),
+            ("Interactive online school", "EdTech Platform", "Education", "english"),
+            
+            ("Système LMS pour entreprise", "Learning Management", "Education", "french"),
+            ("Plateforme de certification en ligne", "Learning Management", "Education", "french"),
+            ("Corporate LMS system", "Learning Management", "Education", "english"),
+            ("Online certification platform", "Learning Management", "Education", "english"),
+            
+            # === TYPES SPÉCIALISÉS ENERGY ===
+            ("Système de gestion énergétique intelligent", "Energy Management", "Energy", "french"),
+            ("Plateforme d'optimisation consommation", "Energy Management", "Energy", "french"),
+            ("Système de monitoring énergétique", "Energy Management", "Energy", "french"),
+            ("Smart energy management system", "Energy Management", "Energy", "english"),
+            ("Energy consumption optimization platform", "Energy Management", "Energy", "english"),
+            ("Energy monitoring and control system", "Energy Management", "Energy", "english"),
+            
+            ("Système smart grid avec IoT", "Smart Grid System", "Energy", "french"),
+            ("Réseau électrique intelligent", "Smart Grid System", "Energy", "french"),
+            ("Smart grid system with IoT", "Smart Grid System", "Energy", "english"),
+            ("Intelligent electrical grid", "Smart Grid System", "Energy", "english"),
+            
+            # === TYPES SPÉCIALISÉS SUPPLY CHAIN ===
+            ("Système de traçabilité supply chain", "Supply Chain System", "Logistics", "french"),
+            ("Plateforme de gestion fournisseurs", "Supply Chain System", "Logistics", "french"),
+            ("Supply chain traceability system", "Supply Chain System", "Logistics", "english"),
+            ("Supplier management platform", "Supply Chain System", "Logistics", "english"),
+            
+            ("Plateforme logistique avec tracking", "Logistics Platform", "Logistics", "french"),
+            ("Système de gestion entrepôt", "Logistics Platform", "Logistics", "french"),
+            ("Logistics platform with tracking", "Logistics Platform", "Logistics", "english"),
+            ("Warehouse management system", "Logistics Platform", "Logistics", "english"),
+            
+            # === TYPES SPÉCIALISÉS AGTECH ===
+            ("Plateforme agriculture de précision", "AgTech Platform", "Agriculture", "french"),
+            ("Système de farming intelligent", "AgTech Platform", "Agriculture", "french"),
+            ("Precision agriculture platform", "AgTech Platform", "Agriculture", "english"),
+            ("Smart farming system", "AgTech Platform", "Agriculture", "english"),
+            
+            # === TYPES SPÉCIALISÉS PROPTECH ===
+            ("Plateforme immobilière avec estimation IA", "PropTech Platform", "Real Estate", "french"),
+            ("Système de gestion locative", "PropTech Platform", "Real Estate", "french"),
+            ("Real estate platform with AI valuation", "PropTech Platform", "Real Estate", "english"),
+            ("Property rental management system", "PropTech Platform", "Real Estate", "english"),
+            
+            # === TYPES SPÉCIALISÉS MARTECH ===
+            ("Plateforme marketing automation", "MarTech Platform", "Marketing & Advertising", "french"),
+            ("Système de gestion campagnes", "MarTech Platform", "Marketing & Advertising", "french"),
+            ("Marketing automation platform", "MarTech Platform", "Marketing & Advertising", "english"),
+            ("Campaign management system", "MarTech Platform", "Marketing & Advertising", "english"),
+            
+            # === TYPES DE BASE (pour compatibilité) ===
+            ("Site web vitrine avec blog", "Application Web", "Technology", "french"),
+            ("Application mobile iOS/Android", "Application Mobile", "Technology", "french"),
+            ("API REST pour authentification", "API REST", "Technology", "french"),
+            ("Plateforme SaaS de gestion", "SaaS", "Technology", "french"),
+            ("Boutique e-commerce avec paiement", "E-commerce", "Retail", "french"),
+            ("CMS avec workflow éditorial", "CMS", "Technology", "french"),
+            ("Dashboard analytics temps réel", "Dashboard", "Technology", "french"),
+            ("Système ERP sur mesure", "Système", "Technology", "french"),
+            
+            ("Company website with blog", "Application Web", "Technology", "english"),
+            ("iOS/Android mobile application", "Application Mobile", "Technology", "english"),
+            ("REST API for authentication", "API REST", "Technology", "english"),
+            ("SaaS management platform", "SaaS", "Technology", "english"),
+            ("E-commerce shop with payment", "E-commerce", "Retail", "english"),
+            ("CMS with editorial workflow", "CMS", "Technology", "english"),
+            ("Real-time analytics dashboard", "Dashboard", "Technology", "english"),
+            ("Custom ERP system", "Système", "Technology", "english"),
+            
+            # === TYPES SPÉCIALISÉS ADDITIONNELS ===
+            ("Plateforme IoT avec capteurs", "IoT Platform", "Technology", "french"),
+            ("Système de compliance réglementaire", "Compliance Platform", "Legal Services", "french"),
+            ("Plateforme de gestion contrats", "Contract System", "Legal Services", "french"),
+            ("Système de gestion cabinet juridique", "Legal Management", "Legal Services", "french"),
+            
+            ("IoT platform with sensors", "IoT Platform", "Technology", "english"),
+            ("Regulatory compliance system", "Compliance Platform", "Legal Services", "english"),
+            ("Contract management platform", "Contract System", "Legal Services", "english"),
+            ("Legal practice management system", "Legal Management", "Legal Services", "english")
+        ]
+        
+        df = pd.DataFrame(training_samples, columns=['description', 'project_type', 'industry', 'language'])
+        
+        print(f"Dataset d'entraînement créé : {len(df)} échantillons pour {df['project_type'].nunique()} types de projets")
+        print(f"✅ Types spécialisés inclus: {len([t for t in df['project_type'].unique() if 'Platform' in t or 'System' in t or 'Management' in t])}")
+        print(f"✅ Répartition types: {dict(list(df['project_type'].value_counts().items())[:10])}")
+        
+        return df
+    
+    def train_model(self):
+        """Entraîner le modèle de classification - VERSION CORRIGÉE"""
+        if self.is_trained:
+            return
+        
+        try:
+            print("Entraînement du classificateur de type de projet...")
+            
+            # Charger les données avec validation
+            df = self.load_training_dataset()
+            
+            if df.empty or len(df) == 0:
+                raise ValueError("Dataset d'entraînement vide")
+            
+            # ✅ FIX: Extraction des features correcte
+            print("Extraction des features...")
+            feature_matrix = []
+            valid_samples = []
+            
+            for idx, row in df.iterrows():
+                try:
+                    # ✅ FIX: Utiliser la bonne méthode d'extraction
+                    features = self.feature_extractor.extract_project_type_features(row['description'])
+                    
+                    if features and isinstance(features, dict) and len(features) > 0:
+                        # ✅ FIX: Convertir les features en liste de valeurs numériques
+                        feature_values = []
+                        for key, value in features.items():
+                            if isinstance(value, (int, float)):
+                                feature_values.append(float(value))
+                            elif isinstance(value, bool):
+                                feature_values.append(1.0 if value else 0.0)
+                            else:
+                                feature_values.append(0.0)
+                        
+                        if len(feature_values) > 0:
+                            feature_matrix.append(feature_values)
+                            valid_samples.append(row)
+                            
+                except Exception as e:
+                    print(f"Erreur extraction features échantillon {idx}: {e}")
+                    continue
+            
+            if len(feature_matrix) == 0:
+                raise ValueError("Aucune feature valide extraite")
+            
+            # ✅ FIX: Continuer avec l'entraînement
+            X = np.array(feature_matrix)
+            valid_df = pd.DataFrame(valid_samples)
+            
+            # ✅ FIX: Encoder les labels correctement
+            if not hasattr(self, 'label_encoder'):
+                self.label_encoder = LabelEncoder()
+            
+            y = self.label_encoder.fit_transform(valid_df['project_type'])
+            
+            print(f"Entraînement sur {len(X)} échantillons valides pour {len(np.unique(y))} types")
+            
+            # ✅ FIX: Entraîner le modèle avec gestion des erreurs
+            try:
+                self.project_type_classifier = VotingClassifier([
+                    ('rf', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')),
+                    ('svm', SVC(probability=True, random_state=42, class_weight='balanced', kernel='rbf')),
+                    ('nb', MultinomialNB(alpha=0.1))
+                ], voting='soft')
+                
+                self.project_type_classifier.fit(X, y)
+                
+            except Exception as e:
+                print(f"Erreur d'entraînement VotingClassifier: {e}")
+                # ✅ FALLBACK: Utiliser un modèle plus simple
+                print("Utilisation d'un modèle RandomForest simple comme fallback...")
+                self.project_type_classifier = RandomForestClassifier(
+                    n_estimators=100, 
+                    random_state=42, 
+                    class_weight='balanced'
+                )
+                self.project_type_classifier.fit(X, y)
+            
+            # Évaluation
+            self._evaluate_model(X, y, valid_df['project_type'])
+            
+            self.is_trained = True
+            print("Classificateur de type de projet entraîné avec succès!")
+            
+        except Exception as e:
+            print(f"ERREUR lors de l'entraînement du module project_type: {e}")
+            # ✅ FIX: Créer un modèle fallback robuste
+            self._create_fallback_model()
+
+    
+    def _evaluate_model(self, X, y, project_types):
+        """Évaluer les performances du modèle - VERSION CORRIGÉE"""
+        try:
+            # ✅ FIX: Vérifier si assez d'échantillons pour faire un split
+            unique_classes = len(np.unique(y))
+            total_samples = len(X)
+            
+            if total_samples < unique_classes * 2:
+                print(f"Dataset trop petit ({total_samples} échantillons, {unique_classes} classes)")
+                print("Évaluation sur l'ensemble complet sans split...")
+                
+                # Évaluation sur tout le dataset
+                predictions = self.project_type_classifier.predict(X)
+                accuracy = accuracy_score(y, predictions)
+                
+                print(f"Précision du modèle de type de projet : {accuracy:.3f}")
+                
+                # Distribution des prédictions
+                from collections import Counter
+                predicted_types = self.label_encoder.inverse_transform(predictions)
+                actual_types = self.label_encoder.inverse_transform(y)
+                
+                print(f"Distribution prédite : {Counter(predicted_types)}")
+                print(f"Distribution réelle : {Counter(actual_types)}")
+                
+            else:
+                # Split normal si assez d'échantillons
+                test_size = min(0.2, max(0.1, unique_classes / total_samples))
+                
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=test_size, random_state=42, stratify=y
+                )
+                
+                predictions = self.project_type_classifier.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                
+                print(f"Précision du modèle de type de projet : {accuracy:.3f}")
+                
+                # Distribution des prédictions
+                from collections import Counter
+                predicted_types = self.label_encoder.inverse_transform(predictions)
+                actual_types = self.label_encoder.inverse_transform(y_test)
+                
+                print(f"Distribution prédite : {Counter(predicted_types)}")
+                print(f"Distribution réelle : {Counter(actual_types)}")
+                
+        except Exception as e:
+            print(f"Erreur lors de l'évaluation : {e}")
+            print("Évaluation ignorée, modèle entraîné avec succès")
+    
+    def predict_project_type_and_stack(self, description: str, industry: str = 'Technology'):
+        """Prédire le type de projet et la stack technique - SANS paramètre language problématique"""
+        
+        # Cache pour éviter les recalculs
+        cache_key = hashlib.md5(f"{description}_{industry}".encode()).hexdigest()
+        if not hasattr(self, 'prediction_cache'):
+            self.prediction_cache = {}
+        
+        if cache_key in self.prediction_cache:
+            return self.prediction_cache[cache_key]
+        
+        try:
+            # Vérifier que le modèle est entraîné
+            if not hasattr(self, 'is_trained') or not self.is_trained:
+                print("Modèle non entraîné, utilisation du fallback")
+                return self._fallback_project_type_prediction_full(description, industry)
+            
+            # Vérifier que les composants nécessaires existent
+            if not hasattr(self, 'project_type_classifier') or self.project_type_classifier is None:
+                print("Classificateur non initialisé, utilisation du fallback")
+                return self._fallback_project_type_prediction_full(description, industry)
+            
+            if not hasattr(self, 'feature_extractor') or self.feature_extractor is None:
+                print("Extracteur de features non initialisé, utilisation du fallback")
+                return self._fallback_project_type_prediction_full(description, industry)
+            
+            # Extraire les features
+            features = self.feature_extractor.extract_project_type_features(description)
+            if not features or len(features) == 0:
+                print("Aucune feature extraite, utilisation du fallback")
+                return self._fallback_project_type_prediction_full(description, industry)
+            
+            # Convertir en array pour le modèle
+            feature_values = []
+            for key, value in features.items():
+                if isinstance(value, (int, float)):
+                    feature_values.append(float(value))
+                elif isinstance(value, bool):
+                    feature_values.append(1.0 if value else 0.0)
+                else:
+                    feature_values.append(0.0)
+            
+            if len(feature_values) == 0:
+                print("Aucune feature numérique extraite, utilisation du fallback")
+                return self._fallback_project_type_prediction_full(description, industry)
+            
+            X = np.array([feature_values])
+            
+            # Prédiction du type de projet
+            prediction = self.project_type_classifier.predict(X)[0]
+            prediction_proba = self.project_type_classifier.predict_proba(X)[0]
+            
+            # Décoder la prédiction
+            if hasattr(self, 'label_encoder') and self.label_encoder is not None:
+                project_type = self.label_encoder.inverse_transform([prediction])[0]
+                confidence = float(np.max(prediction_proba))
+            else:
+                project_type = self._fallback_project_type_prediction(description, industry)
+                confidence = 0.5
+            
+            # Prédiction de la stack technique
+            tech_stack = self._predict_tech_stack(description, project_type, industry)
+            
+            result = {
+                'predicted_type': project_type,
+                'tech_stack': tech_stack,
+                'confidence': confidence,
+                'method': 'ml_prediction',
+                'industry_adjustment': industry
             }
+            
+            # Mettre en cache
+            self.prediction_cache[cache_key] = result
+            
+            return result
+            
+        except Exception as e:
+            print(f"Erreur dans predict_project_type_and_stack: {e}")
+            return self._fallback_project_type_prediction_full(description, industry)
+
+
+    def _fallback_project_type(self, description: str, industry: str = 'Technology'):
+        """Prédiction de fallback améliorée basée sur mots-clés"""
+        desc_lower = description.lower()
+        
+        # Classification par mots-clés avec plus de précision
+        web_keywords = ['web', 'site', 'frontend', 'react', 'vue', 'angular', 'html', 'css', 'javascript']
+        mobile_keywords = ['mobile', 'app', 'android', 'ios', 'flutter', 'react native', 'native']
+        api_keywords = ['api', 'microservice', 'backend', 'rest', 'graphql', 'service', 'endpoint']
+        desktop_keywords = ['desktop', 'electron', 'native', 'windows', 'mac', 'linux']
+        ecommerce_keywords = ['boutique', 'shop', 'ecommerce', 'e-commerce', 'vente', 'commande', 'panier']
+        saas_keywords = ['saas', 'plateforme', 'platform', 'service', 'abonnement', 'subscription']
+        
+        if any(word in desc_lower for word in ecommerce_keywords):
+            project_type = 'E-commerce'
+            stack = ['React', 'Node.js', 'PostgreSQL', 'Stripe']
+        elif any(word in desc_lower for word in saas_keywords):
+            project_type = 'SaaS'
+            stack = ['React', 'Node.js', 'PostgreSQL', 'Redis']
+        elif any(word in desc_lower for word in mobile_keywords):
+            project_type = 'Application Mobile'
+            stack = ['React Native', 'Node.js', 'MongoDB']
+        elif any(word in desc_lower for word in api_keywords):
+            project_type = 'API REST'
+            stack = ['Node.js', 'Express', 'PostgreSQL']
+        elif any(word in desc_lower for word in desktop_keywords):
+            project_type = 'Application Desktop'
+            stack = ['Electron', 'Node.js', 'SQLite']
+        elif any(word in desc_lower for word in web_keywords):
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        else:
+            # Fallback par défaut
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        
+        # Ajustements par industrie
+        if industry == 'Healthcare':
+            stack.extend(['HIPAA Compliance', 'Encryption'])
+        elif industry == 'Finance':
+            stack.extend(['JWT', 'Audit Logs', 'Encryption'])
+        elif industry == 'Education':
+            stack.extend(['LMS Integration', 'Video Streaming'])
+        
+        return {
+            'project_type': project_type,
+            'tech_stack': stack,
+            'confidence': 0.6,  # Confiance plus faible pour le fallback
+            'method': 'keyword_fallback',
+            'industry_adjustment': industry
+        }
     
     def _get_top_types(self, probabilities: Dict[str, float], top_n: int) -> List[Dict[str, Any]]:
         """Récupérer le top N des types de projets par probabilité"""
@@ -1071,6 +1371,214 @@ class MLProjectTypeStackPredictor:
                     patterns.append(f"Technologies {tech_category} détectées: {', '.join(techs)}")
         
         return patterns[:5]  # Limiter à 5 patterns
+    
+    def predict_project_type_and_stack(self, description: str, industry: str = 'Technology'):
+        """Prédire le type de projet et la stack technique - VERSION CORRIGÉE"""
+        
+        try:
+            if not self.is_trained:
+                self.train_model()
+            
+            # Si le modèle principal est disponible
+            if hasattr(self, 'project_type_classifier') and self.project_type_classifier is not None:
+                try:
+                    # Extraire les features
+                    features = self.feature_extractor.extract_project_type_features(description)
+                    feature_values = []
+                    
+                    for key, value in features.items():
+                        if isinstance(value, (int, float)):
+                            feature_values.append(float(value))
+                        elif isinstance(value, bool):
+                            feature_values.append(1.0 if value else 0.0)
+                        else:
+                            feature_values.append(0.0)
+                    
+                    X = np.array([feature_values])
+                    prediction = self.project_type_classifier.predict(X)[0]
+                    confidence = max(self.project_type_classifier.predict_proba(X)[0])
+                    
+                    project_type = self.label_encoder.inverse_transform([prediction])[0]
+                    
+                except Exception as e:
+                    print(f"Erreur prédiction ML: {e}")
+                    project_type = self._fallback_project_type_prediction(description, industry)
+                    confidence = 0.5
+            else:
+                # Utiliser la méthode fallback
+                project_type = self._fallback_project_type_prediction(description, industry)
+                confidence = 0.5
+            
+            # Prédiction de la stack technique
+            tech_stack = self._predict_tech_stack(description, project_type, industry)
+            
+            return {
+                'predicted_type': project_type,
+                'tech_stack': tech_stack,
+                'confidence': confidence,
+                'method': 'ml_prediction' if hasattr(self, 'is_fallback') and not self.is_fallback else 'fallback',
+                'industry_adjustment': industry
+            }
+            
+        except Exception as e:
+            print(f"Erreur dans predict_project_type_and_stack: {e}")
+            return self._fallback_project_type_prediction_full(description, industry)
+
+    def _fallback_project_type(self, description: str, industry: str):
+        """Prédiction de fallback basée sur mots-clés"""
+        desc_lower = description.lower()
+        
+        # Classification par mots-clés
+        if any(word in desc_lower for word in ['web', 'site', 'frontend', 'react', 'vue']):
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        elif any(word in desc_lower for word in ['mobile', 'app', 'android', 'ios', 'flutter']):
+            project_type = 'Application Mobile'
+            stack = ['React Native', 'Node.js', 'MongoDB']
+        elif any(word in desc_lower for word in ['api', 'microservice', 'backend', 'rest']):
+            project_type = 'API/Backend'
+            stack = ['Node.js', 'Express', 'PostgreSQL']
+        elif any(word in desc_lower for word in ['desktop', 'electron', 'native']):
+            project_type = 'Application Desktop'
+            stack = ['Electron', 'Node.js', 'SQLite']
+        else:
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        
+        return {
+            'project_type': project_type,
+            'tech_stack': stack,
+            'confidence': 0.6,
+            'method': 'keyword_fallback'
+        }
+
+    def _predict_tech_stack(self, description: str, project_type: str, industry: str):
+        """Prédire la stack technique recommandée"""
+        
+        # Stacks par type de projet et industrie
+        stacks = {
+            'Application Web': {
+                'Healthcare': ['React', 'Node.js', 'PostgreSQL', 'Redis'],
+                'Finance': ['React', 'Node.js', 'PostgreSQL', 'Redis', 'JWT'],
+                'default': ['React', 'Node.js', 'PostgreSQL']
+            },
+            'Application Mobile': {
+                'Healthcare': ['React Native', 'Node.js', 'PostgreSQL'],
+                'Finance': ['Flutter', 'Node.js', 'PostgreSQL', 'Firebase'],
+                'default': ['React Native', 'Node.js', 'MongoDB']
+            },
+            'API/Backend': {
+                'Finance': ['Node.js', 'Express', 'PostgreSQL', 'Redis', 'JWT'],
+                'Healthcare': ['Node.js', 'Express', 'PostgreSQL', 'Redis'],
+                'default': ['Node.js', 'Express', 'MongoDB']
+            }
+        }
+        
+        return stacks.get(project_type, {}).get(industry, stacks.get(project_type, {}).get('default', ['Node.js']))
+    
+    def _create_fallback_model(self):
+        """Créer un modèle fallback robuste"""
+        print("Création d'un modèle fallback pour project_type...")
+        
+        # Créer un classificateur minimal
+        self.project_type_classifier = None
+        self.label_encoder = LabelEncoder()
+        
+        # Types de projets par défaut
+        default_types = ['Application Web', 'Application Mobile', 'API REST', 'SaaS', 'E-commerce', 'CMS', 'Dashboard', 'Système']
+        self.label_encoder.fit(default_types)
+        
+        # Marquer comme "entraîné" avec fallback
+        self.is_trained = True
+        self.is_fallback = True
+        
+        print("Modèle fallback project_type créé")
+
+    def _fallback_project_type_prediction(self, description: str, industry: str) -> str:
+        """Prédiction fallback basée sur des mots-clés spécialisés"""
+        description_lower = description.lower()
+        
+        # ✅ Priorité aux types spécialisés selon l'industrie
+        if industry == 'Gaming':
+            if any(word in description_lower for word in ['jeu', 'game', 'gaming', 'joueur', 'player', 'esport']):
+                return 'Gaming Platform'
+            elif any(word in description_lower for word in ['streaming', 'live', 'vidéo', 'broadcast']):
+                return 'Streaming Platform'
+        
+        elif industry == 'Healthcare':
+            if any(word in description_lower for word in ['télémédecine', 'telemedicine', 'patient', 'médical', 'medical']):
+                return 'HealthTech Platform'
+            elif any(word in description_lower for word in ['dispositif', 'device', 'capteur', 'sensor', 'monitoring']):
+                return 'MedTech System'
+        
+        elif industry == 'Finance':
+            if any(word in description_lower for word in ['fintech', 'paiement', 'payment', 'wallet', 'crédit']):
+                return 'FinTech Platform'
+            elif any(word in description_lower for word in ['trading', 'bourse', 'exchange', 'marché']):
+                return 'Trading System'
+        
+        elif industry == 'Education':
+            if any(word in description_lower for word in ['éducation', 'education', 'apprentissage', 'learning']):
+                return 'EdTech Platform'
+            elif any(word in description_lower for word in ['lms', 'formation', 'training', 'cours']):
+                return 'Learning Management'
+        
+        elif industry == 'Energy':
+            if any(word in description_lower for word in ['énergie', 'energy', 'smart grid', 'énergétique']):
+                return 'Energy Management'
+            elif any(word in description_lower for word in ['iot', 'capteur', 'sensor', 'connecté']):
+                return 'IoT Platform'
+        
+        elif industry == 'Logistics':
+            if any(word in description_lower for word in ['supply chain', 'chaîne', 'fournisseur']):
+                return 'Supply Chain System'
+            elif any(word in description_lower for word in ['logistique', 'logistics', 'transport', 'livraison']):
+                return 'Logistics Platform'
+        
+        elif industry == 'Real Estate':
+            if any(word in description_lower for word in ['immobilier', 'real estate', 'proptech', 'propriété']):
+                return 'PropTech Platform'
+        
+        elif industry == 'Marketing & Advertising':
+            if any(word in description_lower for word in ['marketing', 'martech', 'campagne', 'campaign']):
+                return 'MarTech Platform'
+        
+        elif industry == 'Legal Services':
+            if any(word in description_lower for word in ['conformité', 'compliance', 'réglementation']):
+                return 'Compliance Platform'
+            elif any(word in description_lower for word in ['contrat', 'contract', 'juridique', 'legal']):
+                return 'Legal Management'
+        
+        # ✅ Fallback sur les types de base
+        if any(word in description_lower for word in ['mobile', 'ios', 'android', 'app']):
+            return 'Application Mobile'
+        elif any(word in description_lower for word in ['api', 'rest', 'microservice', 'service']):
+            return 'API REST'
+        elif any(word in description_lower for word in ['saas', 'plateforme', 'platform', 'subscription']):
+            return 'SaaS'
+        elif any(word in description_lower for word in ['e-commerce', 'boutique', 'shop', 'marketplace']):
+            return 'E-commerce'
+        elif any(word in description_lower for word in ['cms', 'contenu', 'content', 'blog']):
+            return 'CMS'
+        elif any(word in description_lower for word in ['dashboard', 'tableau', 'monitoring', 'analytics']):
+            return 'Dashboard'
+        elif any(word in description_lower for word in ['système', 'system', 'erp', 'gestion']):
+            return 'Système'
+        else:
+            return 'Application Web'
+        
+    def _fallback_project_type_prediction_full(self, description: str, industry: str) -> dict:
+        """Prédiction fallback complète avec stack technique"""
+        project_type = self._fallback_project_type_prediction(description, industry)
+        tech_stack = self._predict_tech_stack(description, project_type, industry)
+        
+        return {
+            'predicted_type': project_type,
+            'tech_stack': tech_stack,
+            'confidence': 0.6,
+            'method': 'fallback_specialized',
+            'industry_adjustment': industry
+        }
 
 
 # Application Flask

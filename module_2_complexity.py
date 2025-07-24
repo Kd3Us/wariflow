@@ -111,14 +111,42 @@ class ComplexityIndicatorAnalyzer:
         
         # Domaines avec complexité inhérente
         self.domain_complexity = {
-            'Healthcare': 'complexe',  # Réglementations strictes
-            'Finance': 'complexe',     # Sécurité critique
-            'Technology': 'moyen',     # Variable selon le projet
-            'Education': 'moyen',      # Généralement standard
-            'Retail': 'moyen',         # E-commerce classique
-            'Media': 'moyen',          # Streaming/contenu
-            'Logistics': 'complexe',   # Optimisation complexe
-            'Energy': 'expert'         # IoT industriel complexe
+            'Healthcare': 'complexe',      # Réglementations strictes
+            'Finance': 'complexe',         # Sécurité critique
+            'Technology': 'moyen',         # Variable selon le projet
+            'Education': 'moyen',          # Généralement standard
+            'Retail': 'moyen',             # E-commerce classique
+            'Media': 'moyen',              # Streaming/contenu
+            'Logistics': 'complexe',       # Optimisation complexe
+            'Energy': 'expert',            # IoT industriel complexe
+            
+            'Consulting': 'moyen',         # Processus métier standard
+            'Legal Services': 'complexe',  # Conformité juridique
+            'Marketing & Advertising': 'simple',  # Campagnes rapides
+            'Human Resources': 'moyen',    # Réglementation RH
+            'Real Estate': 'moyen',        # Processus établis
+            'Insurance': 'complexe',       # Réglementation stricte
+            
+            'Automotive': 'complexe',      # Normes sécurité
+            'Aerospace': 'expert',         # Certifications critiques
+            'Construction': 'moyen',       # BIM et planification
+            'Food & Beverage': 'moyen',    # Traçabilité HACCP
+            'Textile & Fashion': 'moyen',  # Design et production
+            'Chemical': 'complexe',        # REACH et sécurité
+            
+            'Gaming': 'moyen',             # Développement agile
+            'Sports & Fitness': 'simple',  # Applications simples
+            'Travel & Tourism': 'moyen',   # Booking et réservations
+            'Events & Hospitality': 'moyen',  # Gestion événements
+            
+            'Government': 'complexe',      # Procédures strictes
+            'Non-profit': 'simple',       # Ressources limitées
+            'Environmental': 'moyen',      # Monitoring standard
+            'Agriculture': 'moyen',        # IoT agricole
+            
+            'Biotechnology': 'complexe',   # Validation scientifique
+            'Research & Development': 'complexe',  # Méthodologie recherche
+            'Pharmaceutical': 'expert'     # FDA et essais cliniques
         }
     
     def detect_language(self, text: str) -> str:
@@ -242,6 +270,84 @@ class ComplexityFeatureExtractor:
         else:
             features['industry_complexity_boost'] = 0
         
+        # 6. NOUVEAUX PATTERNS DE COMPLEXITÉ SPÉCIALISÉS
+        specialized_complexity_indicators = {
+            'regulatory_high': {
+                'keywords': ['hipaa', 'pci-dss', 'gdpr', 'fda', 'sox', 'iso 27001', 'reach', 'gxp'],
+                'weight': 0.8
+            },
+            'regulatory_medium': {
+                'keywords': ['compliance', 'audit', 'réglementation', 'conformité', 'certification'],
+                'weight': 0.4
+            },
+            'real_time_processing': {
+                'keywords': ['temps réel', 'real-time', 'streaming', 'live', 'instantané', 'time-critical'],
+                'weight': 0.6
+            },
+            'ai_ml_integration': {
+                'keywords': ['intelligence artificielle', 'machine learning', 'ai', 'neural', 'prédictif', 
+                           'deep learning', 'computer vision', 'nlp'],
+                'weight': 0.7
+            },
+            'high_security': {
+                'keywords': ['sécurité critique', 'chiffrement', 'blockchain', 'zero-trust', 
+                           'authentification forte', 'biométrie'],
+                'weight': 0.6
+            },
+            'distributed_systems': {
+                'keywords': ['microservices', 'distribuée', 'cluster', 'scalabilité', 'load balancing', 
+                           'haute disponibilité'],
+                'weight': 0.5
+            },
+            'iot_integration': {
+                'keywords': ['iot', 'capteur', 'sensor', 'connected', 'telemetry', 'monitoring'],
+                'weight': 0.4
+            },
+            'big_data': {
+                'keywords': ['big data', 'data lake', 'analytics', 'data warehouse', 'business intelligence'],
+                'weight': 0.5
+            }
+        }
+        
+        # Calculer le score de complexité spécialisée
+        text_lower = text.lower()
+        specialized_complexity_score = 0.0
+        
+        for category, config in specialized_complexity_indicators.items():
+            keyword_matches = sum(1 for keyword in config['keywords'] if keyword in text_lower)
+            if keyword_matches > 0:
+                category_score = min(keyword_matches * config['weight'], config['weight'])
+                specialized_complexity_score += category_score
+                features[f'has_{category}'] = True
+                features[f'{category}_matches'] = keyword_matches
+            else:
+                features[f'has_{category}'] = False
+                features[f'{category}_matches'] = 0
+        
+        features['specialized_complexity_score'] = min(specialized_complexity_score, 3.0)
+        
+        # 7. Impact des nouvelles industries sur la complexité
+        industry_complexity_indicators = {
+            'Healthcare': ['patient', 'médical', 'clinical', 'healthcare', 'health'],
+            'Finance': ['paiement', 'transaction', 'trading', 'banking', 'financial'],
+            'Pharmaceutical': ['drug', 'médicament', 'clinical trial', 'essai clinique', 'pharma'],
+            'Aerospace': ['flight', 'aviation', 'satellite', 'aerospace', 'aircraft'],
+            'Gaming': ['game', 'player', 'gameplay', 'matchmaking', 'gaming'],
+            'Legal Services': ['legal', 'juridique', 'contract', 'law', 'avocat'],
+            'Automotive': ['vehicle', 'véhicule', 'automotive', 'car', 'automobile']
+        }
+        
+        industry_context_score = 0.0
+        for industry_name, keywords in industry_complexity_indicators.items():
+            industry_matches = sum(1 for keyword in keywords if keyword in text_lower)
+            if industry_matches >= 2:
+                features[f'industry_context_{industry_name.lower()}'] = True
+                industry_context_score += 0.2
+            else:
+                features[f'industry_context_{industry_name.lower()}'] = False
+        
+        features['industry_context_score'] = min(industry_context_score, 1.0)
+        
         return features
     
     def _calculate_tech_sophistication(self, text: str, language: str) -> float:
@@ -315,16 +421,50 @@ class ComplexityFeatureExtractor:
         return min(performance_score / 4, 1.0)
     
     def _get_industry_boost(self, industry: str) -> float:
-        """Obtenir le boost de complexité par industrie"""
+        """Obtenir le boost de complexité par industrie - ÉTENDU À 33 INDUSTRIES"""
         boosts = {
-            'Healthcare': 0.8,
-            'Finance': 0.8,
-            'Energy': 1.0,
-            'Logistics': 0.6,
-            'Technology': 0.4,
-            'Education': 0.2,
-            'Retail': 0.3,
-            'Media': 0.3
+            # === INDUSTRIES ORIGINALES ===
+            'Healthcare': 0.8,         # Réglementation médicale
+            'Finance': 0.8,            # Sécurité bancaire
+            'Energy': 1.0,             # IoT industriel critique
+            'Logistics': 0.6,          # Optimisation transport
+            'Technology': 0.4,         # Variable
+            'Education': 0.2,          # Plateformes éducatives
+            'Retail': 0.3,             # E-commerce standard
+            'Media': 0.3,              # Publication contenu
+            
+            # === NOUVELLES INDUSTRIES B2B ===
+            'Consulting': 0.3,         # Processus métier
+            'Legal Services': 0.7,     # Conformité juridique
+            'Marketing & Advertising': 0.1,  # Campagnes simples
+            'Human Resources': 0.3,    # Réglementation RH
+            'Real Estate': 0.2,        # Processus établis
+            'Insurance': 0.7,          # Réglementation stricte
+            
+            # === NOUVELLES INDUSTRIES MANUFACTURING ===
+            'Automotive': 0.6,         # Normes sécurité
+            'Aerospace': 1.2,          # Certifications critiques
+            'Construction': 0.4,       # BIM et planification
+            'Food & Beverage': 0.4,    # Traçabilité alimentaire
+            'Textile & Fashion': 0.2,  # Design et production
+            'Chemical': 0.8,           # Sécurité et REACH
+            
+            # === NOUVELLES INDUSTRIES CREATIVE ===
+            'Gaming': 0.3,             # Développement rapide
+            'Sports & Fitness': 0.1,   # Applications simples
+            'Travel & Tourism': 0.2,   # Booking standard
+            'Events & Hospitality': 0.2,  # Gestion événements
+            
+            # === NOUVELLES INDUSTRIES PUBLIC/NON-PROFIT ===
+            'Government': 0.7,         # Procédures publiques
+            'Non-profit': 0.1,         # Ressources limitées
+            'Environmental': 0.3,      # Monitoring écologique
+            'Agriculture': 0.3,        # IoT agricole
+            
+            # === NOUVELLES INDUSTRIES SCIENCES ===
+            'Biotechnology': 0.8,      # Validation scientifique
+            'Research & Development': 0.7,  # Recherche rigoureuse
+            'Pharmaceutical': 1.1      # FDA et essais cliniques
         }
         return boosts.get(industry, 0.0)
 
@@ -422,7 +562,8 @@ class MLComplexityDurationPredictor:
         self.prediction_cache = {}
     
     def load_training_dataset(self) -> pd.DataFrame:
-        """Charger ou générer le dataset d'entraînement"""
+        """Charger ou générer le dataset d'entraînement - VERSION CORRIGÉE"""
+        
         training_data = []
         
         # Dataset d'entraînement avec complexité et durée réelles
@@ -452,61 +593,145 @@ class MLComplexityDurationPredictor:
             ("Dashboard analytique", "moyen", 40, "Technology", "french"),
             ("Système de réservation", "moyen", 48, "Technology", "french"),
             ("API REST avec authentification", "moyen", 35, "Technology", "french"),
-            ("Plateforme de formation en ligne", "moyen", 65, "Education", "french"),
+            ("Plateforme collaborative", "moyen", 52, "Technology", "french"),
             
             ("React web app with API", "moyen", 45, "Technology", "english"),
             ("Inventory management system", "moyen", 55, "Technology", "english"),
-            ("E-commerce platform Shopify", "moyen", 60, "Retail", "english"),
+            ("Shopify e-commerce platform", "moyen", 60, "Retail", "english"),
             ("Flutter mobile application", "moyen", 50, "Technology", "english"),
             ("Analytics dashboard", "moyen", 40, "Technology", "english"),
             ("Booking system", "moyen", 48, "Technology", "english"),
-            ("REST API with authentication", "moyen", 35, "Technology", "english"),
-            ("Online learning platform", "moyen", 65, "Education", "english"),
+            ("REST API with auth", "moyen", 35, "Technology", "english"),
+            ("Collaborative platform", "moyen", 52, "Technology", "english"),
             
             # Projets complexes (70-120 jours)
-            ("Plateforme SaaS multi-tenant", "complexe", 95, "Technology", "french"),
-            ("Système de télémédecine sécurisé", "complexe", 110, "Healthcare", "french"),
-            ("Application fintech avec blockchain", "complexe", 120, "Finance", "french"),
-            ("Architecture microservices", "complexe", 90, "Technology", "french"),
-            ("Plateforme IoT industrielle", "complexe", 105, "Energy", "french"),
-            ("Système de gestion hospitalière", "complexe", 115, "Healthcare", "french"),
-            ("Trading algorithmique temps réel", "complexe", 100, "Finance", "french"),
-            ("Supply chain management", "complexe", 85, "Logistics", "french"),
+            ("Plateforme blockchain avec smart contracts", "complexe", 90, "Finance", "french"),
+            ("Système ERP sur mesure", "complexe", 110, "Technology", "french"),
+            ("Application IoT avec ML", "complexe", 85, "Technology", "french"),
+            ("Plateforme trading haute fréquence", "complexe", 95, "Finance", "french"),
+            ("Système de santé interopérable", "complexe", 100, "Healthcare", "french"),
+            ("Plateforme de streaming vidéo", "complexe", 88, "Media", "french"),
+            ("Système de gestion hospitalière", "complexe", 105, "Healthcare", "french"),
             
-            ("Multi-tenant SaaS platform", "complexe", 95, "Technology", "english"),
-            ("Secure telemedicine system", "complexe", 110, "Healthcare", "english"),
-            ("Fintech app with blockchain", "complexe", 120, "Finance", "english"),
-            ("Microservices architecture", "complexe", 90, "Technology", "english"),
-            ("Industrial IoT platform", "complexe", 105, "Energy", "english"),
-            ("Hospital management system", "complexe", 115, "Healthcare", "english"),
-            ("Real-time algorithmic trading", "complexe", 100, "Finance", "english"),
-            ("Supply chain management", "complexe", 85, "Logistics", "english"),
+            ("Blockchain platform with smart contracts", "complexe", 90, "Finance", "english"),
+            ("Custom ERP system", "complexe", 110, "Technology", "english"),
+            ("IoT application with ML", "complexe", 85, "Technology", "english"),
+            ("High frequency trading platform", "complexe", 95, "Finance", "english"),
+            ("Interoperable health system", "complexe", 100, "Healthcare", "english"),
+            ("Video streaming platform", "complexe", 88, "Media", "english"),
+            ("Hospital management system", "complexe", 105, "Healthcare", "english"),
             
             # Projets experts (120+ jours)
-            ("Intelligence artificielle médicale", "expert", 180, "Healthcare", "french"),
-            ("Système bancaire haute fréquence", "expert", 200, "Finance", "french"),
-            ("Plateforme big data temps réel", "expert", 160, "Technology", "french"),
-            ("Smart grid avec IoT massif", "expert", 220, "Energy", "french"),
-            ("Système de paiement cryptographique", "expert", 190, "Finance", "french"),
-            ("Architecture cloud native Kubernetes", "expert", 150, "Technology", "french"),
-            ("Machine learning prédictif", "expert", 140, "Technology", "french"),
-            ("Blockchain enterprise privée", "expert", 170, "Finance", "french"),
+            ("Intelligence artificielle conversationnelle", "expert", 150, "Technology", "french"),
+            ("Plateforme quantique de simulation", "expert", 180, "Research & Development", "french"),
+            ("Système autonome de trading crypto", "expert", 140, "Finance", "french"),
+            ("Plateforme de diagnostic médical IA", "expert", 160, "Healthcare", "french"),
+            ("Système de pilotage automatique", "expert", 200, "Automotive", "french"),
+            ("Plateforme de réalité virtuelle immersive", "expert", 135, "Gaming", "french"),
             
-            ("Medical artificial intelligence", "expert", 180, "Healthcare", "english"),
-            ("High-frequency banking system", "expert", 200, "Finance", "english"),
-            ("Real-time big data platform", "expert", 160, "Technology", "english"),
-            ("Smart grid with massive IoT", "expert", 220, "Energy", "english"),
-            ("Cryptographic payment system", "expert", 190, "Finance", "english"),
-            ("Cloud native Kubernetes architecture", "expert", 150, "Technology", "english"),
-            ("Predictive machine learning", "expert", 140, "Technology", "english"),
-            ("Private enterprise blockchain", "expert", 170, "Finance", "english")
+            ("Conversational AI platform", "expert", 150, "Technology", "english"),
+            ("Quantum simulation platform", "expert", 180, "Research & Development", "english"),
+            ("Autonomous crypto trading system", "expert", 140, "Finance", "english"),
+            ("AI medical diagnosis platform", "expert", 160, "Healthcare", "english"),
+            ("Autonomous driving system", "expert", 200, "Automotive", "english"),
+            ("Immersive VR platform", "expert", 135, "Gaming", "english"),
+            
+            # Secteurs spécialisés
+            # Healthcare (réglementation stricte)
+            ("Dossier médical électronique", "complexe", 80, "Healthcare", "french"),
+            ("Système de télémédecine", "moyen", 65, "Healthcare", "french"),
+            ("Plateforme de recherche clinique", "expert", 120, "Healthcare", "french"),
+            ("Electronic health record", "complexe", 85, "Healthcare", "english"),
+            ("Telemedicine system", "moyen", 70, "Healthcare", "english"),
+            ("Clinical research platform", "expert", 125, "Healthcare", "english"),
+            
+            # Finance (haute sécurité)
+            ("Application bancaire mobile", "complexe", 75, "Finance", "french"),
+            ("Système de paiement en ligne", "moyen", 55, "Finance", "french"),
+            ("Plateforme de crédit scoring", "complexe", 85, "Finance", "french"),
+            ("Mobile banking application", "complexe", 80, "Finance", "english"),
+            ("Online payment system", "moyen", 60, "Finance", "english"),
+            ("Credit scoring platform", "complexe", 90, "Finance", "english"),
+            
+            # Education (pédagogie)
+            ("Plateforme e-learning interactive", "moyen", 50, "Education", "french"),
+            ("Système de gestion scolaire", "moyen", 45, "Education", "french"),
+            ("Application d'apprentissage adaptatif", "complexe", 75, "Education", "french"),
+            ("Interactive e-learning platform", "moyen", 55, "Education", "english"),
+            ("School management system", "moyen", 50, "Education", "english"),
+            ("Adaptive learning application", "complexe", 80, "Education", "english"),
+            
+            # Retail (expérience client)
+            ("Marketplace multi-vendeurs", "complexe", 90, "Retail", "french"),
+            ("Application de fidélité client", "moyen", 40, "Retail", "french"),
+            ("Système de recommandation IA", "complexe", 70, "Retail", "french"),
+            ("Multi-vendor marketplace", "complexe", 95, "Retail", "english"),
+            ("Customer loyalty application", "moyen", 45, "Retail", "english"),
+            ("AI recommendation system", "complexe", 75, "Retail", "english"),
+            
+            # Logistics (optimisation)
+            ("Système de suivi logistique", "moyen", 55, "Logistics", "french"),
+            ("Plateforme d'optimisation de routes", "complexe", 85, "Logistics", "french"),
+            ("Application de gestion d'entrepôt", "moyen", 50, "Logistics", "french"),
+            ("Logistics tracking system", "moyen", 60, "Logistics", "english"),
+            ("Route optimization platform", "complexe", 90, "Logistics", "english"),
+            ("Warehouse management application", "moyen", 55, "Logistics", "english"),
+            
+            # Aerospace (haute précision)
+            ("Système de maintenance aéronautique", "expert", 140, "Aerospace", "french"),
+            ("Plateforme de simulation de vol", "expert", 160, "Aerospace", "french"),
+            ("Aircraft maintenance system", "expert", 145, "Aerospace", "english"),
+            ("Flight simulation platform", "expert", 165, "Aerospace", "english"),
+            
+            # Energy (smart grid)
+            ("Système de gestion énergétique", "complexe", 95, "Energy", "french"),
+            ("Plateforme IoT énergétique", "complexe", 85, "Energy", "french"),
+            ("Energy management system", "complexe", 100, "Energy", "english"),
+            ("Energy IoT platform", "complexe", 90, "Energy", "english"),
+            
+            # Gaming (performance)
+            ("Jeu mobile multijoueur", "complexe", 80, "Gaming", "french"),
+            ("Moteur de jeu 3D", "expert", 120, "Gaming", "french"),
+            ("Multiplayer mobile game", "complexe", 85, "Gaming", "english"),
+            ("3D game engine", "expert", 125, "Gaming", "english"),
+            
+            # Legal Services (conformité)
+            ("Système de gestion juridique", "moyen", 60, "Legal Services", "french"),
+            ("Plateforme de conformité réglementaire", "complexe", 85, "Legal Services", "french"),
+            ("Legal management system", "moyen", 65, "Legal Services", "english"),
+            ("Regulatory compliance platform", "complexe", 90, "Legal Services", "english")
         ]
+        
+        training_data = list(training_samples)  # Convertir tuple en liste
+        
+        if len(training_data) == 0:
+            raise ValueError("Dataset d'entraînement vide ! Impossible d'entraîner le modèle.")
         
         df = pd.DataFrame(training_data, columns=['description', 'complexity', 'duration', 'industry', 'language'])
         print(f"Dataset d'entraînement créé : {len(df)} échantillons")
+        
+        if df.empty:
+            raise ValueError("DataFrame vide après création !")
+        
+        required_columns = ['description', 'complexity', 'duration', 'industry', 'language']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Colonnes manquantes dans le dataset: {missing_columns}")
+        
+        if df['description'].isnull().any():
+            raise ValueError("Descriptions manquantes dans le dataset")
+        if df['complexity'].isnull().any():
+            raise ValueError("Niveaux de complexité manquants dans le dataset")
+        if df['duration'].isnull().any():
+            raise ValueError("Durées manquantes dans le dataset")
+        
+        print(f" Dataset validé: {len(df)} échantillons avec {df['complexity'].nunique()} niveaux de complexité")
+        print(f" Répartition complexité: {df['complexity'].value_counts().to_dict()}")
+        print(f" Répartition langues: {df['language'].value_counts().to_dict()}")
+        
         return df
-    
-    def train_models(self):
+        
+    def train_model(self):
         """Entraîner les modèles de complexité et durée"""
         if self.is_trained:
             return
@@ -594,50 +819,69 @@ class MLComplexityDurationPredictor:
         """Prédire la complexité et la durée d'un projet"""
         if not text or len(text.strip()) < 10:
             return {'error': 'Texte trop court (minimum 10 caractères)'}
-        
+    
         if not self.is_trained:
             self.train_models()
-
         if language is None:
-            language = self.detect_language(text)   
-        
+            language = self.detect_language(text)  
+    
         # Cache
         cache_key = hashlib.md5(f"{text}_{industry}".encode()).hexdigest()
         if cache_key in self.prediction_cache:
             return self.prediction_cache[cache_key]
-        
+    
         try:
             # Analyser les indicateurs
             complexity_analysis = self.complexity_analyzer.analyze_complexity_indicators(text, industry)
-            
+        
             # Extraire les features
             features = self.feature_extractor.extract_complexity_features(text, industry)
-            X = np.array([list(features.values())])
             
+            # *** AJOUTER CETTE VALIDATION ***
+            if not features or len(features) == 0:
+                raise ValueError("Aucune feature extraite du texte")
+            
+            feature_values = list(features.values())
+            if len(feature_values) == 0:
+                raise ValueError("Liste de features vide")
+            
+            # Convertir en valeurs numériques et gérer les valeurs None
+            try:
+                feature_values = [float(v) if v is not None else 0.0 for v in feature_values]
+            except (ValueError, TypeError):
+                raise ValueError("Features non numériques détectées")
+            
+            X = np.array([feature_values])
+            
+            # Vérifier que l'array n'est pas vide
+            if X.size == 0:
+                raise ValueError("Array de features vide après conversion")
+            # *** FIN DE LA VALIDATION ***
+        
             # Prédire la complexité
             complexity_pred = self.complexity_classifier.predict(X)[0]
             complexity_proba = self.complexity_classifier.predict_proba(X)[0]
             predicted_complexity = self.complexity_encoder.inverse_transform([complexity_pred])[0]
             complexity_confidence = float(np.max(complexity_proba))
-            
+        
             # Prédire la durée
             predicted_duration = self.duration_estimator.predict(X)[0]
             predicted_duration = max(int(predicted_duration), 7)  # Minimum 7 jours
-            
+        
             # Calculer la deadline
             deadline = self.working_day_calculator.calculate_deadline(predicted_duration)
-            
+        
             # Analyser les contributeurs à la complexité
             complexity_contributors = self._analyze_complexity_contributors(
                 complexity_analysis, features, predicted_complexity
             )
-            
+        
             # Probabilités par niveau de complexité
             complexity_probabilities = {}
             for i, label in enumerate(self.complexity_encoder.classes_):
                 complexity_name = self.complexity_encoder.inverse_transform([i])[0]
                 complexity_probabilities[complexity_name] = float(complexity_proba[i])
-            
+        
             result = {
                 'complexity': predicted_complexity,
                 'complexity_confidence': complexity_confidence,
@@ -651,17 +895,25 @@ class MLComplexityDurationPredictor:
                 'recommendations': self._generate_recommendations(predicted_complexity, predicted_duration, complexity_analysis['language']),
                 'method': 'ml_random_forest'
             }
-            
+        
             self.prediction_cache[cache_key] = result
             return result
-            
+        
         except Exception as e:
             print(f"Erreur lors de la prédiction : {e}")
+            
+            # *** AMÉLIORER LE FALLBACK ***
             return {
                 'complexity': 'moyen',
                 'complexity_confidence': 0.5,
                 'estimated_duration_days': 45,
                 'estimated_deadline': self.working_day_calculator.calculate_deadline(45),
+                'language': language or 'french',
+                'industry': industry or 'Technology',
+                'complexity_analysis': {'main_factors': ['Estimation par défaut'], 'complexity_score': 0.5},
+                'complexity_probabilities': {'simple': 0.2, 'moyen': 0.6, 'complexe': 0.2},
+                'duration_factors': ['Estimation basée sur la complexité par défaut'],
+                'recommendations': ['Prévoir une planification détaillée', 'Organiser des revues régulières'],
                 'error': str(e),
                 'method': 'fallback'
             }
@@ -795,6 +1047,83 @@ class MLComplexityDurationPredictor:
                 recommendations.append('Significant duration: intermediate milestones advised')
         
         return recommendations
+    
+    def predict_project_type_and_stack(self, description: str, industry: str = 'Technology'):
+        """Méthode de prédiction manquante"""
+        try:
+            if not hasattr(self, 'is_trained') or not self.is_trained:
+                return self._fallback_project_type(description, industry)
+                
+            # Vectoriser la description
+            X = self.vectorizer.transform([description])
+            
+            # Prédiction type de projet
+            project_type = self.project_type_classifier.predict(X)[0]
+            
+            # Prédiction stack technique
+            stack = self._predict_tech_stack(description, project_type, industry)
+            
+            return {
+                'project_type': project_type,
+                'tech_stack': stack,
+                'confidence': 0.8,
+                'method': 'ml_prediction'
+            }
+            
+        except Exception as e:
+            return self._fallback_project_type(description, industry)
+
+    def _fallback_project_type(self, description: str, industry: str):
+        """Prédiction de fallback basée sur mots-clés"""
+        desc_lower = description.lower()
+        
+        # Classification par mots-clés
+        if any(word in desc_lower for word in ['web', 'site', 'frontend', 'react', 'vue']):
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        elif any(word in desc_lower for word in ['mobile', 'app', 'android', 'ios', 'flutter']):
+            project_type = 'Application Mobile'
+            stack = ['React Native', 'Node.js', 'MongoDB']
+        elif any(word in desc_lower for word in ['api', 'microservice', 'backend', 'rest']):
+            project_type = 'API/Backend'
+            stack = ['Node.js', 'Express', 'PostgreSQL']
+        elif any(word in desc_lower for word in ['desktop', 'electron', 'native']):
+            project_type = 'Application Desktop'
+            stack = ['Electron', 'Node.js', 'SQLite']
+        else:
+            project_type = 'Application Web'
+            stack = ['React', 'Node.js', 'PostgreSQL']
+        
+        return {
+            'project_type': project_type,
+            'tech_stack': stack,
+            'confidence': 0.6,
+            'method': 'keyword_fallback'
+        }
+
+    def _predict_tech_stack(self, description: str, project_type: str, industry: str):
+        """Prédire la stack technique recommandée"""
+        
+        # Stacks par type de projet et industrie
+        stacks = {
+            'Application Web': {
+                'Healthcare': ['React', 'Node.js', 'PostgreSQL', 'Redis'],
+                'Finance': ['React', 'Node.js', 'PostgreSQL', 'Redis', 'JWT'],
+                'default': ['React', 'Node.js', 'PostgreSQL']
+            },
+            'Application Mobile': {
+                'Healthcare': ['React Native', 'Node.js', 'PostgreSQL'],
+                'Finance': ['Flutter', 'Node.js', 'PostgreSQL', 'Firebase'],
+                'default': ['React Native', 'Node.js', 'MongoDB']
+            },
+            'API/Backend': {
+                'Finance': ['Node.js', 'Express', 'PostgreSQL', 'Redis', 'JWT'],
+                'Healthcare': ['Node.js', 'Express', 'PostgreSQL', 'Redis'],
+                'default': ['Node.js', 'Express', 'MongoDB']
+            }
+        }
+        
+        return stacks.get(project_type, {}).get(industry, stacks.get(project_type, {}).get('default', ['Node.js']))
 
 
 # Application Flask
@@ -846,29 +1175,88 @@ def predict_complexity_duration():
     """Prédire la complexité et la durée d'un projet"""
     try:
         data = request.get_json()
-        
+       
         if not data or 'text' not in data:
             return jsonify({'error': 'Texte requis dans le champ "text"'}), 400
-        
+       
         text = data['text']
-        industry = data.get('industry')
-        
+        industry = data.get('industry', 'Technology')  # Valeur par défaut
+        language = data.get('language', 'french')  # Ajouter support langue
+       
         if not text or len(text.strip()) < 10:
             return jsonify({'error': 'Texte trop court (minimum 10 caractères)'}), 400
-        
-        # Prédiction
-        result = predictor.predict_complexity_and_duration(text, industry)
-        
+       
+        # Validation et extraction des features AVANT la prédiction
+        try:
+            features = predictor.feature_extractor.extract_complexity_features(text, industry)
+            
+            # Vérifier si des features ont été extraites
+            if not features or len(features) == 0:
+                # Retourner un résultat de fallback
+                fallback_result = {
+                    'predicted_complexity': 'moyen',
+                    'predicted_duration': 45,
+                    'working_days': 32,
+                    'confidence': 0.5,
+                    'method': 'fallback_no_features',
+                    'message': 'Features insuffisantes, utilisation de valeurs par défaut'
+                }
+                
+                return jsonify({
+                    'success': True,
+                    'result': fallback_result,
+                    'input_text_length': len(text),
+                    'timestamp': datetime.now().isoformat()
+                })
+            
+            # Convertir features en array et vérifier dimensions
+            feature_values = list(features.values())
+            if len(feature_values) == 0:
+                raise ValueError("Aucune feature extraite")
+                
+        except Exception as feature_error:
+            # En cas d'erreur d'extraction de features
+            fallback_result = {
+                'predicted_complexity': 'moyen',
+                'predicted_duration': 45,
+                'working_days': 32,
+                'confidence': 0.4,
+                'method': 'fallback_feature_error',
+                'message': f'Erreur extraction features: {str(feature_error)}'
+            }
+            
+            return jsonify({
+                'success': True,
+                'result': fallback_result,
+                'input_text_length': len(text),
+                'timestamp': datetime.now().isoformat()
+            })
+       
+        # Prédiction avec gestion d'erreurs
+        try:
+            result = predictor.predict_complexity_and_duration(text, industry, language)
+        except Exception as prediction_error:
+            # Fallback en cas d'erreur de prédiction
+            result = {
+                'predicted_complexity': 'moyen',
+                'predicted_duration': 45,
+                'working_days': 32,
+                'confidence': 0.3,
+                'method': 'fallback_prediction_error',
+                'error': str(prediction_error)
+            }
+       
         if 'error' in result:
             return jsonify(result), 400
-        
+       
         return jsonify({
             'success': True,
             'result': result,
             'input_text_length': len(text),
+            'features_extracted': len(feature_values) if 'feature_values' in locals() else 0,
             'timestamp': datetime.now().isoformat()
         })
-        
+       
     except Exception as e:
         return jsonify({
             'success': False,

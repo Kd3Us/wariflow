@@ -223,7 +223,241 @@ class BusinessModelAnalyzer:
                 'scalability': 'Medium'
             }
         }
+
+    def _get_default_business_model(self, industry: str) -> str:
+        """Obtenir le modèle économique par défaut selon l'industrie"""
+        default_models = {
+            'Technology': 'SaaS',
+            'Healthcare': 'B2B_SaaS', 
+            'Finance': 'Transaction',
+            'Education': 'Subscription',
+            'Retail': 'E-commerce',
+            'Media': 'Subscription',
+            'Logistics': 'B2B_SaaS',
+            'Energy': 'B2B_SaaS',
+            'Manufacturing': 'License',
+            'Government': 'Service public',
+            'Real Estate': 'Commission',
+            'Consulting': 'Hourly',
+            'Entertainment': 'Freemium'
+        }
+        return default_models.get(industry, 'SaaS')
+
+    def _get_default_funding_strategy(self, complexity: str) -> str:
+        """Obtenir la stratégie de financement par défaut selon la complexité"""
+        funding_strategies = {
+            'simple': 'Autofinancement',
+            'moyen': 'Business Angels',
+            'complexe': 'Venture Capital',
+            'expert': 'Série A/B'
+        }
+        return funding_strategies.get(complexity, 'Business Angels')
     
+    def _extract_business_indicators(self, description: str, language: str) -> Dict[str, Any]:
+        """Extraire les indicateurs business du texte"""
+        text_lower = description.lower()
+        
+        # Signaux de monétisation
+        monetization_signals = []
+        if any(word in text_lower for word in ['abonnement', 'subscription', 'monthly']):
+            monetization_signals.append('subscription')
+        if any(word in text_lower for word in ['commission', 'transaction', 'payment']):
+            monetization_signals.append('transaction')
+        
+        return {
+            'monetization_signals': monetization_signals,
+            'market_signals': [],
+            'user_segments': [],
+            'competitive_advantages': [],
+            'revenue_potential': 'medium'
+        }
+
+    def _get_challenges_by_complexity(self, complexity: str, industry: str, language: str) -> List[str]:
+        """Obtenir les défis selon la complexité"""
+        if language == 'french':
+            challenges = {
+                'simple': ['Concurrence prix', 'Différenciation produit'],
+                'moyen': ['Acquisition clients', 'Scaling technique'],
+                'complexe': ['Complexité technique', 'Time-to-market'],
+                'expert': ['Innovation continue', 'Talents rares']
+            }
+        else:
+            challenges = {
+                'simple': ['Price competition', 'Product differentiation'],
+                'moyen': ['Customer acquisition', 'Technical scaling'],
+                'complexe': ['Technical complexity', 'Time-to-market'],
+                'expert': ['Continuous innovation', 'Rare talents']
+            }
+        
+        return challenges.get(complexity, challenges['moyen'])
+
+    def _get_opportunities_by_complexity(self, complexity: str, industry: str, language: str) -> List[str]:
+        """Obtenir les opportunités selon la complexité"""
+        if language == 'french':
+            opportunities = {
+                'simple': ['Marché large', 'Adoption rapide'],
+                'moyen': ['Niche profitable', 'Partenariats'],
+                'complexe': ['Barrières à l\'entrée', 'Marges élevées'],
+                'expert': ['Leadership technologique', 'Innovation propriétaire']
+            }
+        else:
+            opportunities = {
+                'simple': ['Large market', 'Fast adoption'],
+                'moyen': ['Profitable niche', 'Partnerships'],
+                'complexe': ['Barriers to entry', 'High margins'],
+                'expert': ['Technology leadership', 'Proprietary innovation']
+            }
+        
+        return opportunities.get(complexity, opportunities['moyen'])
+
+    def _estimate_project_cost(self, complexity: str, duration: int) -> str:
+        """Estimer le coût du projet selon la complexité et durée"""
+        # Coût base par jour selon la complexité
+        daily_rates = {
+            'simple': 500,    # 500€/jour
+            'moyen': 800,     # 800€/jour  
+            'complexe': 1200, # 1200€/jour
+            'expert': 1800    # 1800€/jour
+        }
+        
+        base_rate = daily_rates.get(complexity, 800)
+        
+        # Convertir la durée en jours de travail (assume 22 jours/mois)
+        work_days = duration * 22
+        
+        # Calcul du coût avec majoration pour les risques/overhead
+        estimated_cost = base_rate * work_days * 1.3  # +30% pour overhead
+        
+        # Formatage en tranches
+        if estimated_cost < 10000:
+            return f"{int(estimated_cost):,}€ - {int(estimated_cost*1.2):,}€"
+        elif estimated_cost < 50000:
+            return f"{int(estimated_cost/1000)*1000:,}€ - {int((estimated_cost*1.2)/1000)*1000:,}€"
+        elif estimated_cost < 200000:
+            return f"{int(estimated_cost/5000)*5000:,}€ - {int((estimated_cost*1.2)/5000)*5000:,}€"
+        else:
+            return f"{int(estimated_cost/10000)*10000:,}€ - {int((estimated_cost*1.2)/10000)*10000:,}€"
+
+    def _get_investors_profile(self, industry: str) -> List[str]:
+        """Obtenir le profil des investisseurs selon l'industrie"""
+        investor_profiles = {
+            'Technology': [
+                'Business Angels tech',
+                'Fonds de Venture Capital',
+                'Corporate Venture (Google, Microsoft)',
+                'Incubateurs spécialisés'
+            ],
+            'Healthcare': [
+                'Fonds Healthcare',
+                'Business Angels médecins',
+                'Corporate Venture pharma',
+                'Investisseurs institutionnels'
+            ],
+            'Finance': [
+                'Fintech VCs',
+                'Corporate Venture banques',
+                'Régulateurs/fonds publics',
+                'Business Angels finance'
+            ],
+            'Education': [
+                'EdTech investors',
+                'Foundations éducatives',
+                'Corporate Venture éducation',
+                'Fonds d\'impact social'
+            ],
+            'Retail': [
+                'Retail VCs',
+                'Corporate Venture retail',
+                'Business Angels e-commerce',
+                'Fonds consumer'
+            ],
+            'Media': [
+                'Media VCs',
+                'Corporate Venture média',
+                'Content creators funds',
+                'Entertainment investors'
+            ],
+            'Logistics': [
+                'Supply Chain VCs',
+                'Corporate Venture logistique', 
+                'Industrial investors',
+                'Transport funds'
+            ],
+            'Energy': [
+                'Clean Tech VCs',
+                'Energy transition funds',
+                'Corporate Venture énergie',
+                'Government green funds'
+            ]
+        }
+        
+        return investor_profiles.get(industry, [
+            'Business Angels généralistes',
+            'Fonds de Venture Capital',
+            'Investisseurs sectoriels',
+            'Fonds régionaux'
+        ])
+    
+    def analyze_business_context(self, description: str, industry: str, complexity: str) -> Dict[str, Any]:
+        """Analyser le contexte business - VERSION CORRIGÉE"""
+        
+        try:
+            language = self.detect_language(description)
+            
+            # Détection des signaux business
+            business_indicators = self._extract_business_indicators(description, language)
+            
+            # Score de viabilité basé sur la complexité
+            complexity_scores = {
+                'simple': 0.8,
+                'moyen': 0.7, 
+                'complexe': 0.6,
+                'expert': 0.5
+            }
+            base_viability = complexity_scores.get(complexity, 0.7)
+            
+            # Ajustements selon l'industrie
+            industry_multipliers = {
+                'Technology': 1.1,
+                'Healthcare': 0.9,
+                'Finance': 0.8,
+                'Education': 1.0,
+                'Retail': 1.0,
+                'Media': 0.9,
+                'Logistics': 0.9,
+                'Energy': 0.8
+            }
+            
+            industry_multiplier = industry_multipliers.get(industry, 1.0)
+            viability_score = min(base_viability * industry_multiplier, 1.0)
+            
+            # Défis et opportunités selon la complexité
+            challenges = self._get_challenges_by_complexity(complexity, industry, language)
+            opportunities = self._get_opportunities_by_complexity(complexity, industry, language)
+            
+            return {
+                'viability_score': round(viability_score, 2),
+                'key_challenges': challenges,
+                'opportunities': opportunities,
+                'business_indicators': business_indicators,
+                'complexity_level': complexity,
+                'industry_context': industry,
+                'language': language,
+                'analysis_timestamp': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            print(f"Erreur dans analyze_business_context: {e}")
+            return {
+                'viability_score': 0.7,
+                'key_challenges': [f'Défis liés à la complexité {complexity}'],
+                'opportunities': [f'Opportunités dans {industry}'],
+                'business_indicators': {'monetization_signals': [], 'market_signals': []},
+                'complexity_level': complexity,
+                'industry_context': industry,
+                'error': str(e)
+            }
+
     def detect_language(self, text: str) -> str:
         """Détecter la langue du texte"""
         text_lower = text.lower()
@@ -848,7 +1082,7 @@ class MarketTargetAnalyzer:
         market_size = self._calculate_market_size(industry, complexity, primary_segment)
         
         # Identifier les personas cibles
-        personas = self._generate_target_personas(project_description, industry, primary_segment, language)
+        personas = self._generate_target_personas(project_description, industry, primary_segment, language, complexity)
         
         # Analyser la concurrence
         competition_analysis = self._analyze_competition(industry, complexity, language)
@@ -949,7 +1183,7 @@ class MarketTargetAnalyzer:
         }
     
     def _generate_target_personas(self, description: str, industry: str, 
-                                 segment: str, language: str) -> List[Dict[str, Any]]:
+                             segment: str, language: str, complexity: str) -> List[Dict[str, Any]]:
         """Générer les personas cibles"""
         personas = []
         
@@ -1602,93 +1836,207 @@ class MLBusinessProjectGenerator:
         self.generation_cache = {}
     
     def generate_complete_business_project(self, project_description: str, industry: str,
-                                            complexity: str, estimated_duration: int,
-                                            project_type: str = None, language: str = None) -> Dict[str, Any]:
-        """Générer un projet business complet"""
+                                       complexity: str, estimated_duration: int,
+                                       project_type: str = None, language: str = None) -> Dict[str, Any]:
+        """Générer un projet business complet - VERSION CORRIGÉE"""
+    
+        try:
+            # Détecter la langue
+            if language is None:
+                detected_language = self.business_analyzer.detect_language(project_description)
+            else:
+                detected_language = language
         
-        # Détecter la langue
-        if language is None:
-            detected_language = self.business_analyzer.detect_language(project_description)
-        else:
-            detected_language = language
+            # Cache key
+            cache_key = hashlib.md5(
+                f"{project_description}_{industry}_{complexity}_{estimated_duration}".encode()
+            ).hexdigest()
         
-        # Cache key
-        cache_key = hashlib.md5(
-            f"{project_description}_{industry}_{complexity}_{estimated_duration}".encode()
-        ).hexdigest()
+            if cache_key in self.generation_cache:
+                return self.generation_cache[cache_key]
         
-        if cache_key in self.generation_cache:
-            return self.generation_cache[cache_key]
+            # ✅ FIX: Analyser le contexte business avec le bon paramètre
+            try:
+                business_context = self.business_analyzer.analyze_business_context(
+                    project_description, industry, complexity  # ✅ Utiliser 'complexity' directement
+                )
+            except Exception as e:
+                print(f"Erreur analyse business context: {e}")
+                business_context = {
+                    'viability_score': 0.7,
+                    'key_challenges': ['Estimation par défaut'],
+                    'opportunities': ['Marché potentiel'],
+                    'error': str(e)
+                }
         
-        # Analyser le contexte business
-        business_context = self.business_analyzer.analyze_business_context(
-            project_description, industry, complexity
-        )
+            # ✅ FIX: Générer les jalons avec gestion d'erreur
+            try:
+                milestones = self.milestone_generator.generate_milestones(
+                    project_description, industry, complexity, estimated_duration, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur génération milestones: {e}")
+                milestones = [
+                    {'name': 'Phase 1: Conception', 'duration': estimated_duration // 3, 'description': 'Phase initiale'},
+                    {'name': 'Phase 2: Développement', 'duration': estimated_duration // 2, 'description': 'Phase principale'},
+                    {'name': 'Phase 3: Déploiement', 'duration': estimated_duration // 6, 'description': 'Phase finale'}
+                ]
         
-        # Générer les jalons
-        milestones = self.milestone_generator.generate_milestones(
-            project_description, industry, complexity, estimated_duration, language
-        )
+            # ✅ FIX: Analyser le marché cible avec gestion d'erreur
+            try:
+                market_analysis = self.market_analyzer.analyze_target_market(
+                    project_description, industry, complexity, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur analyse marché: {e}")
+                market_analysis = {
+                    'primary_segment': f"Marché {industry}",
+                    'market_size': 'Estimation nécessaire',
+                    'competition_level': 'Moyen',
+                    'growth_potential': 'Bon',
+                    'error': str(e)
+                }
         
-        # Analyser le marché cible
-        market_analysis = self.market_analyzer.analyze_target_market(
-            project_description, industry, complexity, language
-        )
+            # ✅ FIX: Recommander le modèle économique avec gestion d'erreur
+            try:
+                business_model = self._recommend_business_model(
+                    business_context, market_analysis, industry, complexity, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur modèle business: {e}")
+                business_model = {
+                    'model_type': self._get_default_business_model(industry),
+                    'revenue_streams': ['Ventes directes', 'Services'],
+                    'key_activities': ['Développement', 'Marketing', 'Support'],
+                    'value_proposition': f'Solution {project_type or "innovante"} pour {industry}',
+                    'error': str(e)
+                }
         
-        # Recommander le modèle économique
-        business_model = self._recommend_business_model(
-            business_context, market_analysis, industry, complexity, language
-        )
+            # ✅ FIX: Calculer les projections financières avec gestion d'erreur
+            try:
+                financial_projections = self._calculate_financial_projections(
+                    business_model, market_analysis, complexity, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur projections financières: {e}")
+                financial_projections = {
+                    'estimated_cost': self._estimate_project_cost(complexity, estimated_duration),
+                    'revenue_projection_y1': 'À déterminer',
+                    'break_even_point': f"{estimated_duration + 12} mois",
+                    'roi_estimation': '15-25%',
+                    'error': str(e)
+                }
         
-        # Calculer les projections financières
-        financial_projections = self._calculate_financial_projections(
-            business_model, market_analysis, complexity, language
-        )
+            # ✅ FIX: Identifier les risques business avec gestion d'erreur
+            try:
+                business_risks = self._identify_business_risks(
+                    industry, complexity, market_analysis, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur risques business: {e}")
+                business_risks = {
+                    'high_risks': [f'Concurrence dans {industry}', 'Évolution technologique'],
+                    'medium_risks': ['Adoption utilisateur', 'Coûts de développement'],
+                    'mitigation_strategies': ['Veille concurrentielle', 'Développement agile'],
+                    'error': str(e)
+                }
         
-        # Identifier les risques business
-        business_risks = self._identify_business_risks(
-            industry, complexity, market_analysis, language
-        )
+            # ✅ FIX: Stratégie de financement avec gestion d'erreur
+            try:
+                funding_strategy = self._generate_funding_strategy(
+                    financial_projections, complexity, industry, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur stratégie financement: {e}")
+                funding_strategy = {
+                    'recommended_funding': self._get_default_funding_strategy(complexity),
+                    'funding_amount': financial_projections.get('estimated_cost', 'À déterminer'),
+                    'funding_timeline': f"{estimated_duration // 2} mois",
+                    'investors_profile': self._get_investors_profile(industry),
+                    'error': str(e)
+                }
         
-        # Stratégie de financement
-        funding_strategy = self._generate_funding_strategy(
-            financial_projections, complexity, industry, language
-        )
+            # ✅ FIX: Roadmap produit avec gestion d'erreur
+            try:
+                product_roadmap = self._generate_product_roadmap(
+                    milestones, market_analysis, complexity, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur roadmap produit: {e}")
+                product_roadmap = {
+                    'phases': [
+                        {'name': 'MVP', 'duration': estimated_duration // 2, 'features': ['Fonctionnalités de base']},
+                        {'name': 'Version complète', 'duration': estimated_duration // 2, 'features': ['Fonctionnalités avancées']}
+                    ],
+                    'key_features': ['Interface utilisateur', 'Fonctionnalités métier'],
+                    'error': str(e)
+                }
         
-        # Roadmap produit
-        product_roadmap = self._generate_product_roadmap(
-            milestones, market_analysis, complexity, language
-        )
+            # ✅ FIX: Métriques de succès avec gestion d'erreur
+            try:
+                success_metrics = self._define_success_metrics(
+                    business_model, market_analysis, industry, detected_language
+                )
+            except Exception as e:
+                print(f"Erreur métriques succès: {e}")
+                success_metrics = {
+                    'kpi_objectives': ['Adoption utilisateur', 'Satisfaction client', 'ROI'],
+                    'success_criteria': ['Objectifs atteints dans les temps', 'Budget respecté'],
+                    'measurement_methods': ['Analytics', 'Feedback utilisateur', 'Métriques business'],
+                    'error': str(e)
+                }
         
-        # Métriques de succès
-        success_metrics = self._define_success_metrics(
-            business_model, market_analysis, industry, language
-        )
+            # ✅ Assemblage du résultat final
+            result = {
+                'project_overview': {
+                    'description': project_description,
+                    'industry': industry,
+                    'complexity': complexity,
+                    'estimated_duration': estimated_duration,
+                    'language': detected_language,
+                    'project_type': project_type or 'Non spécifié'
+                },
+                'business_context': business_context,
+                'milestones': milestones,
+                'market_analysis': market_analysis,
+                'business_model': business_model,
+                'financial_projections': financial_projections,
+                'business_risks': business_risks,
+                'funding_strategy': funding_strategy,
+                'product_roadmap': product_roadmap,
+                'success_metrics': success_metrics,
+                'generated_at': datetime.now().isoformat(),
+                'generation_method': 'ml_business_generator_v1'
+            }
         
-        result = {
-            'project_overview': {
-                'description': project_description,
-                'industry': industry,
-                'complexity': complexity,
-                'estimated_duration': estimated_duration,
-                'language': language,
-                'project_type': project_type
-            },
-            'business_context': business_context,
-            'milestones': milestones,
-            'market_analysis': market_analysis,
-            'business_model': business_model,
-            'financial_projections': financial_projections,
-            'business_risks': business_risks,
-            'funding_strategy': funding_strategy,
-            'product_roadmap': product_roadmap,
-            'success_metrics': success_metrics,
-            'generated_at': datetime.now().isoformat(),
-            'generation_method': 'ml_business_generator_v1'
-        }
-        
-        self.generation_cache[cache_key] = result
-        return result
+            # Mise en cache
+            self.generation_cache[cache_key] = result
+            return result
+            
+        except Exception as e:
+            print(f"Erreur globale dans generate_complete_business_project: {e}")
+            return {
+                'project_overview': {
+                    'description': project_description,
+                    'industry': industry,
+                    'complexity': complexity,
+                    'estimated_duration': estimated_duration,
+                    'language': language or 'french',
+                    'project_type': project_type or 'Non spécifié'
+                },
+                'business_context': {'viability_score': 0.5, 'status': 'Analyse simplifiée'},
+                'milestones': [{'name': 'Développement', 'duration': estimated_duration}],
+                'market_analysis': {'primary_segment': f'Marché {industry}'},
+                'business_model': {'model_type': 'À déterminer'},
+                'financial_projections': {'estimated_cost': 'À évaluer'},
+                'business_risks': {'high_risks': ['À identifier']},
+                'funding_strategy': {'recommended_funding': 'À déterminer'},
+                'product_roadmap': {'phases': [{'name': 'Développement', 'duration': estimated_duration}]},
+                'success_metrics': {'kpi_objectives': ['À définir']},
+                'generated_at': datetime.now().isoformat(),
+                'generation_method': 'fallback_business_generator',
+                'error': str(e)
+            }
     
     def _recommend_business_model(self, business_context: Dict, market_analysis: Dict, 
                                  industry: str, complexity: str, language: str) -> Dict[str, Any]:
