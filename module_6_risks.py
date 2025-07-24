@@ -836,26 +836,23 @@ class MLRiskOpportunityAnalyzer:
         return self.train_models()
     
     def _evaluate_models(self, X, y_risk, y_opportunity, y_strategy):
-        """Évaluer les performances des modèles"""
+        """Évaluer les performances des modèles - VERSION CORRIGÉE"""
         try:
             X_train, X_test, y_risk_train, y_risk_test = train_test_split(
-                X, y_risk, test_size=0.2, random_state=42, stratify=y_risk
+                X, y_risk, test_size=0.2, random_state=42  
             )
             
-            # Évaluation risque
             risk_pred = self.risk_level_classifier.predict(X_test)
-            risk_accuracy = accuracy_score(y_risk_test, risk_pred)
+            risk_accuracy = accuracy_score(y_risk_test, risk_pred)  
             
-            # Évaluation opportunité
             _, _, y_opp_train, y_opp_test = train_test_split(
-                X, y_opportunity, test_size=0.2, random_state=42, stratify=y_opportunity
+                X, y_opportunity, test_size=0.2, random_state=42  
             )
             opp_pred = self.opportunity_level_classifier.predict(X_test)
             opp_accuracy = accuracy_score(y_opp_test, opp_pred)
             
-            # Évaluation stratégie
             _, _, y_strat_train, y_strat_test = train_test_split(
-                X, y_strategy, test_size=0.2, random_state=42, stratify=y_strategy
+                X, y_strategy, test_size=0.2, random_state=42  # ✅ Supprimer stratify
             )
             strat_pred = self.mitigation_strategy_predictor.predict(X_test)
             strat_accuracy = accuracy_score(y_strat_test, strat_pred)
@@ -872,6 +869,7 @@ class MLRiskOpportunityAnalyzer:
             
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
+
     
     def analyze_project_risks_opportunities(self, description: str, industry: str, complexity: str, language: str = 'french') -> Dict[str, Any]:
         """Analyser les risques et opportunités d'un projet avec ML"""

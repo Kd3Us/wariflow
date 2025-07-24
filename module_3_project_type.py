@@ -931,137 +931,319 @@ class MLProjectTypeStackPredictor:
         """Dataset AVEC types spécialisés pour meilleure génération de tâches"""
         
         training_samples = [
-            # === TYPES SPÉCIALISÉS GAMING ===
-            ("Plateforme de jeux multijoueur temps réel", "Gaming Platform", "Gaming", "french"),
-            ("Système de matchmaking pour esport", "Gaming Platform", "Gaming", "french"),
-            ("Plateforme de tournois gaming", "Gaming Platform", "Gaming", "french"),
-            ("Jeu mobile avec monétisation éthique", "Gaming Platform", "Gaming", "french"),
-            ("Real-time multiplayer gaming platform", "Gaming Platform", "Gaming", "english"),
-            ("Esport tournament management system", "Gaming Platform", "Gaming", "english"),
-            ("Game matchmaking and ranking platform", "Gaming Platform", "Gaming", "english"),
-            ("Mobile game with ethical monetization", "Gaming Platform", "Gaming", "english"),
+            # === INDUSTRIES DÉJÀ PRÉSENTES (8) - Renforcées ===
             
-            ("Plateforme de streaming vidéo live", "Streaming Platform", "Media", "french"),
-            ("Système de diffusion en direct", "Streaming Platform", "Media", "french"),
-            ("Live video streaming platform", "Streaming Platform", "Media", "english"),
-            ("Real-time broadcast system", "Streaming Platform", "Media", "english"),
+            # Technology - Renforcé
+            ("Développer une plateforme SaaS moderne", "SaaS", "Technology", "french"),
+            ("API microservices avec architecture cloud", "API REST", "Technology", "french"),
+            ("Site web vitrine avec blog", "Application Web", "Technology", "french"),
+            ("Application mobile iOS/Android", "Application Mobile", "Technology", "french"),
+            ("Build scalable web application", "Application Web", "Technology", "english"),
+            ("Develop mobile app with AI features", "Application Mobile", "Technology", "english"),
+            ("REST API for authentication", "API REST", "Technology", "english"),
+            ("SaaS management platform", "SaaS", "Technology", "english"),
             
-            # === TYPES SPÉCIALISÉS HEALTHCARE ===
-            ("Plateforme de télémédecine avec diagnostic IA", "HealthTech Platform", "Healthcare", "french"),
-            ("Système de suivi patient connecté", "HealthTech Platform", "Healthcare", "french"),
-            ("Plateforme de thérapie digitale", "HealthTech Platform", "Healthcare", "french"),
-            ("Application santé mentale travailleurs", "HealthTech Platform", "Healthcare", "french"),
-            ("AI-powered telemedicine platform", "HealthTech Platform", "Healthcare", "english"),
-            ("Connected patient monitoring system", "HealthTech Platform", "Healthcare", "english"),
-            ("Digital therapy and wellness platform", "HealthTech Platform", "Healthcare", "english"),
-            ("Mental health app for workers", "HealthTech Platform", "Healthcare", "english"),
-            
+            # Healthcare - Renforcé
+            ("Plateforme télémédecine avec IA", "HealthTech Platform", "Healthcare", "french"),
+            ("Système de gestion hospitalière", "MedTech System", "Healthcare", "french"),
             ("Dispositif médical avec capteurs IoT", "MedTech System", "Healthcare", "french"),
-            ("Système de monitoring biométrique", "MedTech System", "Healthcare", "french"),
+            ("Application santé mentale travailleurs", "HealthTech Platform", "Healthcare", "french"),
+            ("Clinical trial management platform", "Clinical Platform", "Healthcare", "english"),
+            ("Patient monitoring IoT system", "HealthTech Platform", "Healthcare", "english"),
             ("Medical device with IoT sensors", "MedTech System", "Healthcare", "english"),
-            ("Biometric monitoring system", "MedTech System", "Healthcare", "english"),
+            ("Digital therapy and wellness platform", "HealthTech Platform", "Healthcare", "english"),
             
-            # === TYPES SPÉCIALISÉS FINTECH ===
-            ("Plateforme de paiement mobile wallet", "FinTech Platform", "Finance", "french"),
+            # Finance - Renforcé
+            ("Application de trading algorithmique", "Trading System", "Finance", "french"),
+            ("Plateforme de paiement mobile", "Payment Gateway", "Finance", "french"),
             ("Système de crédit scoring automatisé", "FinTech Platform", "Finance", "french"),
-            ("Plateforme d'investissement social", "FinTech Platform", "Finance", "french"),
             ("Application bancaire néobanque", "FinTech Platform", "Finance", "french"),
-            ("Mobile payment platform with wallet", "FinTech Platform", "Finance", "english"),
-            ("Automated credit scoring system", "FinTech Platform", "Finance", "english"),
-            ("Social investment trading platform", "FinTech Platform", "Finance", "english"),
-            ("Neobank mobile application", "FinTech Platform", "Finance", "english"),
-            
-            ("Système de trading haute fréquence", "Trading System", "Finance", "french"),
-            ("Plateforme de trading algorithmique", "Trading System", "Finance", "french"),
+            ("Robo-advisor investment platform", "FinTech Platform", "Finance", "english"),
+            ("Blockchain-based payment system", "Payment Gateway", "Finance", "english"),
             ("High-frequency trading system", "Trading System", "Finance", "english"),
             ("Algorithmic trading platform", "Trading System", "Finance", "english"),
             
-            # === TYPES SPÉCIALISÉS EDTECH ===
+            # Education - Renforcé
+            ("Plateforme e-learning interactive", "EdTech Platform", "Education", "french"),
+            ("Système de gestion d'école", "Learning Management", "Education", "french"),
             ("Plateforme d'apprentissage adaptatif", "EdTech Platform", "Education", "french"),
-            ("Système de formation en ligne gamifié", "EdTech Platform", "Education", "french"),
-            ("Plateforme éducative avec IA", "EdTech Platform", "Education", "french"),
-            ("École en ligne interactive", "EdTech Platform", "Education", "french"),
-            ("Adaptive learning platform with AI", "EdTech Platform", "Education", "english"),
-            ("Gamified online training system", "EdTech Platform", "Education", "english"),
-            ("Educational platform with AI", "EdTech Platform", "Education", "english"),
-            ("Interactive online school", "EdTech Platform", "Education", "english"),
-            
             ("Système LMS pour entreprise", "Learning Management", "Education", "french"),
-            ("Plateforme de certification en ligne", "Learning Management", "Education", "french"),
+            ("AI-powered tutoring platform", "EdTech Platform", "Education", "english"),
+            ("Student assessment system", "Assessment System", "Education", "english"),
+            ("Adaptive learning platform with AI", "EdTech Platform", "Education", "english"),
             ("Corporate LMS system", "Learning Management", "Education", "english"),
-            ("Online certification platform", "Learning Management", "Education", "english"),
             
-            # === TYPES SPÉCIALISÉS ENERGY ===
-            ("Système de gestion énergétique intelligent", "Energy Management", "Energy", "french"),
-            ("Plateforme d'optimisation consommation", "Energy Management", "Energy", "french"),
-            ("Système de monitoring énergétique", "Energy Management", "Energy", "french"),
-            ("Smart energy management system", "Energy Management", "Energy", "english"),
-            ("Energy consumption optimization platform", "Energy Management", "Energy", "english"),
-            ("Energy monitoring and control system", "Energy Management", "Energy", "english"),
+            # Retail - Renforcé
+            ("Marketplace e-commerce multivendeur", "E-commerce", "Retail", "french"),
+            ("Application mobile de shopping", "Application Mobile", "Retail", "french"),
+            ("Boutique e-commerce avec paiement", "E-commerce", "Retail", "french"),
+            ("Système de gestion inventaire", "Système", "Retail", "french"),
+            ("Omnichannel retail platform", "E-commerce", "Retail", "english"),
+            ("Inventory management system", "Système", "Retail", "english"),
+            ("E-commerce shop with payment", "E-commerce", "Retail", "english"),
+            ("Mobile shopping application", "Application Mobile", "Retail", "english"),
             
-            ("Système smart grid avec IoT", "Smart Grid System", "Energy", "french"),
-            ("Réseau électrique intelligent", "Smart Grid System", "Energy", "french"),
-            ("Smart grid system with IoT", "Smart Grid System", "Energy", "english"),
-            ("Intelligent electrical grid", "Smart Grid System", "Energy", "english"),
+            # Media - Renforcé
+            ("Plateforme de streaming vidéo", "Streaming Platform", "Media", "french"),
+            ("Système de gestion de contenu", "CMS", "Media", "french"),
+            ("Plateforme de streaming vidéo live", "Streaming Platform", "Media", "french"),
+            ("Système de diffusion en direct", "Streaming Platform", "Media", "french"),
+            ("Social media analytics platform", "Content Platform", "Media", "english"),
+            ("Live streaming platform", "Streaming Platform", "Media", "english"),
+            ("Live video streaming platform", "Streaming Platform", "Media", "english"),
+            ("Real-time broadcast system", "Streaming Platform", "Media", "english"),
             
-            # === TYPES SPÉCIALISÉS SUPPLY CHAIN ===
+            # Logistics - Renforcé
+            ("Système de tracking en temps réel", "Logistics Platform", "Logistics", "french"),
+            ("Plateforme de gestion de flotte", "Fleet Management", "Logistics", "french"),
             ("Système de traçabilité supply chain", "Supply Chain System", "Logistics", "french"),
             ("Plateforme de gestion fournisseurs", "Supply Chain System", "Logistics", "french"),
+            ("Supply chain optimization system", "Supply Chain System", "Logistics", "english"),
+            ("Warehouse management platform", "Logistics Platform", "Logistics", "english"),
             ("Supply chain traceability system", "Supply Chain System", "Logistics", "english"),
             ("Supplier management platform", "Supply Chain System", "Logistics", "english"),
             
-            ("Plateforme logistique avec tracking", "Logistics Platform", "Logistics", "french"),
-            ("Système de gestion entrepôt", "Logistics Platform", "Logistics", "french"),
-            ("Logistics platform with tracking", "Logistics Platform", "Logistics", "english"),
-            ("Warehouse management system", "Logistics Platform", "Logistics", "english"),
+            # Energy - Renforcé
+            ("Plateforme smart grid IoT", "Smart Grid System", "Energy", "french"),
+            ("Système de monitoring énergétique", "Energy Management", "Energy", "french"),
+            ("Système de gestion énergétique intelligent", "Energy Management", "Energy", "french"),
+            ("Système smart grid avec IoT", "Smart Grid System", "Energy", "french"),
+            ("Renewable energy management platform", "Energy Management", "Energy", "english"),
+            ("Smart meter data analytics", "IoT Platform", "Energy", "english"),
+            ("Smart energy management system", "Energy Management", "Energy", "english"),
+            ("Smart grid system with IoT", "Smart Grid System", "Energy", "english"),
             
-            # === TYPES SPÉCIALISÉS AGTECH ===
-            ("Plateforme agriculture de précision", "AgTech Platform", "Agriculture", "french"),
-            ("Système de farming intelligent", "AgTech Platform", "Agriculture", "french"),
-            ("Precision agriculture platform", "AgTech Platform", "Agriculture", "english"),
-            ("Smart farming system", "AgTech Platform", "Agriculture", "english"),
+            # === NOUVELLES INDUSTRIES (23) - 8 échantillons chacune ===
             
-            # === TYPES SPÉCIALISÉS PROPTECH ===
-            ("Plateforme immobilière avec estimation IA", "PropTech Platform", "Real Estate", "french"),
-            ("Système de gestion locative", "PropTech Platform", "Real Estate", "french"),
-            ("Real estate platform with AI valuation", "PropTech Platform", "Real Estate", "english"),
-            ("Property rental management system", "PropTech Platform", "Real Estate", "english"),
+            # 9. Consulting
+            ("Plateforme de consulting digital", "Consulting Platform", "Consulting", "french"),
+            ("Système de gestion projets conseil", "Project Management", "Consulting", "french"),
+            ("Outil d'analyse stratégique", "Analytics Dashboard", "Consulting", "french"),
+            ("Plateforme de collaboration client", "Collaboration Platform", "Consulting", "french"),
+            ("Digital consulting platform", "Consulting Platform", "Consulting", "english"),
+            ("Strategic analysis dashboard", "Analytics Dashboard", "Consulting", "english"),
+            ("Client collaboration system", "Collaboration Platform", "Consulting", "english"),
+            ("Business intelligence platform", "Analytics Dashboard", "Consulting", "english"),
             
-            # === TYPES SPÉCIALISÉS MARTECH ===
-            ("Plateforme marketing automation", "MarTech Platform", "Marketing & Advertising", "french"),
-            ("Système de gestion campagnes", "MarTech Platform", "Marketing & Advertising", "french"),
-            ("Marketing automation platform", "MarTech Platform", "Marketing & Advertising", "english"),
-            ("Campaign management system", "MarTech Platform", "Marketing & Advertising", "english"),
-            
-            # === TYPES DE BASE (pour compatibilité) ===
-            ("Site web vitrine avec blog", "Application Web", "Technology", "french"),
-            ("Application mobile iOS/Android", "Application Mobile", "Technology", "french"),
-            ("API REST pour authentification", "API REST", "Technology", "french"),
-            ("Plateforme SaaS de gestion", "SaaS", "Technology", "french"),
-            ("Boutique e-commerce avec paiement", "E-commerce", "Retail", "french"),
-            ("CMS avec workflow éditorial", "CMS", "Technology", "french"),
-            ("Dashboard analytics temps réel", "Dashboard", "Technology", "french"),
-            ("Système ERP sur mesure", "Système", "Technology", "french"),
-            
-            ("Company website with blog", "Application Web", "Technology", "english"),
-            ("iOS/Android mobile application", "Application Mobile", "Technology", "english"),
-            ("REST API for authentication", "API REST", "Technology", "english"),
-            ("SaaS management platform", "SaaS", "Technology", "english"),
-            ("E-commerce shop with payment", "E-commerce", "Retail", "english"),
-            ("CMS with editorial workflow", "CMS", "Technology", "english"),
-            ("Real-time analytics dashboard", "Dashboard", "Technology", "english"),
-            ("Custom ERP system", "Système", "Technology", "english"),
-            
-            # === TYPES SPÉCIALISÉS ADDITIONNELS ===
-            ("Plateforme IoT avec capteurs", "IoT Platform", "Technology", "french"),
-            ("Système de compliance réglementaire", "Compliance Platform", "Legal Services", "french"),
-            ("Plateforme de gestion contrats", "Contract System", "Legal Services", "french"),
-            ("Système de gestion cabinet juridique", "Legal Management", "Legal Services", "french"),
-            
-            ("IoT platform with sensors", "IoT Platform", "Technology", "english"),
-            ("Regulatory compliance system", "Compliance Platform", "Legal Services", "english"),
+            # 10. Legal Services
+            ("Plateforme juridique en ligne", "Legal Platform", "Legal Services", "french"),
+            ("Système de gestion cabinet avocat", "Legal Management", "Legal Services", "french"),
+            ("Outil de rédaction de contrats", "Contract System", "Legal Services", "french"),
+            ("Plateforme de conformité RGPD", "Compliance Platform", "Legal Services", "french"),
+            ("Legal practice management system", "Legal Management", "Legal Services", "english"),
             ("Contract management platform", "Contract System", "Legal Services", "english"),
-            ("Legal practice management system", "Legal Management", "Legal Services", "english")
+            ("Legal document automation", "Legal Platform", "Legal Services", "english"),
+            ("Compliance monitoring system", "Compliance Platform", "Legal Services", "english"),
+            
+            # 11. Marketing & Advertising
+            ("Plateforme marketing automation", "MarTech Platform", "Marketing & Advertising", "french"),
+            ("Système de gestion campagnes", "Campaign Management", "Marketing & Advertising", "french"),
+            ("Outil d'analyse de performance", "Analytics Dashboard", "Marketing & Advertising", "french"),
+            ("Plateforme de création de contenu", "Content Platform", "Marketing & Advertising", "french"),
+            ("Marketing automation platform", "MarTech Platform", "Marketing & Advertising", "english"),
+            ("Campaign management system", "Campaign Management", "Marketing & Advertising", "english"),
+            ("Social media management tool", "Content Platform", "Marketing & Advertising", "english"),
+            ("Influencer marketing platform", "MarTech Platform", "Marketing & Advertising", "english"),
+            
+            # 12. Human Resources
+            ("Plateforme RH et recrutement", "HR Platform", "Human Resources", "french"),
+            ("Système de gestion des talents", "Talent Management", "Human Resources", "french"),
+            ("Outil de gestion de la paie", "HR System", "Human Resources", "french"),
+            ("Plateforme de formation en ligne", "Learning Management", "Human Resources", "french"),
+            ("HR management platform", "HR Platform", "Human Resources", "english"),
+            ("Talent acquisition system", "Talent Management", "Human Resources", "english"),
+            ("Employee performance tracking", "HR System", "Human Resources", "english"),
+            ("Workforce analytics dashboard", "Analytics Dashboard", "Human Resources", "english"),
+            
+            # 13. Real Estate
+            ("Plateforme immobilière intelligente", "PropTech Platform", "Real Estate", "french"),
+            ("Système de gestion locative", "Property Management", "Real Estate", "french"),
+            ("Outil d'estimation immobilière IA", "Real Estate Platform", "Real Estate", "french"),
+            ("Plateforme de visite virtuelle", "PropTech Platform", "Real Estate", "french"),
+            ("Smart real estate platform", "PropTech Platform", "Real Estate", "english"),
+            ("Property rental management", "Property Management", "Real Estate", "english"),
+            ("AI property valuation system", "Real Estate Platform", "Real Estate", "english"),
+            ("Real estate CRM system", "CRM", "Real Estate", "english"),
+            
+            # 14. Insurance
+            ("Plateforme assurance digitale", "InsurTech Platform", "Insurance", "french"),
+            ("Système de gestion sinistres", "Claims Management", "Insurance", "french"),
+            ("Outil de souscription automatisée", "Underwriting System", "Insurance", "french"),
+            ("Plateforme d'évaluation des risques", "Risk Assessment", "Insurance", "french"),
+            ("Digital insurance platform", "InsurTech Platform", "Insurance", "english"),
+            ("Claims management system", "Claims Management", "Insurance", "english"),
+            ("Automated underwriting platform", "Underwriting System", "Insurance", "english"),
+            ("Insurance policy management", "Insurance System", "Insurance", "english"),
+            
+            # 15. Automotive
+            ("Application de gestion de flotte", "Fleet Management", "Automotive", "french"),
+            ("Système de maintenance véhicules", "Vehicle System", "Automotive", "french"),
+            ("Plateforme de covoiturage", "Mobility Platform", "Automotive", "french"),
+            ("Outil de diagnostic automobile", "Diagnostic System", "Automotive", "french"),
+            ("Connected car platform", "Automotive Platform", "Automotive", "english"),
+            ("Vehicle fleet management", "Fleet Management", "Automotive", "english"),
+            ("Car sharing platform", "Mobility Platform", "Automotive", "english"),
+            ("Electric vehicle charging system", "Charging Platform", "Automotive", "english"),
+            
+            # 16. Aerospace
+            ("Système de maintenance aéronautique", "Aerospace System", "Aerospace", "french"),
+            ("Plateforme de gestion vol", "Flight Management", "Aerospace", "french"),
+            ("Outil de planification de mission", "Mission Planning", "Aerospace", "french"),
+            ("Système de contrôle satellite", "Satellite System", "Aerospace", "french"),
+            ("Aircraft maintenance system", "Aerospace System", "Aerospace", "english"),
+            ("Flight operations platform", "Flight Management", "Aerospace", "english"),
+            ("Mission planning system", "Mission Planning", "Aerospace", "english"),
+            ("Aerospace supply chain management", "Supply Chain System", "Aerospace", "english"),
+            
+            # 17. Construction
+            ("Plateforme BTP et chantiers", "Construction Platform", "Construction", "french"),
+            ("Système de gestion projet construction", "Project Management", "Construction", "french"),
+            ("Outil de planification chantier", "Planning System", "Construction", "french"),
+            ("Plateforme de gestion matériaux", "Materials Management", "Construction", "french"),
+            ("Construction project management", "Construction Platform", "Construction", "english"),
+            ("Building site management system", "Construction System", "Construction", "english"),
+            ("Construction planning platform", "Planning System", "Construction", "english"),
+            ("Building information modeling", "BIM Platform", "Construction", "english"),
+            
+            # 18. Food & Beverage
+            ("Plateforme food delivery", "Food Platform", "Food & Beverage", "french"),
+            ("Système de gestion restaurant", "Restaurant Management", "Food & Beverage", "french"),
+            ("Outil de traçabilité alimentaire", "Traceability System", "Food & Beverage", "french"),
+            ("Plateforme de réservation restaurant", "Booking Platform", "Food & Beverage", "french"),
+            ("Food delivery platform", "Food Platform", "Food & Beverage", "english"),
+            ("Restaurant management system", "Restaurant Management", "Food & Beverage", "english"),
+            ("Food traceability platform", "Traceability System", "Food & Beverage", "english"),
+            ("Kitchen operations platform", "Kitchen Management", "Food & Beverage", "english"),
+            
+            # 19. Textile & Fashion
+            ("Plateforme mode et textile", "Fashion Platform", "Textile & Fashion", "french"),
+            ("Système de gestion collection", "Fashion Management", "Textile & Fashion", "french"),
+            ("Outil de design virtuel", "Design Platform", "Textile & Fashion", "french"),
+            ("Plateforme de vente en ligne mode", "Fashion E-commerce", "Textile & Fashion", "french"),
+            ("Fashion and textile platform", "Fashion Platform", "Textile & Fashion", "english"),
+            ("Collection management system", "Fashion Management", "Textile & Fashion", "english"),
+            ("Virtual fashion design tool", "Design Platform", "Textile & Fashion", "english"),
+            ("Textile supply chain management", "Supply Chain System", "Textile & Fashion", "english"),
+            
+            # 20. Chemical
+            ("Système de gestion chimique", "Chemical Management", "Chemical", "french"),
+            ("Plateforme de processus industriel", "Industrial Platform", "Chemical", "french"),
+            ("Outil de contrôle qualité", "Quality Control", "Chemical", "french"),
+            ("Système de sécurité chimique", "Safety System", "Chemical", "french"),
+            ("Chemical management system", "Chemical Management", "Chemical", "english"),
+            ("Industrial process platform", "Industrial Platform", "Chemical", "english"),
+            ("Chemical quality control system", "Quality Control", "Chemical", "english"),
+            ("Laboratory information system", "Lab Management", "Chemical", "english"),
+            
+            # 21. Gaming
+            ("Plateforme de jeux en ligne", "Gaming Platform", "Gaming", "french"),
+            ("Système de tournois esport", "Esport Platform", "Gaming", "french"),
+            ("Outil de développement de jeux", "Game Development", "Gaming", "french"),
+            ("Plateforme de streaming gaming", "Gaming Streaming", "Gaming", "french"),
+            ("Online gaming platform", "Gaming Platform", "Gaming", "english"),
+            ("Esport tournament system", "Esport Platform", "Gaming", "english"),
+            ("Game development platform", "Game Development", "Gaming", "english"),
+            ("Game analytics dashboard", "Analytics Dashboard", "Gaming", "english"),
+            
+            # 22. Sports & Fitness
+            ("Plateforme fitness connectée", "Fitness Platform", "Sports & Fitness", "french"),
+            ("Système de coaching sportif", "Sports Management", "Sports & Fitness", "french"),
+            ("Application de suivi performance", "Performance Tracking", "Sports & Fitness", "french"),
+            ("Plateforme de réservation sport", "Sports Booking", "Sports & Fitness", "french"),
+            ("Connected fitness platform", "Fitness Platform", "Sports & Fitness", "english"),
+            ("Sports coaching system", "Sports Management", "Sports & Fitness", "english"),
+            ("Performance tracking app", "Performance Tracking", "Sports & Fitness", "english"),
+            ("Athletic performance analytics", "Analytics Dashboard", "Sports & Fitness", "english"),
+            
+            # 23. Travel & Tourism
+            ("Plateforme de réservation voyage", "Travel Platform", "Travel & Tourism", "french"),
+            ("Système de gestion hôtelière", "Hotel Management", "Travel & Tourism", "french"),
+            ("Outil de planification voyage", "Trip Planning", "Travel & Tourism", "french"),
+            ("Plateforme de guide touristique", "Tourism Platform", "Travel & Tourism", "french"),
+            ("Travel booking platform", "Travel Platform", "Travel & Tourism", "english"),
+            ("Hotel management system", "Hotel Management", "Travel & Tourism", "english"),
+            ("Trip planning platform", "Trip Planning", "Travel & Tourism", "english"),
+            ("Travel experience platform", "Experience Platform", "Travel & Tourism", "english"),
+            
+            # 24. Events & Hospitality
+            ("Plateforme de gestion événements", "Event Platform", "Events & Hospitality", "french"),
+            ("Système de réservation événementiel", "Event Management", "Events & Hospitality", "french"),
+            ("Outil de billetterie en ligne", "Ticketing System", "Events & Hospitality", "french"),
+            ("Plateforme de networking événement", "Networking Platform", "Events & Hospitality", "french"),
+            ("Event management platform", "Event Platform", "Events & Hospitality", "english"),
+            ("Event booking system", "Event Management", "Events & Hospitality", "english"),
+            ("Online ticketing platform", "Ticketing System", "Events & Hospitality", "english"),
+            ("Event networking system", "Networking Platform", "Events & Hospitality", "english"),
+            
+            # 25. Government
+            ("Plateforme e-gouvernement", "GovTech Platform", "Government", "french"),
+            ("Système administratif public", "Government System", "Government", "french"),
+            ("Outil de service citoyen", "Citizen Service", "Government", "french"),
+            ("Plateforme de vote électronique", "E-voting System", "Government", "french"),
+            ("E-government platform", "GovTech Platform", "Government", "english"),
+            ("Public administration system", "Government System", "Government", "english"),
+            ("Citizen service portal", "Citizen Service", "Government", "english"),
+            ("Public data management", "Data Platform", "Government", "english"),
+            
+            # 26. Non-profit
+            ("Plateforme de dons caritatifs", "Donation Platform", "Non-profit", "french"),
+            ("Système de gestion ONG", "NGO Management", "Non-profit", "french"),
+            ("Outil de gestion bénévoles", "Volunteer Management", "Non-profit", "french"),
+            ("Plateforme de crowdfunding social", "Crowdfunding Platform", "Non-profit", "french"),
+            ("Charitable donation platform", "Donation Platform", "Non-profit", "english"),
+            ("NGO management system", "NGO Management", "Non-profit", "english"),
+            ("Volunteer management platform", "Volunteer Management", "Non-profit", "english"),
+            ("Impact measurement platform", "Impact Platform", "Non-profit", "english"),
+            
+            # 27. Environmental
+            ("Plateforme monitoring environnemental", "Environmental Platform", "Environmental", "french"),
+            ("Système de gestion déchets", "Waste Management", "Environmental", "french"),
+            ("Outil de mesure carbone", "Carbon Tracking", "Environmental", "french"),
+            ("Plateforme d'énergie verte", "Green Energy Platform", "Environmental", "french"),
+            ("Environmental monitoring platform", "Environmental Platform", "Environmental", "english"),
+            ("Waste management system", "Waste Management", "Environmental", "english"),
+            ("Carbon footprint tracker", "Carbon Tracking", "Environmental", "english"),
+            ("Sustainability reporting platform", "Sustainability Platform", "Environmental", "english"),
+            
+            # 28. Agriculture
+            ("Plateforme agriculture connectée", "AgTech Platform", "Agriculture", "french"),
+            ("Système de monitoring des cultures", "Farm Management", "Agriculture", "french"),
+            ("Outil de gestion d'élevage", "Livestock Management", "Agriculture", "french"),
+            ("Plateforme de vente directe agricole", "Farm-to-Table Platform", "Agriculture", "french"),
+            ("Smart farming platform", "AgTech Platform", "Agriculture", "english"),
+            ("Crop monitoring system", "Farm Management", "Agriculture", "english"),
+            ("Livestock management platform", "Livestock Management", "Agriculture", "english"),
+            ("Precision agriculture system", "Precision Agriculture", "Agriculture", "english"),
+            
+            # 29. Biotechnology
+            ("Plateforme de recherche biotech", "BioTech Platform", "Biotechnology", "french"),
+            ("Système de laboratoire", "Lab Management", "Biotechnology", "french"),
+            ("Outil d'analyse génétique", "Genetic Analysis", "Biotechnology", "french"),
+            ("Plateforme de bioinformatique", "Bioinformatics Platform", "Biotechnology", "french"),
+            ("Biotech research platform", "BioTech Platform", "Biotechnology", "english"),
+            ("Laboratory management system", "Lab Management", "Biotechnology", "english"),
+            ("Genetic analysis platform", "Genetic Analysis", "Biotechnology", "english"),
+            ("Clinical genomics platform", "Genomics Platform", "Biotechnology", "english"),
+            
+            # 30. Research & Development
+            ("Plateforme de recherche collaborative", "Research Platform", "Research & Development", "french"),
+            ("Système de gestion R&D", "R&D Management", "Research & Development", "french"),
+            ("Outil de gestion brevets", "Patent Management", "Research & Development", "french"),
+            ("Plateforme d'innovation ouverte", "Innovation Platform", "Research & Development", "french"),
+            ("Collaborative research platform", "Research Platform", "Research & Development", "english"),
+            ("R&D management system", "R&D Management", "Research & Development", "english"),
+            ("Patent management platform", "Patent Management", "Research & Development", "english"),
+            ("Research data management", "Data Platform", "Research & Development", "english"),
+            
+            # 31. Pharmaceutical
+            ("Système de recherche pharmaceutique", "Pharma Research", "Pharmaceutical", "french"),
+            ("Plateforme essais cliniques", "Clinical Platform", "Pharmaceutical", "french"),
+            ("Outil de développement médicament", "Drug Development", "Pharmaceutical", "french"),
+            ("Système de pharmacovigilance", "Pharmacovigilance System", "Pharmaceutical", "french"),
+            ("Drug research platform", "Pharma Research", "Pharmaceutical", "english"),
+            ("Clinical trial platform", "Clinical Platform", "Pharmaceutical", "english"),
+            ("Drug development system", "Drug Development", "Pharmaceutical", "english"),
+            ("Regulatory compliance system", "Regulatory Platform", "Pharmaceutical", "english"),
         ]
         
         df = pd.DataFrame(training_samples, columns=['description', 'project_type', 'industry', 'language'])
@@ -1166,7 +1348,6 @@ class MLProjectTypeStackPredictor:
     def _evaluate_model(self, X, y, project_types):
         """Évaluer les performances du modèle - VERSION CORRIGÉE"""
         try:
-            # ✅ FIX: Vérifier si assez d'échantillons pour faire un split
             unique_classes = len(np.unique(y))
             total_samples = len(X)
             
@@ -1180,7 +1361,7 @@ class MLProjectTypeStackPredictor:
                 
                 print(f"Précision du modèle de type de projet : {accuracy:.3f}")
                 
-                # Distribution des prédictions
+                # ✅ CORRECTION: Définir les variables pour l'affichage
                 from collections import Counter
                 predicted_types = self.label_encoder.inverse_transform(predictions)
                 actual_types = self.label_encoder.inverse_transform(y)
@@ -1189,26 +1370,52 @@ class MLProjectTypeStackPredictor:
                 print(f"Distribution réelle : {Counter(actual_types)}")
                 
             else:
-                # Split normal si assez d'échantillons
-                test_size = min(0.2, max(0.1, unique_classes / total_samples))
+                # Calcul intelligent du test_size
+                min_samples_per_class = 2
+                min_test_samples_needed = unique_classes * min_samples_per_class
                 
-                X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=test_size, random_state=42, stratify=y
-                )
-                
-                predictions = self.project_type_classifier.predict(X_test)
-                accuracy = accuracy_score(y_test, predictions)
-                
-                print(f"Précision du modèle de type de projet : {accuracy:.3f}")
-                
-                # Distribution des prédictions
-                from collections import Counter
-                predicted_types = self.label_encoder.inverse_transform(predictions)
-                actual_types = self.label_encoder.inverse_transform(y_test)
-                
-                print(f"Distribution prédite : {Counter(predicted_types)}")
-                print(f"Distribution réelle : {Counter(actual_types)}")
-                
+                if total_samples < min_test_samples_needed:
+                    print(f"⚠️ Pas assez d'échantillons pour split stratifié ({total_samples} < {min_test_samples_needed})")
+                    print("Évaluation sur l'ensemble complet...")
+                    
+                    predictions = self.project_type_classifier.predict(X)
+                    accuracy = accuracy_score(y, predictions)
+                    print(f"Précision du modèle de type de projet : {accuracy:.3f}")
+                    
+                    from collections import Counter
+                    predicted_types = self.label_encoder.inverse_transform(predictions)
+                    actual_types = self.label_encoder.inverse_transform(y) 
+                    
+                    print(f"Distribution prédite : {Counter(predicted_types)}")
+                    print(f"Distribution réelle : {Counter(actual_types)}")
+                    
+                else:
+                    min_test_per_class = 3
+                    ideal_test_size = (unique_classes * min_test_per_class) / total_samples
+                    
+                    test_size = min(0.3, max(0.15, ideal_test_size))
+                    
+                    actual_test_samples = int(total_samples * test_size)
+                    if actual_test_samples < min_test_samples_needed:
+                        test_size = min_test_samples_needed / total_samples
+                        
+                    print(f"✅ Test size calculé: {test_size:.3f} ({int(total_samples * test_size)} échantillons)")
+                    
+                    X_train, X_test, y_train, y_test = train_test_split(
+                        X, y, test_size=test_size, random_state=42  
+                    )
+                    
+                    predictions = self.project_type_classifier.predict(X_test)
+                    accuracy = accuracy_score(y_test, predictions)
+                    print(f"Précision du modèle de type de projet : {accuracy:.3f}")
+                    
+                    from collections import Counter
+                    predicted_types = self.label_encoder.inverse_transform(predictions)
+                    actual_types = self.label_encoder.inverse_transform(y_test)
+                    
+                    print(f"Distribution prédite : {Counter(predicted_types)}")
+                    print(f"Distribution réelle : {Counter(actual_types)}")
+                    
         except Exception as e:
             print(f"Erreur lors de l'évaluation : {e}")
             print("Évaluation ignorée, modèle entraîné avec succès")
