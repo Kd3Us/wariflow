@@ -227,20 +227,52 @@ class BusinessModelAnalyzer:
     def _get_default_business_model(self, industry: str) -> str:
         """Obtenir le modèle économique par défaut selon l'industrie"""
         default_models = {
+            # === TECHNOLOGY & DIGITAL ===
             'Technology': 'SaaS',
-            'Healthcare': 'B2B_SaaS', 
-            'Finance': 'Transaction',
-            'Education': 'Subscription',
-            'Retail': 'E-commerce',
             'Media': 'Subscription',
-            'Logistics': 'B2B_SaaS',
-            'Energy': 'B2B_SaaS',
-            'Manufacturing': 'License',
-            'Government': 'Service public',
+            'Gaming': 'Freemium',
+            
+            # === HEALTHCARE & SCIENCES ===
+            'Healthcare': 'B2B_SaaS',
+            'Biotechnology': 'License',
+            'Pharmaceutical': 'License',
+            'Research & Development': 'Grant_Based',
+            
+            # === FINANCE & BUSINESS ===
+            'Finance': 'Transaction',
+            'Insurance': 'Subscription',
             'Real Estate': 'Commission',
             'Consulting': 'Hourly',
-            'Entertainment': 'Freemium',
-            'Sports & Fitness': 'Freemium'
+            'Legal Services': 'Hourly',
+            'Marketing & Advertising': 'Project_Based',
+            'Human Resources': 'B2B_SaaS',
+            
+            # === EDUCATION & TRAINING ===
+            'Education': 'Subscription',
+            
+            # === RETAIL & COMMERCE ===
+            'Retail': 'E-commerce',
+            'Food & Beverage': 'Retail_Hybrid',
+            'Textile & Fashion': 'E-commerce',
+            
+            # === MANUFACTURING & INDUSTRY ===
+            'Automotive': 'B2B_License',
+            'Aerospace': 'B2B_Contract',
+            'Construction': 'Project_Based',
+            'Chemical': 'B2B_License',
+            'Energy': 'B2B_SaaS',
+            'Logistics': 'B2B_SaaS',
+            
+            # === SERVICES & ENTERTAINMENT ===
+            'Sports & Fitness': 'Freemium',
+            'Travel & Tourism': 'Commission',
+            'Events & Hospitality': 'Event_Based',
+            
+            # === PUBLIC & NON-PROFIT ===
+            'Government': 'Service_Public',
+            'Non-profit': 'Donation_Based',
+            'Environmental': 'Grant_Based',
+            'Agriculture': 'B2B_License'
         }
         return default_models.get(industry, 'SaaS')
 
