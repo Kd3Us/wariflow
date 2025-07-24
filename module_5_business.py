@@ -239,7 +239,8 @@ class BusinessModelAnalyzer:
             'Government': 'Service public',
             'Real Estate': 'Commission',
             'Consulting': 'Hourly',
-            'Entertainment': 'Freemium'
+            'Entertainment': 'Freemium',
+            'Sports & Fitness': 'Freemium'
         }
         return default_models.get(industry, 'SaaS')
 
