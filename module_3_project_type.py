@@ -277,278 +277,290 @@ class ProjectTypeAnalyzer:
         return complexity_scores
 
 
-class ProjectTypeAnalyzer:
-    """Analyseur de type de projet multilingue - VERSION COMPLÈTE 31 INDUSTRIES"""
+class TechStackRecommendationEngine:
+    """Moteur de recommandation de stack technique"""
     
     def __init__(self):
-        self.supported_languages = ['french', 'english']
-        
-        # ✅ Types spécialisés pour génération de tâches précises - VERSION ÉTENDUE
-        self.project_types = [
-            # === TYPES DE BASE ===
-            'Application Web', 'Application Mobile', 'API REST', 'SaaS',
-            'E-commerce', 'CMS', 'Dashboard', 'Système',
-            
-            # === TECHNOLOGY & DIGITAL ===
-            'Tech Platform', 'Cloud System', 'DevOps Platform',
-            
-            # === MEDIA & ENTERTAINMENT ===
-            'Gaming Platform', 'Streaming Platform', 'Content Platform',
-            'Media Management', 'Creator Platform',
-            
-            # === HEALTHCARE & SCIENCES ===
-            'HealthTech Platform', 'MedTech System', 'Clinical Platform',
-            'BioTech System', 'Research Platform', 'Pharmaceutical System',
-            
-            # === FINANCE & BUSINESS ===
-            'FinTech Platform', 'Trading System', 'Payment Gateway',
-            'Insurance Platform', 'Real Estate Portal', 'Investment Platform',
-            
-            # === EDUCATION & TRAINING ===
-            'EdTech Platform', 'Learning Management', 'Assessment System',
-            
-            # === RETAIL & COMMERCE ===
-            'Retail Platform', 'Food Tech Platform', 'Fashion Platform',
-            
-            # === MANUFACTURING & INDUSTRY ===
-            'AutoTech Platform', 'Aerospace System', 'Construction Platform',
-            'Chemical System', 'Energy Management', 'Smart Grid System',
-            'Logistics Platform', 'Supply Chain System', 'Fleet Management',
-            
-            # === SERVICES & ENTERTAINMENT ===
-            'Sports Platform', 'Travel Platform', 'Event Management',
-            
-            # === PUBLIC & NON-PROFIT ===
-            'GovTech Platform', 'Non-Profit System', 'Environmental Platform',
-            
-            # === AGRICULTURE ===
-            'AgTech Platform', 'Farm Management', 'Crop Monitoring',
-            
-            # === PROFESSIONAL SERVICES ===
-            'Legal Management', 'Compliance Platform', 'Contract System',
-            'Consulting Platform', 'MarTech Platform', 'HR Platform'
-        ]
-        
-        # ✅ Mots-clés DÉTAILLÉS pour chaque type spécialisé - VERSION COMPLÈTE
-        self.type_keywords = {
-            'french': {
-                # === TYPES DE BASE ===
-                'Application Web': ['site', 'web', 'portail', 'interface web', 'navigateur', 'html', 'css', 'webapp'],
-                'Application Mobile': ['mobile', 'app', 'smartphone', 'ios', 'android', 'flutter', 'react native', 'appli'],
-                'API REST': ['api', 'rest', 'service', 'endpoint', 'microservice', 'json', 'graphql', 'webservice'],
-                'SaaS': ['saas', 'plateforme', 'service', 'abonnement', 'multi-tenant', 'cloud', 'software service'],
-                'E-commerce': ['boutique', 'e-commerce', 'vente', 'panier', 'marketplace', 'commande', 'shop online'],
-                'CMS': ['cms', 'contenu', 'blog', 'publication', 'éditorial', 'wordpress', 'gestion contenu'],
-                'Dashboard': ['dashboard', 'tableau', 'monitoring', 'kpi', 'analytics', 'métriques', 'reporting'],
-                'Système': ['système', 'erp', 'gestion', 'enterprise', 'complexe', 'hospitalier', 'intégré'],
-                
-                # === TECHNOLOGY & DIGITAL ===
-                'Tech Platform': ['technologie', 'innovation', 'digital', 'transformation', 'plateforme tech', 'startup'],
-                'Cloud System': ['cloud', 'aws', 'azure', 'infrastructure', 'hébergement', 'sauvegarde', 'scalabilité'],
-                'DevOps Platform': ['devops', 'ci/cd', 'déploiement', 'automatisation', 'pipeline', 'jenkins', 'docker'],
-                
-                # === MEDIA & ENTERTAINMENT ===
-                'Gaming Platform': ['jeu', 'gaming', 'joueur', 'gameplay', 'multijoueur', 'esport', 'match', 'tournoi', 'console'],
-                'Streaming Platform': ['streaming', 'vidéo', 'live', 'diffusion', 'broadcast', 'contenu vidéo', 'netflix'],
-                'Content Platform': ['contenu', 'média', 'publication', 'création', 'partage', 'communauté', 'créateur'],
-                'Media Management': ['média', 'actualité', 'presse', 'journalisme', 'information', 'news', 'édition'],
-                'Creator Platform': ['créateur', 'influenceur', 'monétisation', 'audience', 'communauté', 'talent'],
-                
-                # === HEALTHCARE & SCIENCES ===
-                'HealthTech Platform': ['santé', 'médical', 'patient', 'télémédecine', 'diagnostic', 'thérapie', 'wellness', 'e-santé'],
-                'MedTech System': ['dispositif médical', 'équipement', 'monitoring', 'capteur', 'biométrie', 'médical', 'imagerie'],
-                'Clinical Platform': ['clinique', 'essai', 'recherche', 'protocole', 'patient', 'données cliniques', 'étude'],
-                'BioTech System': ['biotechnologie', 'biologie', 'génétique', 'laboratoire', 'recherche bio', 'biotech'],
-                'Research Platform': ['recherche', 'scientifique', 'laboratoire', 'étude', 'analyse', 'publication', 'académie'],
-                'Pharmaceutical System': ['pharmaceutique', 'médicament', 'pharmacie', 'drug', 'molécule', 'thérapeutique'],
-                
-                # === FINANCE & BUSINESS ===
-                'FinTech Platform': ['fintech', 'finance', 'paiement', 'portefeuille', 'crédit', 'investissement', 'bancaire', 'néobanque'],
-                'Trading System': ['trading', 'bourse', 'marché', 'ordre', 'portfolio', 'algorithme', 'forex', 'crypto'],
-                'Payment Gateway': ['paiement', 'transaction', 'carte', 'wallet', 'gateway', 'pos', 'stripe', 'paypal'],
-                'Insurance Platform': ['assurance', 'mutuelle', 'couverture', 'sinistre', 'police', 'courtage', 'risque'],
-                'Real Estate Portal': ['immobilier', 'propriété', 'location', 'vente', 'transaction', 'syndic', 'estimation'],
-                'Investment Platform': ['investissement', 'placement', 'épargne', 'portefeuille', 'gestion actifs', 'bourse'],
-                
-                # === EDUCATION & TRAINING ===
-                'EdTech Platform': ['éducation', 'apprentissage', 'formation', 'cours', 'pédagogie', 'école', 'université'],
-                'Learning Management': ['lms', 'e-learning', 'parcours', 'compétence', 'certification', 'moodle', 'mooc'],
-                'Assessment System': ['évaluation', 'test', 'examen', 'notation', 'compétence', 'quiz', 'certification'],
-                
-                # === RETAIL & COMMERCE ===
-                'Retail Platform': ['commerce', 'détail', 'magasin', 'vente', 'client', 'caisse', 'inventory'],
-                'Food Tech Platform': ['alimentaire', 'restaurant', 'livraison', 'cuisine', 'nutrition', 'food', 'recette'],
-                'Fashion Platform': ['mode', 'vêtement', 'textile', 'design', 'collection', 'tendance', 'style'],
-                
-                # === MANUFACTURING & INDUSTRY ===
-                'AutoTech Platform': ['automobile', 'voiture', 'véhicule', 'automotive', 'transport', 'mobilité', 'garage'],
-                'Aerospace System': ['aérospatial', 'aviation', 'avion', 'spatial', 'vol', 'aéronautique', 'satellite'],
-                'Construction Platform': ['construction', 'btp', 'chantier', 'bâtiment', 'architecture', 'génie civil'],
-                'Chemical System': ['chimique', 'laboratoire', 'process', 'production', 'matériaux', 'formulation'],
-                'Energy Management': ['énergie', 'consommation', 'efficacité', 'optimisation', 'monitoring énergétique', 'renouvelable'],
-                'Smart Grid System': ['smart grid', 'réseau', 'distribution', 'compteur', 'iot énergie', 'électricité'],
-                'Logistics Platform': ['logistique', 'transport', 'livraison', 'entrepôt', 'tracking', 'expedition', 'supply'],
-                'Supply Chain System': ['supply chain', 'chaîne', 'approvisionnement', 'fournisseur', 'procurement', 'stock'],
-                'Fleet Management': ['flotte', 'véhicule', 'gestion parc', 'maintenance', 'géolocalisation', 'gps', 'transport'],
-                
-                # === SERVICES & ENTERTAINMENT ===
-                'Sports Platform': ['sport', 'fitness', 'entraînement', 'coach', 'performance', 'club', 'athlète'],
-                'Travel Platform': ['voyage', 'tourisme', 'réservation', 'hôtel', 'transport', 'destination', 'booking'],
-                'Event Management': ['événement', 'conférence', 'salon', 'organisation', 'billetterie', 'planning'],
-                
-                # === PUBLIC & NON-PROFIT ===
-                'GovTech Platform': ['gouvernement', 'public', 'administration', 'citoyen', 'service public', 'mairie', 'état'],
-                'Non-Profit System': ['association', 'ong', 'bénévolat', 'don', 'humanitaire', 'social', 'fondation'],
-                'Environmental Platform': ['environnement', 'écologie', 'durable', 'carbone', 'pollution', 'vert', 'climat'],
-                
-                # === AGRICULTURE ===
-                'AgTech Platform': ['agriculture', 'agtech', 'ferme', 'exploitation', 'agricole', 'farming', 'rural'],
-                'Farm Management': ['gestion ferme', 'parcelle', 'culture', 'élevage', 'production agricole', 'tracteur'],
-                'Crop Monitoring': ['surveillance culture', 'récolte', 'irrigation', 'pesticide', 'rendement', 'semence'],
-                
-                # === PROFESSIONAL SERVICES ===
-                'Legal Management': ['juridique', 'avocat', 'cabinet', 'dossier', 'procédure', 'droit', 'tribunal'],
-                'Compliance Platform': ['conformité', 'réglementation', 'audit', 'risque', 'gouvernance', 'rgpd', 'norme'],
-                'Contract System': ['contrat', 'accord', 'signature', 'négociation', 'clause', 'juridique', 'légal'],
-                'Consulting Platform': ['conseil', 'consultant', 'expertise', 'stratégie', 'accompagnement', 'audit'],
-                'MarTech Platform': ['marketing', 'martech', 'campagne', 'automation', 'lead', 'digital marketing', 'crm'],
-                'HR Platform': ['ressources humaines', 'rh', 'recrutement', 'paie', 'talent', 'formation', 'sirh']
+        # Stacks par défaut par type de projet
+        self.default_stacks = {
+            'Application Web': {
+                'simple': {
+                    'frontend': ['HTML/CSS/JS', 'Bootstrap'],
+                    'backend': ['PHP', 'Node.js'],
+                    'database': ['MySQL', 'PostgreSQL'],
+                    'hosting': ['Shared hosting', 'Netlify']
+                },
+                'moyen': {
+                    'frontend': ['React', 'Vue.js'],
+                    'backend': ['Node.js', 'Django'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'hosting': ['Vercel', 'Heroku'],
+                    'tools': ['Git', 'Docker']
+                },
+                'complexe': {
+                    'frontend': ['React', 'TypeScript', 'Next.js'],
+                    'backend': ['Node.js', 'Django', 'FastAPI'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'hosting': ['AWS', 'Azure'],
+                    'tools': ['Docker', 'Kubernetes', 'CI/CD']
+                },
+                'expert': {
+                    'frontend': ['React', 'TypeScript', 'Next.js'],
+                    'backend': ['Microservices', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'hosting': ['AWS', 'Kubernetes'],
+                    'tools': ['Docker', 'Terraform', 'Monitoring']
+                }
             },
-            'english': {
-                # === TYPES DE BASE ===
-                'Application Web': ['website', 'web', 'portal', 'web interface', 'browser', 'html', 'css', 'webapp'],
-                'Application Mobile': ['mobile', 'app', 'smartphone', 'ios', 'android', 'flutter', 'react native', 'mobile app'],
-                'API REST': ['api', 'rest', 'service', 'endpoint', 'microservice', 'json', 'graphql', 'webservice'],
-                'SaaS': ['saas', 'platform', 'service', 'subscription', 'multi-tenant', 'cloud', 'software service'],
-                'E-commerce': ['shop', 'e-commerce', 'sales', 'cart', 'marketplace', 'order', 'online store'],
-                'CMS': ['cms', 'content', 'blog', 'publishing', 'editorial', 'wordpress', 'content management'],
-                'Dashboard': ['dashboard', 'board', 'monitoring', 'kpi', 'analytics', 'metrics', 'reporting'],
-                'Système': ['system', 'erp', 'management', 'enterprise', 'complex', 'hospital', 'integrated'],
-                
-                # === TECHNOLOGY & DIGITAL ===
-                'Tech Platform': ['technology', 'innovation', 'digital', 'transformation', 'tech platform', 'startup'],
-                'Cloud System': ['cloud', 'aws', 'azure', 'infrastructure', 'hosting', 'backup', 'scalability'],
-                'DevOps Platform': ['devops', 'ci/cd', 'deployment', 'automation', 'pipeline', 'jenkins', 'docker'],
-                
-                # === MEDIA & ENTERTAINMENT ===
-                'Gaming Platform': ['game', 'gaming', 'player', 'gameplay', 'multiplayer', 'esport', 'match', 'tournament', 'console'],
-                'Streaming Platform': ['streaming', 'video', 'live', 'broadcast', 'content delivery', 'netflix', 'media'],
-                'Content Platform': ['content', 'media', 'publishing', 'creation', 'sharing', 'community', 'creator'],
-                'Media Management': ['media', 'news', 'press', 'journalism', 'information', 'publishing', 'editorial'],
-                'Creator Platform': ['creator', 'influencer', 'monetization', 'audience', 'community', 'talent'],
-                
-                # === HEALTHCARE & SCIENCES ===
-                'HealthTech Platform': ['health', 'medical', 'patient', 'telemedicine', 'diagnosis', 'therapy', 'wellness', 'e-health'],
-                'MedTech System': ['medical device', 'equipment', 'monitoring', 'sensor', 'biometric', 'medical', 'imaging'],
-                'Clinical Platform': ['clinical', 'trial', 'research', 'protocol', 'patient data', 'clinical study', 'study'],
-                'BioTech System': ['biotechnology', 'biology', 'genetic', 'laboratory', 'bio research', 'biotech'],
-                'Research Platform': ['research', 'scientific', 'laboratory', 'study', 'analysis', 'publication', 'academic'],
-                'Pharmaceutical System': ['pharmaceutical', 'medicine', 'pharmacy', 'drug', 'molecule', 'therapeutic'],
-                
-                # === FINANCE & BUSINESS ===
-                'FinTech Platform': ['fintech', 'finance', 'payment', 'wallet', 'credit', 'investment', 'banking', 'neobank'],
-                'Trading System': ['trading', 'exchange', 'market', 'order', 'portfolio', 'algorithm', 'forex', 'crypto'],
-                'Payment Gateway': ['payment', 'transaction', 'card', 'wallet', 'gateway', 'pos', 'stripe', 'paypal'],
-                'Insurance Platform': ['insurance', 'coverage', 'claim', 'policy', 'broker', 'risk', 'underwriting'],
-                'Real Estate Portal': ['real estate', 'property', 'rental', 'sale', 'transaction', 'property management', 'valuation'],
-                'Investment Platform': ['investment', 'portfolio', 'savings', 'wealth', 'asset management', 'trading'],
-                
-                # === EDUCATION & TRAINING ===
-                'EdTech Platform': ['education', 'learning', 'training', 'course', 'pedagogy', 'school', 'university'],
-                'Learning Management': ['lms', 'e-learning', 'curriculum', 'skill', 'certification', 'moodle', 'mooc'],
-                'Assessment System': ['assessment', 'test', 'exam', 'grading', 'evaluation', 'quiz', 'certification'],
-                
-                # === RETAIL & COMMERCE ===
-                'Retail Platform': ['retail', 'store', 'sales', 'customer', 'checkout', 'inventory', 'merchandise'],
-                'Food Tech Platform': ['food', 'restaurant', 'delivery', 'cuisine', 'nutrition', 'recipe', 'catering'],
-                'Fashion Platform': ['fashion', 'clothing', 'textile', 'design', 'collection', 'trend', 'style'],
-                
-                # === MANUFACTURING & INDUSTRY ===
-                'AutoTech Platform': ['automotive', 'car', 'vehicle', 'transport', 'mobility', 'garage', 'auto'],
-                'Aerospace System': ['aerospace', 'aviation', 'aircraft', 'space', 'flight', 'aeronautical', 'satellite'],
-                'Construction Platform': ['construction', 'building', 'site', 'architecture', 'civil engineering', 'contractor'],
-                'Chemical System': ['chemical', 'laboratory', 'process', 'production', 'materials', 'formulation'],
-                'Energy Management': ['energy', 'consumption', 'efficiency', 'optimization', 'energy monitoring', 'renewable'],
-                'Smart Grid System': ['smart grid', 'grid', 'distribution', 'meter', 'iot energy', 'electricity'],
-                'Logistics Platform': ['logistics', 'transport', 'delivery', 'warehouse', 'tracking', 'shipping', 'supply'],
-                'Supply Chain System': ['supply chain', 'procurement', 'supplier', 'sourcing', 'supply', 'stock'],
-                'Fleet Management': ['fleet', 'vehicle', 'fleet management', 'maintenance', 'gps', 'transport'],
-                
-                # === SERVICES & ENTERTAINMENT ===
-                'Sports Platform': ['sports', 'fitness', 'training', 'coach', 'performance', 'club', 'athlete'],
-                'Travel Platform': ['travel', 'tourism', 'booking', 'hotel', 'transport', 'destination', 'trip'],
-                'Event Management': ['event', 'conference', 'meeting', 'organization', 'ticketing', 'planning'],
-                
-                # === PUBLIC & NON-PROFIT ===
-                'GovTech Platform': ['government', 'public', 'administration', 'citizen', 'public service', 'municipal', 'state'],
-                'Non-Profit System': ['non-profit', 'ngo', 'volunteer', 'donation', 'humanitarian', 'social', 'foundation'],
-                'Environmental Platform': ['environment', 'ecology', 'sustainable', 'carbon', 'pollution', 'green', 'climate'],
-                
-                # === AGRICULTURE ===
-                'AgTech Platform': ['agriculture', 'agtech', 'farm', 'farming', 'agricultural', 'crop', 'rural'],
-                'Farm Management': ['farm management', 'field', 'crop', 'livestock', 'agricultural production', 'tractor'],
-                'Crop Monitoring': ['crop monitoring', 'harvest', 'irrigation', 'pesticide', 'yield', 'seed'],
-                
-                # === PROFESSIONAL SERVICES ===
-                'Legal Management': ['legal', 'lawyer', 'law firm', 'case', 'procedure', 'law', 'court'],
-                'Compliance Platform': ['compliance', 'regulation', 'audit', 'risk', 'governance', 'gdpr', 'standard'],
-                'Contract System': ['contract', 'agreement', 'signature', 'negotiation', 'clause', 'legal', 'terms'],
-                'Consulting Platform': ['consulting', 'consultant', 'expertise', 'strategy', 'advisory', 'audit'],
-                'MarTech Platform': ['marketing', 'martech', 'campaign', 'automation', 'lead', 'digital marketing', 'crm'],
-                'HR Platform': ['human resources', 'hr', 'recruitment', 'payroll', 'talent', 'training', 'hris']
+            'Application Mobile': {
+                'simple': {
+                    'framework': ['Flutter', 'React Native'],
+                    'backend': ['Firebase', 'Supabase'],
+                    'database': ['SQLite', 'Firebase'],
+                    'services': ['Push notifications']
+                },
+                'moyen': {
+                    'framework': ['React Native', 'Flutter'],
+                    'backend': ['Node.js', 'Django'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'services': ['Auth0', 'Stripe'],
+                    'tools': ['Expo', 'Fastlane']
+                },
+                'complexe': {
+                    'framework': ['React Native', 'Flutter'],
+                    'backend': ['Node.js', 'Django', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'services': ['AWS Cognito', 'AWS S3'],
+                    'tools': ['CodePush', 'Crashlytics']
+                },
+                'expert': {
+                    'framework': ['Native iOS/Android', 'React Native'],
+                    'backend': ['Microservices', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'services': ['AWS', 'Firebase'],
+                    'tools': ['CI/CD', 'Performance monitoring']
+                }
+            },
+            'API REST': {
+                'simple': {
+                    'framework': ['Flask', 'Express.js'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'auth': ['JWT'],
+                    'docs': ['Swagger']
+                },
+                'moyen': {
+                    'framework': ['Django REST', 'FastAPI'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'auth': ['OAuth2', 'JWT'],
+                    'docs': ['OpenAPI', 'Swagger'],
+                    'tools': ['Postman', 'Docker']
+                },
+                'complexe': {
+                    'framework': ['Django REST', 'FastAPI', 'Spring Boot'],
+                    'database': ['PostgreSQL', 'Redis', 'MongoDB'],
+                    'auth': ['OAuth2', 'Auth0'],
+                    'docs': ['OpenAPI', 'Swagger'],
+                    'tools': ['Docker', 'API Gateway']
+                },
+                'expert': {
+                    'framework': ['GraphQL', 'gRPC', 'Microservices'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'auth': ['OAuth2', 'Auth0', 'Keycloak'],
+                    'docs': ['OpenAPI', 'GraphQL Schema'],
+                    'tools': ['Kubernetes', 'API Gateway', 'Monitoring']
+                }
+            },
+            'SaaS': {
+                'simple': {
+                    'frontend': ['React', 'Vue.js'],
+                    'backend': ['Node.js', 'Django'],
+                    'database': ['PostgreSQL'],
+                    'auth': ['Auth0'],
+                    'payment': ['Stripe']
+                },
+                'moyen': {
+                    'frontend': ['React', 'TypeScript'],
+                    'backend': ['Node.js', 'Django'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'auth': ['Auth0', 'AWS Cognito'],
+                    'payment': ['Stripe', 'PayPal'],
+                    'tools': ['Docker', 'CI/CD']
+                },
+                'complexe': {
+                    'frontend': ['React', 'TypeScript', 'Next.js'],
+                    'backend': ['Microservices', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'auth': ['Auth0', 'Keycloak'],
+                    'payment': ['Stripe', 'Multi-currency'],
+                    'tools': ['Docker', 'Kubernetes', 'Monitoring']
+                },
+                'expert': {
+                    'frontend': ['React', 'TypeScript', 'Micro-frontends'],
+                    'backend': ['Microservices', 'Event-driven'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'auth': ['Multi-tenant auth', 'SSO'],
+                    'payment': ['Multi-gateway', 'Billing'],
+                    'tools': ['Kubernetes', 'Service mesh', 'Observability']
+                }
+            },
+            'E-commerce': {
+                'simple': {
+                    'platform': ['Shopify', 'WooCommerce'],
+                    'frontend': ['Liquid', 'PHP'],
+                    'payment': ['Stripe', 'PayPal'],
+                    'hosting': ['Shopify', 'WordPress']
+                },
+                'moyen': {
+                    'frontend': ['React', 'Vue.js'],
+                    'backend': ['Node.js', 'Django'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'payment': ['Stripe', 'PayPal'],
+                    'search': ['Elasticsearch', 'Algolia']
+                },
+                'complexe': {
+                    'frontend': ['React', 'TypeScript', 'Next.js'],
+                    'backend': ['Microservices', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'payment': ['Multi-gateway'],
+                    'search': ['Elasticsearch'],
+                    'tools': ['Docker', 'CDN']
+                },
+                'expert': {
+                    'frontend': ['React', 'TypeScript', 'PWA'],
+                    'backend': ['Microservices', 'Event-driven'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'payment': ['Multi-gateway', 'Fraud detection'],
+                    'search': ['Elasticsearch', 'Recommendations'],
+                    'tools': ['Kubernetes', 'Real-time inventory']
+                }
+            },
+            'CMS': {
+                'simple': {
+                    'platform': ['WordPress', 'Ghost'],
+                    'frontend': ['PHP', 'Handlebars'],
+                    'database': ['MySQL', 'SQLite'],
+                    'hosting': ['Shared hosting']
+                },
+                'moyen': {
+                    'platform': ['Strapi', 'Contentful'],
+                    'frontend': ['React', 'Vue.js'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'hosting': ['Vercel', 'Netlify']
+                },
+                'complexe': {
+                    'platform': ['Headless CMS', 'Custom'],
+                    'frontend': ['React', 'TypeScript', 'Next.js'],
+                    'backend': ['Node.js', 'GraphQL'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'hosting': ['AWS', 'Vercel']
+                },
+                'expert': {
+                    'platform': ['Custom headless', 'Multi-site'],
+                    'frontend': ['React', 'TypeScript', 'Static generation'],
+                    'backend': ['Microservices', 'GraphQL'],
+                    'database': ['PostgreSQL', 'Elasticsearch'],
+                    'hosting': ['AWS', 'CDN', 'Multi-region']
+                }
+            },
+            'Dashboard': {
+                'simple': {
+                    'frontend': ['Chart.js', 'D3.js'],
+                    'backend': ['Flask', 'Express.js'],
+                    'database': ['PostgreSQL', 'MySQL'],
+                    'visualization': ['Chart.js', 'Google Charts']
+                },
+                'moyen': {
+                    'frontend': ['React', 'Vue.js', 'D3.js'],
+                    'backend': ['Django', 'FastAPI'],
+                    'database': ['PostgreSQL', 'InfluxDB'],
+                    'visualization': ['Recharts', 'Chart.js']
+                },
+                'complexe': {
+                    'frontend': ['React', 'TypeScript', 'D3.js'],
+                    'backend': ['Django', 'FastAPI', 'GraphQL'],
+                    'database': ['PostgreSQL', 'InfluxDB', 'Redis'],
+                    'visualization': ['Custom charts', 'Real-time']
+                },
+                'expert': {
+                    'frontend': ['React', 'TypeScript', 'WebGL'],
+                    'backend': ['Microservices', 'Stream processing'],
+                    'database': ['PostgreSQL', 'InfluxDB', 'Elasticsearch'],
+                    'visualization': ['Custom WebGL', 'Real-time streaming']
+                }
+            },
+            'Système': {
+                'simple': {
+                    'backend': ['Django', 'Laravel'],
+                    'database': ['PostgreSQL', 'MySQL'],
+                    'frontend': ['Bootstrap', 'Vue.js'],
+                    'hosting': ['VPS', 'Heroku']
+                },
+                'moyen': {
+                    'backend': ['Django', 'Spring Boot'],
+                    'database': ['PostgreSQL', 'MongoDB'],
+                    'frontend': ['React', 'Angular'],
+                    'hosting': ['AWS', 'Docker']
+                },
+                'complexe': {
+                    'backend': ['Microservices', 'Spring Boot'],
+                    'database': ['PostgreSQL', 'Redis', 'MongoDB'],
+                    'frontend': ['React', 'TypeScript'],
+                    'hosting': ['AWS', 'Kubernetes']
+                },
+                'expert': {
+                    'backend': ['Microservices', 'Event-driven'],
+                    'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
+                    'frontend': ['React', 'TypeScript', 'Micro-frontends'],
+                    'hosting': ['Kubernetes', 'Multi-cloud']
+                }
+            },
+            'Gaming Platform': {
+                'simple': {
+                    'engine': ['Unity', 'Godot'],
+                    'backend': ['Firebase', 'Node.js'],
+                    'database': ['Firebase Realtime'],
+                    'monetization': ['AdMob', 'Unity Ads']
+                },
+                'complexe': {
+                    'engine': ['Unity', 'Unreal Engine'],  
+                    'backend': ['Node.js', 'Java Spring'],
+                    'database': ['PostgreSQL', 'Redis'],
+                    'cloud': ['AWS GameLift', 'Azure PlayFab'],
+                    'analytics': ['GameAnalytics', 'Unity Analytics']
+                }
+            },
+            'Legal Management': {
+                'moyen': {
+                    'frontend': ['React', 'Angular'],
+                    'backend': ['Java Spring Boot', '.NET Core'],
+                    'database': ['PostgreSQL', 'SQL Server'],
+                    'security': ['Auth0', 'KeyCloak'],
+                    'integrations': ['DocuSign API', 'Calendar APIs']
+                }
             }
         }
         
-        # ✅ Mapping industrie vers types spécialisés prioritaires
-        self.industry_type_mapping = {
-            'Technology': ['Tech Platform', 'Cloud System', 'DevOps Platform', 'SaaS', 'API REST'],
-            'Media': ['Streaming Platform', 'Content Platform', 'Media Management', 'Creator Platform'],
-            'Gaming': ['Gaming Platform', 'Streaming Platform', 'Content Platform'],
-            'Healthcare': ['HealthTech Platform', 'MedTech System', 'Clinical Platform'],
-            'Biotechnology': ['BioTech System', 'Research Platform', 'Clinical Platform'],
-            'Pharmaceutical': ['Pharmaceutical System', 'Research Platform', 'Clinical Platform'],
-            'Research & Development': ['Research Platform', 'BioTech System', 'Tech Platform'],
-            'Finance': ['FinTech Platform', 'Trading System', 'Payment Gateway'],
-            'Insurance': ['Insurance Platform', 'FinTech Platform', 'Compliance Platform'],
-            'Real Estate': ['Real Estate Portal', 'Investment Platform', 'Retail Platform'],
-            'Education': ['EdTech Platform', 'Learning Management', 'Assessment System'],
-            'Retail': ['Retail Platform', 'E-commerce', 'Marketplace'],
-            'Food & Beverage': ['Food Tech Platform', 'Retail Platform', 'E-commerce'],
-            'Textile & Fashion': ['Fashion Platform', 'E-commerce', 'Retail Platform'],
-            'Automotive': ['AutoTech Platform', 'Fleet Management', 'IoT Platform'],
-            'Aerospace': ['Aerospace System', 'Manufacturing System', 'Compliance Platform'],
-            'Construction': ['Construction Platform', 'Real Estate Portal', 'Fleet Management'],
-            'Chemical': ['Chemical System', 'Manufacturing System', 'Compliance Platform'],
-            'Energy': ['Energy Management', 'Smart Grid System', 'IoT Platform'],
-            'Logistics': ['Logistics Platform', 'Supply Chain System', 'Fleet Management'],
-            'Sports & Fitness': ['Sports Platform', 'HealthTech Platform', 'Community Platform'],
-            'Travel & Tourism': ['Travel Platform', 'Event Management', 'Booking Platform'],
-            'Events & Hospitality': ['Event Management', 'Travel Platform', 'Booking Platform'],
-            'Government': ['GovTech Platform', 'Compliance Platform', 'Citizen Platform'],
-            'Non-profit': ['Non-Profit System', 'Community Platform', 'Fundraising Platform'],
-            'Environmental': ['Environmental Platform', 'Energy Management', 'Monitoring Platform'],
-            'Agriculture': ['AgTech Platform', 'Farm Management', 'Crop Monitoring'],
-            'Consulting': ['Consulting Platform', 'Professional Services', 'Dashboard'],
-            'Legal Services': ['Legal Management', 'Compliance Platform', 'Contract System'],
-            'Marketing & Advertising': ['MarTech Platform', 'Analytics Dashboard', 'Campaign Management'],
-            'Human Resources': ['HR Platform', 'Talent Management', 'Assessment System']
-        }
-        
-        # ✅ Patterns de reconnaissance avancés
-        self.advanced_patterns = {
-            'french': {
-                'platform_indicators': ['plateforme', 'portail', 'hub', 'centre', 'espace'],
-                'system_indicators': ['système', 'solution', 'outil', 'logiciel', 'application'],
-                'management_indicators': ['gestion', 'administration', 'pilotage', 'contrôle', 'suivi'],
-                'tech_stack_indicators': ['api', 'cloud', 'mobile', 'web', 'iot', 'ai', 'ml'],
-                'business_indicators': ['business', 'commercial', 'entreprise', 'professionnel', 'métier']
+        # Ajustements par industrie
+        self.industry_adjustments = {
+            'Healthcare': {
+                'security': ['HIPAA compliance', 'End-to-end encryption'],
+                'database': ['Encrypted storage', 'Audit logs'],
+                'hosting': ['HIPAA-compliant cloud']
             },
-            'english': {
-                'platform_indicators': ['platform', 'portal', 'hub', 'center', 'space'],
-                'system_indicators': ['system', 'solution', 'tool', 'software', 'application'],
-                'management_indicators': ['management', 'administration', 'control', 'monitoring', 'tracking'],
-                'tech_stack_indicators': ['api', 'cloud', 'mobile', 'web', 'iot', 'ai', 'ml'],
-                'business_indicators': ['business', 'commercial', 'enterprise', 'professional', 'corporate']
+            'Finance': {
+                'security': ['PCI-DSS compliance', 'Multi-factor auth'],
+                'database': ['Encrypted storage', 'ACID compliance'],
+                'hosting': ['Financial-grade security']
+            },
+            'Education': {
+                'features': ['LMS integration', 'Video streaming'],
+                'database': ['Student data protection'],
+                'hosting': ['Scalable for peak usage']
+            },
+            'Energy': {
+                'features': ['IoT integration', 'Real-time monitoring'],
+                'database': ['Time-series data'],
+                'hosting': ['Edge computing']
             }
         }
     
@@ -825,415 +837,6 @@ class ProjectTypeFeatureExtractor:
         
         text_lower = text.lower()
         return sum(1 for indicator in indicators if indicator in text_lower)
-    class TechStackRecommendationEngine:
-        """Moteur de recommandation de stack technique intelligente"""
-        
-        def __init__(self):
-            self.supported_languages = ['french', 'english']
-            
-            # Stacks par type de projet et complexité
-            self.tech_stacks = {
-                # === TYPES DE BASE ===
-                'Application Web': {
-                    'simple': {
-                        'frontend': ['HTML/CSS', 'JavaScript', 'Bootstrap'],
-                        'backend': ['Node.js', 'Express'],
-                        'database': ['MongoDB', 'SQLite'],
-                        'hosting': ['Netlify', 'Heroku']
-                    },
-                    'moyen': {
-                        'frontend': ['React', 'Vue.js', 'TypeScript'],
-                        'backend': ['Node.js', 'Django', 'Rails'],
-                        'database': ['PostgreSQL', 'MongoDB'],
-                        'hosting': ['AWS', 'Digital Ocean'],
-                        'tools': ['Docker', 'CI/CD']
-                    },
-                    'complexe': {
-                        'frontend': ['React', 'Next.js', 'TypeScript'],
-                        'backend': ['Node.js', 'Django', 'Spring Boot'],
-                        'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
-                        'hosting': ['AWS', 'Google Cloud'],
-                        'tools': ['Docker', 'Kubernetes', 'CI/CD']
-                    },
-                    'expert': {
-                        'frontend': ['React', 'Next.js', 'Micro-frontends'],
-                        'backend': ['Microservices', 'GraphQL', 'gRPC'],
-                        'database': ['PostgreSQL', 'Redis', 'Cassandra'],
-                        'hosting': ['AWS', 'Multi-cloud'],
-                        'tools': ['Kubernetes', 'Service Mesh', 'Monitoring']
-                    }
-                },
-                
-                'Application Mobile': {
-                    'simple': {
-                        'framework': ['Flutter', 'React Native'],
-                        'backend': ['Firebase', 'Supabase'],
-                        'database': ['Firebase Firestore'],
-                        'tools': ['Expo', 'App Store Connect']
-                    },
-                    'moyen': {
-                        'framework': ['React Native', 'Flutter'],
-                        'backend': ['Node.js', 'Django'],
-                        'database': ['PostgreSQL', 'MongoDB'],
-                        'services': ['AWS Cognito', 'Firebase'],
-                        'tools': ['CI/CD', 'App Distribution']
-                    },
-                    'complexe': {
-                        'framework': ['React Native', 'Flutter', 'Native'],
-                        'backend': ['Microservices', 'GraphQL'],
-                        'database': ['PostgreSQL', 'Redis'],
-                        'services': ['AWS', 'Push Notifications'],
-                        'tools': ['CI/CD', 'Performance Monitoring']
-                    },
-                    'expert': {
-                        'framework': ['Native iOS/Android', 'React Native'],
-                        'backend': ['Microservices', 'Real-time'],
-                        'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
-                        'services': ['AWS', 'ML Services'],
-                        'tools': ['Advanced CI/CD', 'A/B Testing']
-                    }
-                },
-                
-                'API REST': {
-                    'simple': {
-                        'framework': ['Express.js', 'Flask'],
-                        'database': ['PostgreSQL', 'MongoDB'],
-                        'auth': ['JWT'],
-                        'docs': ['Swagger']
-                    },
-                    'moyen': {
-                        'framework': ['Node.js', 'Django REST'],
-                        'database': ['PostgreSQL', 'Redis'],
-                        'auth': ['OAuth2', 'JWT'],
-                        'tools': ['Docker', 'API Gateway']
-                    },
-                    'complexe': {
-                        'framework': ['FastAPI', 'Spring Boot'],
-                        'database': ['PostgreSQL', 'Redis', 'MongoDB'],
-                        'auth': ['OAuth2', 'Auth0'],
-                        'tools': ['Docker', 'Kubernetes', 'Monitoring']
-                    },
-                    'expert': {
-                        'framework': ['GraphQL', 'gRPC', 'Microservices'],
-                        'database': ['PostgreSQL', 'Redis', 'Elasticsearch'],
-                        'auth': ['OAuth2', 'Keycloak'],
-                        'tools': ['Service Mesh', 'API Gateway', 'Observability']
-                    }
-                },
-                
-                'SaaS': {
-                    'simple': {
-                        'frontend': ['React', 'Vue.js'],
-                        'backend': ['Node.js', 'Rails'],
-                        'database': ['PostgreSQL'],
-                        'auth': ['Auth0'],
-                        'payment': ['Stripe']
-                    },
-                    'moyen': {
-                        'frontend': ['React', 'TypeScript'],
-                        'backend': ['Node.js', 'Django'],
-                        'database': ['PostgreSQL', 'Redis'],
-                        'auth': ['Auth0', 'AWS Cognito'],
-                        'payment': ['Stripe', 'Billing'],
-                        'tools': ['Docker', 'CI/CD']
-                    },
-                    'complexe': {
-                        'frontend': ['React', 'Next.js', 'TypeScript'],
-                        'backend': ['Microservices', 'GraphQL'],
-                        'database': ['PostgreSQL', 'Redis', 'Analytics'],
-                        'auth': ['Multi-tenant Auth'],
-                        'payment': ['Advanced Billing'],
-                        'tools': ['Kubernetes', 'Monitoring']
-                    },
-                    'expert': {
-                        'frontend': ['Micro-frontends', 'Advanced React'],
-                        'backend': ['Event-driven Architecture'],
-                        'database': ['Multi-tenant DB', 'Data Lake'],
-                        'auth': ['Enterprise SSO'],
-                        'payment': ['Usage-based Billing'],
-                        'tools': ['Full Observability Stack']
-                    }
-                },
-                
-                # === TYPES SPÉCIALISÉS ===
-                'Gaming Platform': {
-                    'simple': {
-                        'engine': ['Unity', 'Godot'],
-                        'backend': ['Node.js', 'Firebase'],
-                        'database': ['MongoDB', 'Redis'],
-                        'multiplayer': ['WebSocket', 'Socket.io']
-                    },
-                    'moyen': {
-                        'engine': ['Unity', 'Unreal Engine'],
-                        'backend': ['Node.js', 'Go'],
-                        'database': ['PostgreSQL', 'Redis'],
-                        'multiplayer': ['Dedicated Servers', 'Matchmaking']
-                    },
-                    'complexe': {
-                        'engine': ['Unity', 'Unreal Engine', 'Custom'],
-                        'backend': ['Microservices', 'Real-time'],
-                        'database': ['PostgreSQL', 'Redis', 'Analytics'],
-                        'multiplayer': ['Game Servers', 'Anti-cheat']
-                    },
-                    'expert': {
-                        'engine': ['Custom Engine', 'Advanced Graphics'],
-                        'backend': ['Distributed Systems'],
-                        'database': ['Sharded DB', 'Real-time Analytics'],
-                        'multiplayer': ['Global Infrastructure', 'Advanced Networking']
-                    }
-                },
-                
-                'HealthTech Platform': {
-                    'simple': {
-                        'frontend': ['React', 'HIPAA Compliant'],
-                        'backend': ['Node.js', 'FHIR'],
-                        'database': ['Encrypted PostgreSQL'],
-                        'security': ['End-to-end Encryption']
-                    },
-                    'moyen': {
-                        'frontend': ['React', 'PWA'],
-                        'backend': ['FHIR API', 'HL7'],
-                        'database': ['PostgreSQL', 'Audit Logs'],
-                        'security': ['HIPAA', 'SOC2'],
-                        'integration': ['EHR Systems']
-                    },
-                    'complexe': {
-                        'frontend': ['React', 'Real-time'],
-                        'backend': ['Microservices', 'ML Pipeline'],
-                        'database': ['PostgreSQL', 'Data Lake'],
-                        'security': ['Advanced Encryption', 'Compliance'],
-                        'integration': ['Multiple EHR', 'IoT Devices']
-                    },
-                    'expert': {
-                        'frontend': ['Advanced UI', 'Accessibility'],
-                        'backend': ['AI/ML Services', 'Real-time Processing'],
-                        'database': ['Multi-region', 'Analytics'],
-                        'security': ['Zero Trust', 'Advanced Compliance'],
-                        'integration': ['Healthcare Ecosystem']
-                    }
-                },
-                
-                'FinTech Platform': {
-                    'simple': {
-                        'frontend': ['React', 'Secure UI'],
-                        'backend': ['Node.js', 'Payment API'],
-                        'database': ['PostgreSQL', 'Encryption'],
-                        'security': ['PCI DSS', 'KYC']
-                    },
-                    'moyen': {
-                        'frontend': ['React', 'PWA'],
-                        'backend': ['Node.js', 'Spring Boot'],
-                        'database': ['PostgreSQL', 'Redis'],
-                        'security': ['Advanced Auth', 'Fraud Detection'],
-                        'payment': ['Multiple Processors']
-                    },
-                    'complexe': {
-                        'frontend': ['React', 'Real-time Trading'],
-                        'backend': ['Microservices', 'Event Streaming'],
-                        'database': ['PostgreSQL', 'Time Series'],
-                        'security': ['Advanced Fraud', 'Risk Management'],
-                        'payment': ['Multi-currency', 'Blockchain']
-                    },
-                    'expert': {
-                        'frontend': ['Advanced Trading UI'],
-                        'backend': ['High-frequency Systems'],
-                        'database': ['Distributed', 'Real-time Analytics'],
-                        'security': ['Quantum-safe', 'Advanced Risk'],
-                        'payment': ['DeFi Integration', 'Central Bank Digital Currency']
-                    }
-                }
-            }
-            
-            # Ajustements par industrie
-            self.industry_adjustments = {
-                'Healthcare': {
-                    'security_priority': 'very_high',
-                    'compliance': ['HIPAA', 'GDPR', 'SOC2'],
-                    'required_features': ['Encryption', 'Audit Logs', 'Access Control']
-                },
-                'Finance': {
-                    'security_priority': 'very_high',
-                    'compliance': ['PCI DSS', 'SOX', 'GDPR'],
-                    'required_features': ['Fraud Detection', 'KYC', 'Real-time Monitoring']
-                },
-                'Education': {
-                    'security_priority': 'medium',
-                    'compliance': ['FERPA', 'COPPA'],
-                    'required_features': ['User Management', 'Content Protection']
-                },
-                'Gaming': {
-                    'performance_priority': 'very_high',
-                    'required_features': ['Low Latency', 'Scalability', 'Anti-cheat']
-                }
-            }
-        
-        def recommend_stack(self, project_type: str, complexity: str, industry: str = 'Technology', 
-                        language: str = 'french') -> Dict[str, Any]:
-            """Recommander une stack technique optimisée"""
-            
-            # Stack de base selon le type et la complexité
-            base_stack = self.tech_stacks.get(project_type, {}).get(complexity, {})
-            
-            if not base_stack:
-                # Fallback vers Application Web si type non trouvé
-                base_stack = self.tech_stacks['Application Web'].get(complexity, 
-                            self.tech_stacks['Application Web']['moyen'])
-            
-            # Ajustements par industrie
-            industry_adjustments = self.industry_adjustments.get(industry, {})
-            
-            # Recommendations finales
-            recommendations = {
-                'primary_stack': base_stack,
-                'industry_specific': self._get_industry_specific_tools(industry, complexity),
-                'security_requirements': self._get_security_requirements(industry),
-                'compliance_needs': industry_adjustments.get('compliance', []),
-                'performance_considerations': self._get_performance_considerations(project_type, complexity),
-                'cost_estimation': self._estimate_stack_cost(base_stack, complexity),
-                'learning_curve': self._assess_learning_curve(base_stack, complexity),
-                'alternatives': self._suggest_alternatives(project_type, complexity),
-                'deployment_options': self._get_deployment_options(complexity, industry)
-            }
-            
-            return recommendations
-        
-        def _get_industry_specific_tools(self, industry: str, complexity: str) -> List[str]:
-            """Outils spécifiques à l'industrie"""
-            tools = {
-                'Healthcare': ['FHIR Server', 'HL7 Parser', 'Medical Imaging', 'Telemedicine SDK'],
-                'Finance': ['Payment Processors', 'KYC Services', 'Fraud Detection', 'Risk Engine'],
-                'Education': ['LTI Integration', 'SCORM Player', 'Video Conferencing', 'Assessment Tools'],
-                'Gaming': ['Game Analytics', 'Matchmaking', 'Anti-cheat', 'Leaderboards'],
-                'Energy': ['IoT Platform', 'Time Series DB', 'SCADA Integration', 'Smart Meters'],
-                'Retail': ['E-commerce Platform', 'Inventory Management', 'POS Integration', 'Analytics']
-            }
-            
-            return tools.get(industry, ['Industry Tools', 'Specialized APIs'])
-        
-        def _get_security_requirements(self, industry: str) -> List[str]:
-            """Exigences de sécurité par industrie"""
-            security = {
-                'Healthcare': ['HIPAA Compliance', 'End-to-end Encryption', 'Audit Logging', 'Access Control'],
-                'Finance': ['PCI DSS', 'Multi-factor Auth', 'Fraud Detection', 'Real-time Monitoring'],
-                'Education': ['FERPA Compliance', 'Student Privacy', 'Content Protection'],
-                'Government': ['FedRAMP', 'High Security', 'Multi-level Access'],
-                'default': ['HTTPS/TLS', 'Authentication', 'Data Encryption', 'Security Headers']
-            }
-            
-            return security.get(industry, security['default'])
-        
-        def _get_performance_considerations(self, project_type: str, complexity: str) -> Dict[str, str]:
-            """Considérations de performance"""
-            performance = {
-                'Gaming Platform': {
-                    'latency': 'Critical (<50ms)',
-                    'throughput': 'Very High',
-                    'scalability': 'Global',
-                    'priority': 'Real-time Performance'
-                },
-                'Trading System': {
-                    'latency': 'Ultra Low (<1ms)',
-                    'throughput': 'Extreme',
-                    'scalability': 'High',
-                    'priority': 'Speed and Reliability'
-                },
-                'Streaming Platform': {
-                    'latency': 'Low',
-                    'throughput': 'Very High',
-                    'scalability': 'Global CDN',
-                    'priority': 'Bandwidth and Quality'
-                },
-                'default': {
-                    'latency': 'Standard (<200ms)',
-                    'throughput': 'Medium',
-                    'scalability': 'Regional',
-                    'priority': 'Balanced Performance'
-                }
-            }
-            
-            return performance.get(project_type, performance['default'])
-        
-        def _estimate_stack_cost(self, stack: Dict, complexity: str) -> Dict[str, str]:
-            """Estimer le coût de la stack"""
-            base_costs = {
-                'simple': {'monthly': '50-200€', 'setup': '500-2K€'},
-                'moyen': {'monthly': '200-800€', 'setup': '2-8K€'},
-                'complexe': {'monthly': '800-3K€', 'setup': '8-25K€'},
-                'expert': {'monthly': '3K-15K€', 'setup': '25-100K€'}
-            }
-            
-            return base_costs.get(complexity, base_costs['moyen'])
-        
-        def _assess_learning_curve(self, stack: Dict, complexity: str) -> str:
-            """Évaluer la courbe d'apprentissage"""
-            curves = {
-                'simple': 'Facile (2-4 semaines)',
-                'moyen': 'Modérée (1-3 mois)',
-                'complexe': 'Élevée (3-6 mois)',
-                'expert': 'Très élevée (6+ mois)'
-            }
-            
-            return curves.get(complexity, 'Modérée')
-        
-        def _suggest_alternatives(self, project_type: str, complexity: str) -> List[Dict[str, str]]:
-            """Suggérer des alternatives"""
-            alternatives = [
-                {
-                    'name': 'Low-code Platform',
-                    'description': 'Solutions comme Bubble, Webflow pour développement rapide',
-                    'pros': 'Rapide, pas de code',
-                    'cons': 'Limitations de personnalisation'
-                },
-                {
-                    'name': 'Template/Framework',
-                    'description': 'Utiliser des templates existants ou frameworks',
-                    'pros': 'Accélération développement',
-                    'cons': 'Adaptation nécessaire'
-                },
-                {
-                    'name': 'Cloud Services',
-                    'description': 'Maximiser les services managés (AWS, Google Cloud)',
-                    'pros': 'Moins de maintenance',
-                    'cons': 'Vendor lock-in possible'
-                }
-            ]
-            
-            return alternatives
-        
-        def _get_deployment_options(self, complexity: str, industry: str) -> List[Dict[str, str]]:
-            """Options de déploiement"""
-            options = [
-                {
-                    'type': 'Cloud Public',
-                    'providers': 'AWS, Google Cloud, Azure',
-                    'best_for': 'Scalabilité et coût',
-                    'considerations': 'Sécurité et compliance'
-                },
-                {
-                    'type': 'Cloud Privé',
-                    'providers': 'VMware, OpenStack',
-                    'best_for': 'Contrôle et sécurité',
-                    'considerations': 'Coût et maintenance'
-                },
-                {
-                    'type': 'Hybride',
-                    'providers': 'Multi-cloud',
-                    'best_for': 'Flexibilité',
-                    'considerations': 'Complexité de gestion'
-                }
-            ]
-            
-            # Ajustements par industrie
-            if industry in ['Healthcare', 'Finance', 'Government']:
-                options[0]['considerations'] += ', Compliance stricte'
-                options.insert(0, {
-                    'type': 'On-Premise',
-                    'providers': 'Infrastructure propre',
-                    'best_for': 'Contrôle total et compliance',
-                    'considerations': 'Coût élevé et expertise interne'
-                })
-            
-            return options
 
 
 class MLProjectTypeStackPredictor:
@@ -1459,114 +1062,6 @@ class MLProjectTypeStackPredictor:
             ("Regulatory compliance system", "Compliance Platform", "Legal Services", "english"),
             ("Contract management platform", "Contract System", "Legal Services", "english"),
             ("Legal practice management system", "Legal Management", "Legal Services", "english")
-
-            # Sports & Fitness
-            ("Application de coaching fitness personnalisé", "Sports Platform", "Sports & Fitness", "french"),
-            ("Plateforme de réservation cours fitness", "Sports Platform", "Sports & Fitness", "french"),
-            ("Fitness coaching application", "Sports Platform", "Sports & Fitness", "english"),
-            ("Sports club management system", "Sports Platform", "Sports & Fitness", "english"),
-
-            # Travel & Tourism
-            ("Plateforme de réservation voyage", "Travel Platform", "Travel & Tourism", "french"),
-            ("Application de guide touristique", "Travel Platform", "Travel & Tourism", "french"),
-            ("Travel booking platform", "Travel Platform", "Travel & Tourism", "english"),
-            ("Tourism management system", "Travel Platform", "Travel & Tourism", "english"),
-
-            # Events & Hospitality
-            ("Système de gestion événementielle", "Event Management", "Events & Hospitality", "french"),
-            ("Plateforme de réservation événements", "Event Management", "Events & Hospitality", "french"),
-            ("Event management system", "Event Management", "Events & Hospitality", "english"),
-            ("Hospitality booking platform", "Event Management", "Events & Hospitality", "english"),
-
-            # Government
-            ("Plateforme citoyenne e-gouvernement", "GovTech Platform", "Government", "french"),
-            ("Système d'administration publique", "GovTech Platform", "Government", "french"),
-            ("E-government citizen platform", "GovTech Platform", "Government", "english"),
-            ("Public administration system", "GovTech Platform", "Government", "english"),
-
-            # Non-profit
-            ("Plateforme de gestion association", "Non-Profit System", "Non-profit", "french"),
-            ("Système de collecte de dons", "Non-Profit System", "Non-profit", "french"),
-            ("Association management platform", "Non-Profit System", "Non-profit", "english"),
-            ("Donation management system", "Non-Profit System", "Non-profit", "english"),
-
-            # Environmental
-            ("Plateforme de monitoring environnemental", "Environmental Platform", "Environmental", "french"),
-            ("Système de gestion carbone", "Environmental Platform", "Environmental", "french"),
-            ("Environmental monitoring platform", "Environmental Platform", "Environmental", "english"),
-            ("Carbon management system", "Environmental Platform", "Environmental", "english"),
-
-            # Automotive
-            ("Plateforme de gestion de flotte", "AutoTech Platform", "Automotive", "french"),
-            ("Système de maintenance véhicules", "AutoTech Platform", "Automotive", "french"),
-            ("Fleet management platform", "AutoTech Platform", "Automotive", "english"),
-            ("Vehicle maintenance system", "AutoTech Platform", "Automotive", "english"),
-
-            # Aerospace
-            ("Système de maintenance aéronautique", "Aerospace System", "Aerospace", "french"),
-            ("Plateforme de gestion vols", "Aerospace System", "Aerospace", "french"),
-            ("Aircraft maintenance system", "Aerospace System", "Aerospace", "english"),
-            ("Flight management platform", "Aerospace System", "Aerospace", "english"),
-
-            # Construction
-            ("Plateforme de gestion chantier", "Construction Platform", "Construction", "french"),
-            ("Système BIM de construction", "Construction Platform", "Construction", "french"),
-            ("Construction site management platform", "Construction Platform", "Construction", "english"),
-            ("BIM construction system", "Construction Platform", "Construction", "english"),
-
-            # Food & Beverage
-            ("Plateforme de livraison alimentaire", "Food Tech Platform", "Food & Beverage", "french"),
-            ("Système de gestion restaurant", "Food Tech Platform", "Food & Beverage", "french"),
-            ("Food delivery platform", "Food Tech Platform", "Food & Beverage", "english"),
-            ("Restaurant management system", "Food Tech Platform", "Food & Beverage", "english"),
-
-            # Textile & Fashion
-            ("Plateforme de mode en ligne", "Fashion Platform", "Textile & Fashion", "french"),
-            ("Système de gestion collection", "Fashion Platform", "Textile & Fashion", "french"),
-            ("Online fashion platform", "Fashion Platform", "Textile & Fashion", "english"),
-            ("Collection management system", "Fashion Platform", "Textile & Fashion", "english"),
-
-            # Chemical
-            ("Système de gestion laboratoire chimique", "Chemical System", "Chemical", "french"),
-            ("Plateforme de contrôle qualité", "Chemical System", "Chemical", "french"),
-            ("Chemical laboratory management system", "Chemical System", "Chemical", "english"),
-            ("Quality control platform", "Chemical System", "Chemical", "english"),
-
-            # Biotechnology
-            ("Système de recherche biotechnologique", "BioTech System", "Biotechnology", "french"),
-            ("Plateforme d'analyse génétique", "BioTech System", "Biotechnology", "french"),
-            ("Biotechnology research system", "BioTech System", "Biotechnology", "english"),
-            ("Genetic analysis platform", "BioTech System", "Biotechnology", "english"),
-
-            # Research & Development
-            ("Plateforme de recherche collaborative", "Research Platform", "Research & Development", "french"),
-            ("Système de gestion projets R&D", "Research Platform", "Research & Development", "french"),
-            ("Collaborative research platform", "Research Platform", "Research & Development", "english"),
-            ("R&D project management system", "Research Platform", "Research & Development", "english"),
-
-            # Pharmaceutical
-            ("Système de développement médicaments", "Pharmaceutical System", "Pharmaceutical", "french"),
-            ("Plateforme d'essais cliniques", "Pharmaceutical System", "Pharmaceutical", "french"),
-            ("Drug development system", "Pharmaceutical System", "Pharmaceutical", "english"),
-            ("Clinical trials platform", "Pharmaceutical System", "Pharmaceutical", "english"),
-
-            # Insurance
-            ("Plateforme d'assurance digitale", "Insurance Platform", "Insurance", "french"),
-            ("Système de gestion sinistres", "Insurance Platform", "Insurance", "french"),
-            ("Digital insurance platform", "Insurance Platform", "Insurance", "english"),
-            ("Claims management system", "Insurance Platform", "Insurance", "english"),
-
-            # Consulting
-            ("Plateforme de conseil en ligne", "Consulting Platform", "Consulting", "french"),
-            ("Système de gestion missions", "Consulting Platform", "Consulting", "french"),
-            ("Online consulting platform", "Consulting Platform", "Consulting", "english"),
-            ("Mission management system", "Consulting Platform", "Consulting", "english"),
-
-            # Human Resources
-            ("Plateforme RH de recrutement", "HR Platform", "Human Resources", "french"),
-            ("Système de gestion talents", "HR Platform", "Human Resources", "french"),
-            ("HR recruitment platform", "HR Platform", "Human Resources", "english"),
-            ("Talent management system", "HR Platform", "Human Resources", "english"),
         ]
         
         df = pd.DataFrame(training_samples, columns=['description', 'project_type', 'industry', 'language'])
