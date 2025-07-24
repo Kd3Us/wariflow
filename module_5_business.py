@@ -39,48 +39,21 @@ except:
 
 
 class BusinessModelAnalyzer:
-    """Analyseur de modèles économiques multilingue"""
+    """Analyseur de modèles économiques multilingue - Version complète 31 industries"""
     
     def __init__(self):
         self.supported_languages = ['french', 'english']
         
-        # Modèles économiques par industrie et langue
+        # Modèles économiques par industrie et langue - VERSION COMPLÈTE
         self.business_models = {
             'french': {
+                # === TECHNOLOGY & DIGITAL ===
                 'Technology': {
                     'SaaS': 'Logiciel en tant que Service avec abonnement mensuel/annuel',
                     'Freemium': 'Version gratuite avec fonctionnalités premium payantes',
                     'Marketplace': 'Commission sur les transactions entre utilisateurs',
                     'API': 'Facturation par appel API ou volume d\'utilisation',
                     'License': 'Licence logicielle avec support et maintenance'
-                },
-                'Healthcare': {
-                    'B2B_SaaS': 'Abonnement professionnel pour établissements de santé',
-                    'Per_Patient': 'Facturation par patient suivi ou traité',
-                    'Consultation': 'Frais par consultation ou téléconsultation',
-                    'Insurance': 'Remboursement par assurances et mutuelles',
-                    'Enterprise': 'Licence enterprise pour hôpitaux et cliniques'
-                },
-                'Finance': {
-                    'Transaction': 'Commission sur chaque transaction financière',
-                    'AUM': 'Frais sur les actifs sous gestion (% du portefeuille)',
-                    'Spread': 'Marge sur les écarts de taux ou prix',
-                    'Premium': 'Abonnement premium pour fonctionnalités avancées',
-                    'Advisory': 'Services de conseil financier personnalisé'
-                },
-                'Education': {
-                    'Course_Fee': 'Frais de cours et certifications',
-                    'Subscription': 'Abonnement mensuel pour accès illimité',
-                    'B2B_License': 'Licence institutionnelle pour écoles/entreprises',
-                    'Marketplace': 'Commission sur ventes de cours par instructeurs',
-                    'Certification': 'Frais de certification et validation'
-                },
-                'Retail': {
-                    'Commission': 'Commission sur chaque vente (marketplace)',
-                    'Subscription': 'Abonnement pour vendeurs premium',
-                    'Advertising': 'Publicité et placement produits payants',
-                    'Fulfillment': 'Frais de logistique et expédition',
-                    'Data': 'Monétisation des données consommateurs'
                 },
                 'Media': {
                     'Subscription': 'Abonnement streaming ou contenu premium',
@@ -89,12 +62,155 @@ class BusinessModelAnalyzer:
                     'Creator_Economy': 'Partage revenus avec créateurs de contenu',
                     'Licensing': 'Licence de contenu à des tiers'
                 },
-                'Logistics': {
-                    'Per_Delivery': 'Frais par livraison ou colis transporté',
-                    'Route_Optimization': 'Abonnement pour optimisation de routes',
-                    'Warehouse': 'Frais de stockage et gestion d\'entrepôt',
-                    'B2B_Contract': 'Contrats enterprise avec volume minimum',
-                    'Dynamic_Pricing': 'Tarification dynamique selon demande'
+                'Gaming': {
+                    'Freemium': 'Jeu gratuit avec achats intégrés et contenu premium',
+                    'Subscription': 'Abonnement pour accès illimité au contenu',
+                    'In_App_Purchase': 'Achats intégrés pour objets et améliorations',
+                    'Ad_Supported': 'Modèle gratuit avec publicités intégrées',
+                    'Battle_Pass': 'Passes saisonniers avec récompenses exclusives'
+                },
+                
+                # === HEALTHCARE & SCIENCES ===
+                'Healthcare': {
+                    'B2B_SaaS': 'Abonnement professionnel pour établissements de santé',
+                    'Per_Patient': 'Facturation par patient suivi ou traité',
+                    'Consultation': 'Frais par consultation ou téléconsultation',
+                    'Insurance': 'Remboursement par assurances et mutuelles',
+                    'Enterprise': 'Licence enterprise pour hôpitaux et cliniques'
+                },
+                'Biotechnology': {
+                    'License': 'Licence de brevets et technologies biotechnologiques',
+                    'Royalty': 'Royalties sur produits développés avec la technologie',
+                    'Research_Partnership': 'Partenariats de recherche avec pharmaceutiques',
+                    'Grant_Based': 'Financement par subventions et fonds de recherche',
+                    'IP_Monetization': 'Monétisation de propriété intellectuelle'
+                },
+                'Pharmaceutical': {
+                    'License': 'Licence de molécules et procédés pharmaceutiques',
+                    'Royalty': 'Royalties sur ventes de médicaments développés',
+                    'Contract_Research': 'Services de recherche contractuelle',
+                    'Manufacturing': 'Production sous contrat pour autres pharmas',
+                    'Specialty_Drugs': 'Médicaments spécialisés à haute valeur'
+                },
+                'Research & Development': {
+                    'Grant_Based': 'Financement par subventions publiques et privées',
+                    'Contract_Research': 'Recherche sous contrat pour entreprises',
+                    'IP_Licensing': 'Licence de propriété intellectuelle développée',
+                    'Consulting': 'Services de conseil en R&D spécialisé',
+                    'Joint_Venture': 'Partenariats de recherche collaborative'
+                },
+                
+                # === FINANCE & BUSINESS ===
+                'Finance': {
+                    'Transaction': 'Commission sur chaque transaction financière',
+                    'AUM': 'Frais sur les actifs sous gestion (% du portefeuille)',
+                    'Spread': 'Marge sur les écarts de taux ou prix',
+                    'Premium': 'Abonnement premium pour fonctionnalités avancées',
+                    'Advisory': 'Services de conseil financier personnalisé'
+                },
+                'Insurance': {
+                    'Subscription': 'Primes d\'assurance mensuelles/annuelles',
+                    'Risk_Based': 'Tarification basée sur l\'évaluation des risques',
+                    'Commission': 'Commissions de courtage et intermédiaires',
+                    'Claims_Management': 'Frais de gestion des sinistres',
+                    'Reinsurance': 'Services de réassurance pour autres assureurs'
+                },
+                'Real Estate': {
+                    'Commission': 'Commission sur transactions immobilières',
+                    'Property_Management': 'Frais de gestion locative mensuelle',
+                    'Subscription': 'Abonnement pour outils professionnels',
+                    'Lead_Generation': 'Génération de prospects pour agents',
+                    'Marketplace': 'Commission sur marketplace immobilier'
+                },
+                'Consulting': {
+                    'Hourly': 'Facturation horaire pour expertise spécialisée',
+                    'Project_Based': 'Tarification forfaitaire par projet',
+                    'Retainer': 'Honoraires de conseil récurrents',
+                    'Performance': 'Rémunération basée sur les résultats',
+                    'Training': 'Formation et développement des compétences'
+                },
+                'Legal Services': {
+                    'Hourly': 'Facturation horaire pour services juridiques',
+                    'Fixed_Fee': 'Honoraires forfaitaires par dossier',
+                    'Contingency': 'Rémunération au succès (% du gain)',
+                    'Retainer': 'Honoraires récurrents pour conseil juridique',
+                    'Document_Automation': 'Automatisation de documents juridiques'
+                },
+                'Marketing & Advertising': {
+                    'Project_Based': 'Tarification par campagne ou projet',
+                    'Performance': 'Rémunération basée sur performance (CPA/CPM)',
+                    'Retainer': 'Honoraires mensuels récurrents',
+                    'Commission': 'Commission sur achats publicitaires',
+                    'SaaS_Tools': 'Outils marketing en abonnement'
+                },
+                'Human Resources': {
+                    'B2B_SaaS': 'Logiciels RH en abonnement pour entreprises',
+                    'Per_Employee': 'Facturation par employé géré',
+                    'Recruitment_Fee': 'Frais de recrutement (% du salaire)',
+                    'Training': 'Formation et développement RH',
+                    'Compliance': 'Services de conformité réglementaire'
+                },
+                
+                # === EDUCATION & TRAINING ===
+                'Education': {
+                    'Course_Fee': 'Frais de cours et certifications',
+                    'Subscription': 'Abonnement mensuel pour accès illimité',
+                    'B2B_License': 'Licence institutionnelle pour écoles/entreprises',
+                    'Marketplace': 'Commission sur ventes de cours par instructeurs',
+                    'Certification': 'Frais de certification et validation'
+                },
+                
+                # === RETAIL & COMMERCE ===
+                'Retail': {
+                    'Commission': 'Commission sur chaque vente (marketplace)',
+                    'Subscription': 'Abonnement pour vendeurs premium',
+                    'Advertising': 'Publicité et placement produits payants',
+                    'Fulfillment': 'Frais de logistique et expédition',
+                    'Data': 'Monétisation des données consommateurs'
+                },
+                'Food & Beverage': {
+                    'Retail_Hybrid': 'Vente directe + marketplace food tech',
+                    'Delivery_Commission': 'Commission sur livraisons de repas',
+                    'Subscription_Box': 'Abonnement pour box alimentaires',
+                    'B2B_Supply': 'Fourniture de restaurants et commerces',
+                    'Franchise': 'Modèle de franchise avec redevances'
+                },
+                'Textile & Fashion': {
+                    'E-commerce': 'Vente en ligne directe consommateur',
+                    'Wholesale': 'Vente en gros aux détaillants',
+                    'Subscription_Box': 'Box mode et accessoires par abonnement',
+                    'Custom_Design': 'Personnalisation et design sur mesure',
+                    'Marketplace': 'Plateforme avec créateurs indépendants'
+                },
+                
+                # === MANUFACTURING & INDUSTRY ===
+                'Automotive': {
+                    'B2B_License': 'Licence de technologies automobiles',
+                    'Manufacturing': 'Production de composants automobiles',
+                    'Leasing': 'Location longue durée de véhicules',
+                    'Maintenance': 'Services de maintenance et réparation',
+                    'Fleet_Management': 'Gestion de flottes d\'entreprise'
+                },
+                'Aerospace': {
+                    'B2B_Contract': 'Contrats gouvernementaux et entreprises',
+                    'Manufacturing': 'Production de composants aéronautiques',
+                    'Maintenance': 'Maintenance d\'aéronefs spécialisée',
+                    'License': 'Licence de technologies aérospatiales',
+                    'Certification': 'Services de certification aéronautique'
+                },
+                'Construction': {
+                    'Project_Based': 'Tarification forfaitaire par projet',
+                    'Time_Materials': 'Facturation temps et matériaux',
+                    'Cost_Plus': 'Coût plus marge sur projets complexes',
+                    'Design_Build': 'Conception-construction intégrée',
+                    'Property_Development': 'Développement immobilier'
+                },
+                'Chemical': {
+                    'B2B_License': 'Licence de procédés chimiques',
+                    'Manufacturing': 'Production chimique sous contrat',
+                    'Specialty_Chemicals': 'Chimie fine et spécialités',
+                    'Waste_Management': 'Gestion et traitement des déchets',
+                    'Consulting': 'Conseil en procédés chimiques'
                 },
                 'Energy': {
                     'Energy_Saved': 'Partage des économies d\'énergie réalisées',
@@ -102,43 +218,76 @@ class BusinessModelAnalyzer:
                     'Maintenance': 'Contrats de maintenance prédictive',
                     'Consulting': 'Services de conseil en efficacité énergétique',
                     'Carbon_Credits': 'Vente de crédits carbone générés'
+                },
+                'Logistics': {
+                    'Per_Delivery': 'Frais par livraison ou colis transporté',
+                    'Route_Optimization': 'Abonnement pour optimisation de routes',
+                    'Warehouse': 'Frais de stockage et gestion d\'entrepôt',
+                    'B2B_Contract': 'Contrats enterprise avec volume minimum',
+                    'Dynamic_Pricing': 'Tarification dynamique selon demande'
+                },
+                
+                # === SERVICES & ENTERTAINMENT ===
+                'Sports & Fitness': {
+                    'Freemium': 'App gratuite avec abonnement premium',
+                    'Subscription': 'Abonnement mensuel pour contenu fitness',
+                    'Per_Session': 'Paiement par séance ou cours',
+                    'Equipment_Sales': 'Vente d\'équipements et accessoires',
+                    'Corporate_Wellness': 'Programmes bien-être en entreprise'
+                },
+                'Travel & Tourism': {
+                    'Commission': 'Commission sur réservations voyages',
+                    'Markup': 'Marge sur packages et services touristiques',
+                    'Subscription': 'Abonnement pour services voyage premium',
+                    'Advertising': 'Publicité pour destinations et hôtels',
+                    'Experience_Marketplace': 'Commission sur expériences locales'
+                },
+                'Events & Hospitality': {
+                    'Event_Based': 'Tarification par événement organisé',
+                    'Commission': 'Commission sur billets et réservations',
+                    'Service_Fee': 'Frais de service pour organisation',
+                    'Venue_Rental': 'Location d\'espaces événementiels',
+                    'Catering': 'Services de restauration événementielle'
+                },
+                
+                # === PUBLIC & NON-PROFIT ===
+                'Government': {
+                    'Service_Public': 'Services publics financés par impôts',
+                    'Contract_Based': 'Contrats publics sur appels d\'offres',
+                    'Fee_For_Service': 'Frais pour services administratifs',
+                    'Licensing': 'Licences et autorisations réglementaires',
+                    'Public_Private': 'Partenariats public-privé'
+                },
+                'Non-profit': {
+                    'Donation_Based': 'Financement par dons et mécénat',
+                    'Grant_Funding': 'Subventions publiques et privées',
+                    'Fundraising': 'Collecte de fonds et événements',
+                    'Membership': 'Cotisations des membres et adhérents',
+                    'Social_Enterprise': 'Activités économiques à impact social'
+                },
+                'Environmental': {
+                    'Grant_Based': 'Financement par subventions environnementales',
+                    'Carbon_Credits': 'Vente de crédits carbone et compensations',
+                    'Consulting': 'Conseil en développement durable',
+                    'Monitoring_Services': 'Services de monitoring environnemental',
+                    'Waste_Management': 'Gestion et valorisation des déchets'
+                },
+                'Agriculture': {
+                    'B2B_License': 'Licence de technologies agricoles',
+                    'Equipment_Sales': 'Vente d\'équipements et matériel agricole',
+                    'Precision_Farming': 'Services d\'agriculture de précision',
+                    'Supply_Chain': 'Services de chaîne d\'approvisionnement',
+                    'Data_Analytics': 'Analytics et insights pour agriculteurs'
                 }
             },
             'english': {
+                # === TECHNOLOGY & DIGITAL ===
                 'Technology': {
                     'SaaS': 'Software as a Service with monthly/annual subscription',
                     'Freemium': 'Free version with paid premium features',
                     'Marketplace': 'Commission on transactions between users',
                     'API': 'Billing per API call or usage volume',
                     'License': 'Software license with support and maintenance'
-                },
-                'Healthcare': {
-                    'B2B_SaaS': 'Professional subscription for healthcare institutions',
-                    'Per_Patient': 'Billing per patient monitored or treated',
-                    'Consultation': 'Fees per consultation or telemedicine session',
-                    'Insurance': 'Reimbursement through insurance providers',
-                    'Enterprise': 'Enterprise license for hospitals and clinics'
-                },
-                'Finance': {
-                    'Transaction': 'Commission on each financial transaction',
-                    'AUM': 'Fees on assets under management (% of portfolio)',
-                    'Spread': 'Margin on rate or price spreads',
-                    'Premium': 'Premium subscription for advanced features',
-                    'Advisory': 'Personalized financial advisory services'
-                },
-                'Education': {
-                    'Course_Fee': 'Course and certification fees',
-                    'Subscription': 'Monthly subscription for unlimited access',
-                    'B2B_License': 'Institutional license for schools/companies',
-                    'Marketplace': 'Commission on course sales by instructors',
-                    'Certification': 'Certification and validation fees'
-                },
-                'Retail': {
-                    'Commission': 'Commission on each sale (marketplace)',
-                    'Subscription': 'Subscription for premium sellers',
-                    'Advertising': 'Paid advertising and product placement',
-                    'Fulfillment': 'Logistics and shipping fees',
-                    'Data': 'Consumer data monetization'
                 },
                 'Media': {
                     'Subscription': 'Streaming or premium content subscription',
@@ -147,12 +296,155 @@ class BusinessModelAnalyzer:
                     'Creator_Economy': 'Revenue sharing with content creators',
                     'Licensing': 'Content licensing to third parties'
                 },
-                'Logistics': {
-                    'Per_Delivery': 'Fees per delivery or package transported',
-                    'Route_Optimization': 'Subscription for route optimization',
-                    'Warehouse': 'Storage and warehouse management fees',
-                    'B2B_Contract': 'Enterprise contracts with minimum volume',
-                    'Dynamic_Pricing': 'Dynamic pricing based on demand'
+                'Gaming': {
+                    'Freemium': 'Free game with in-app purchases and premium content',
+                    'Subscription': 'Subscription for unlimited content access',
+                    'In_App_Purchase': 'In-app purchases for items and upgrades',
+                    'Ad_Supported': 'Free model with integrated advertising',
+                    'Battle_Pass': 'Seasonal passes with exclusive rewards'
+                },
+                
+                # === HEALTHCARE & SCIENCES ===
+                'Healthcare': {
+                    'B2B_SaaS': 'Professional subscription for healthcare institutions',
+                    'Per_Patient': 'Billing per patient monitored or treated',
+                    'Consultation': 'Fees per consultation or telemedicine session',
+                    'Insurance': 'Reimbursement through insurance providers',
+                    'Enterprise': 'Enterprise license for hospitals and clinics'
+                },
+                'Biotechnology': {
+                    'License': 'Licensing of biotechnology patents and technologies',
+                    'Royalty': 'Royalties on products developed with technology',
+                    'Research_Partnership': 'Research partnerships with pharmaceuticals',
+                    'Grant_Based': 'Funding through research grants and funds',
+                    'IP_Monetization': 'Intellectual property monetization'
+                },
+                'Pharmaceutical': {
+                    'License': 'Licensing of pharmaceutical molecules and processes',
+                    'Royalty': 'Royalties on sales of developed medicines',
+                    'Contract_Research': 'Contract research services',
+                    'Manufacturing': 'Contract manufacturing for other pharmas',
+                    'Specialty_Drugs': 'High-value specialized medications'
+                },
+                'Research & Development': {
+                    'Grant_Based': 'Funding through public and private grants',
+                    'Contract_Research': 'Contract research for companies',
+                    'IP_Licensing': 'Licensing of developed intellectual property',
+                    'Consulting': 'Specialized R&D consulting services',
+                    'Joint_Venture': 'Collaborative research partnerships'
+                },
+                
+                # === FINANCE & BUSINESS ===
+                'Finance': {
+                    'Transaction': 'Commission on each financial transaction',
+                    'AUM': 'Fees on assets under management (% of portfolio)',
+                    'Spread': 'Margin on rate or price spreads',
+                    'Premium': 'Premium subscription for advanced features',
+                    'Advisory': 'Personalized financial advisory services'
+                },
+                'Insurance': {
+                    'Subscription': 'Monthly/annual insurance premiums',
+                    'Risk_Based': 'Risk-based pricing and underwriting',
+                    'Commission': 'Brokerage and intermediary commissions',
+                    'Claims_Management': 'Claims management fees',
+                    'Reinsurance': 'Reinsurance services for other insurers'
+                },
+                'Real Estate': {
+                    'Commission': 'Commission on real estate transactions',
+                    'Property_Management': 'Monthly property management fees',
+                    'Subscription': 'Subscription for professional tools',
+                    'Lead_Generation': 'Lead generation for agents',
+                    'Marketplace': 'Real estate marketplace commission'
+                },
+                'Consulting': {
+                    'Hourly': 'Hourly billing for specialized expertise',
+                    'Project_Based': 'Fixed pricing per project',
+                    'Retainer': 'Recurring consulting retainer fees',
+                    'Performance': 'Performance-based compensation',
+                    'Training': 'Training and skill development'
+                },
+                'Legal Services': {
+                    'Hourly': 'Hourly billing for legal services',
+                    'Fixed_Fee': 'Fixed fees per legal matter',
+                    'Contingency': 'Success-based compensation (% of award)',
+                    'Retainer': 'Recurring legal counsel retainer',
+                    'Document_Automation': 'Legal document automation'
+                },
+                'Marketing & Advertising': {
+                    'Project_Based': 'Pricing per campaign or project',
+                    'Performance': 'Performance-based pricing (CPA/CPM)',
+                    'Retainer': 'Monthly recurring retainer fees',
+                    'Commission': 'Commission on advertising spend',
+                    'SaaS_Tools': 'Marketing tools subscription'
+                },
+                'Human Resources': {
+                    'B2B_SaaS': 'HR software subscription for businesses',
+                    'Per_Employee': 'Billing per employee managed',
+                    'Recruitment_Fee': 'Recruitment fees (% of salary)',
+                    'Training': 'HR training and development',
+                    'Compliance': 'Regulatory compliance services'
+                },
+                
+                # === EDUCATION & TRAINING ===
+                'Education': {
+                    'Course_Fee': 'Course and certification fees',
+                    'Subscription': 'Monthly subscription for unlimited access',
+                    'B2B_License': 'Institutional license for schools/companies',
+                    'Marketplace': 'Commission on course sales by instructors',
+                    'Certification': 'Certification and validation fees'
+                },
+                
+                # === RETAIL & COMMERCE ===
+                'Retail': {
+                    'Commission': 'Commission on each sale (marketplace)',
+                    'Subscription': 'Subscription for premium sellers',
+                    'Advertising': 'Paid advertising and product placement',
+                    'Fulfillment': 'Logistics and shipping fees',
+                    'Data': 'Consumer data monetization'
+                },
+                'Food & Beverage': {
+                    'Retail_Hybrid': 'Direct sales + food tech marketplace',
+                    'Delivery_Commission': 'Commission on meal deliveries',
+                    'Subscription_Box': 'Subscription for food boxes',
+                    'B2B_Supply': 'Supply to restaurants and retailers',
+                    'Franchise': 'Franchise model with royalties'
+                },
+                'Textile & Fashion': {
+                    'E-commerce': 'Direct-to-consumer online sales',
+                    'Wholesale': 'Wholesale to retailers',
+                    'Subscription_Box': 'Fashion and accessory subscription boxes',
+                    'Custom_Design': 'Customization and bespoke design',
+                    'Marketplace': 'Platform with independent creators'
+                },
+                
+                # === MANUFACTURING & INDUSTRY ===
+                'Automotive': {
+                    'B2B_License': 'Automotive technology licensing',
+                    'Manufacturing': 'Automotive component manufacturing',
+                    'Leasing': 'Vehicle leasing services',
+                    'Maintenance': 'Maintenance and repair services',
+                    'Fleet_Management': 'Enterprise fleet management'
+                },
+                'Aerospace': {
+                    'B2B_Contract': 'Government and enterprise contracts',
+                    'Manufacturing': 'Aerospace component manufacturing',
+                    'Maintenance': 'Specialized aircraft maintenance',
+                    'License': 'Aerospace technology licensing',
+                    'Certification': 'Aerospace certification services'
+                },
+                'Construction': {
+                    'Project_Based': 'Fixed pricing per project',
+                    'Time_Materials': 'Time and materials billing',
+                    'Cost_Plus': 'Cost plus margin for complex projects',
+                    'Design_Build': 'Integrated design-build',
+                    'Property_Development': 'Real estate development'
+                },
+                'Chemical': {
+                    'B2B_License': 'Chemical process licensing',
+                    'Manufacturing': 'Contract chemical manufacturing',
+                    'Specialty_Chemicals': 'Fine and specialty chemicals',
+                    'Waste_Management': 'Waste management and treatment',
+                    'Consulting': 'Chemical process consulting'
                 },
                 'Energy': {
                     'Energy_Saved': 'Sharing of energy savings achieved',
@@ -160,46 +452,79 @@ class BusinessModelAnalyzer:
                     'Maintenance': 'Predictive maintenance contracts',
                     'Consulting': 'Energy efficiency consulting services',
                     'Carbon_Credits': 'Sale of generated carbon credits'
+                },
+                'Logistics': {
+                    'Per_Delivery': 'Fees per delivery or package transported',
+                    'Route_Optimization': 'Subscription for route optimization',
+                    'Warehouse': 'Storage and warehouse management fees',
+                    'B2B_Contract': 'Enterprise contracts with minimum volume',
+                    'Dynamic_Pricing': 'Dynamic pricing based on demand'
+                },
+                
+                # === SERVICES & ENTERTAINMENT ===
+                'Sports & Fitness': {
+                    'Freemium': 'Free app with premium subscription',
+                    'Subscription': 'Monthly subscription for fitness content',
+                    'Per_Session': 'Payment per session or class',
+                    'Equipment_Sales': 'Sales of equipment and accessories',
+                    'Corporate_Wellness': 'Corporate wellness programs'
+                },
+                'Travel & Tourism': {
+                    'Commission': 'Commission on travel bookings',
+                    'Markup': 'Markup on travel packages and services',
+                    'Subscription': 'Subscription for premium travel services',
+                    'Advertising': 'Advertising for destinations and hotels',
+                    'Experience_Marketplace': 'Commission on local experiences'
+                },
+                'Events & Hospitality': {
+                    'Event_Based': 'Pricing per organized event',
+                    'Commission': 'Commission on tickets and bookings',
+                    'Service_Fee': 'Service fees for organization',
+                    'Venue_Rental': 'Event venue rental',
+                    'Catering': 'Event catering services'
+                },
+                
+                # === PUBLIC & NON-PROFIT ===
+                'Government': {
+                    'Service_Public': 'Public services funded by taxes',
+                    'Contract_Based': 'Public contracts through tenders',
+                    'Fee_For_Service': 'Fees for administrative services',
+                    'Licensing': 'Regulatory licenses and permits',
+                    'Public_Private': 'Public-private partnerships'
+                },
+                'Non-profit': {
+                    'Donation_Based': 'Funding through donations and philanthropy',
+                    'Grant_Funding': 'Public and private grants',
+                    'Fundraising': 'Fundraising and events',
+                    'Membership': 'Member dues and subscriptions',
+                    'Social_Enterprise': 'Economic activities with social impact'
+                },
+                'Environmental': {
+                    'Grant_Based': 'Environmental grant funding',
+                    'Carbon_Credits': 'Carbon credits and offset sales',
+                    'Consulting': 'Sustainability consulting',
+                    'Monitoring_Services': 'Environmental monitoring services',
+                    'Waste_Management': 'Waste management and valorization'
+                },
+                'Agriculture': {
+                    'B2B_License': 'Agricultural technology licensing',
+                    'Equipment_Sales': 'Agricultural equipment and machinery sales',
+                    'Precision_Farming': 'Precision farming services',
+                    'Supply_Chain': 'Agricultural supply chain services',
+                    'Data_Analytics': 'Analytics and insights for farmers'
                 }
             }
         }
         
-        # Indicateurs de marché par industrie
+        # Indicateurs de marché par industrie - VERSION ÉTENDUE
         self.market_indicators = {
+            # === TECHNOLOGY & DIGITAL ===
             'Technology': {
                 'size': 'Large',
                 'growth': 'High',
                 'competition': 'Very High',
                 'barriers': 'Medium',
                 'scalability': 'Very High'
-            },
-            'Healthcare': {
-                'size': 'Very Large',
-                'growth': 'High',
-                'competition': 'Medium',
-                'barriers': 'Very High',
-                'scalability': 'High'
-            },
-            'Finance': {
-                'size': 'Very Large',
-                'growth': 'Medium',
-                'competition': 'Very High',
-                'barriers': 'Very High',
-                'scalability': 'High'
-            },
-            'Education': {
-                'size': 'Large',
-                'growth': 'High',
-                'competition': 'High',
-                'barriers': 'Medium',
-                'scalability': 'Very High'
-            },
-            'Retail': {
-                'size': 'Very Large',
-                'growth': 'Medium',
-                'competition': 'Very High',
-                'barriers': 'Low',
-                'scalability': 'High'
             },
             'Media': {
                 'size': 'Large',
@@ -208,12 +533,155 @@ class BusinessModelAnalyzer:
                 'barriers': 'Medium',
                 'scalability': 'High'
             },
-            'Logistics': {
+            'Gaming': {
+                'size': 'Large',
+                'growth': 'Very High',
+                'competition': 'High',
+                'barriers': 'Medium',
+                'scalability': 'Very High'
+            },
+            
+            # === HEALTHCARE & SCIENCES ===
+            'Healthcare': {
+                'size': 'Very Large',
+                'growth': 'High',
+                'competition': 'Medium',
+                'barriers': 'Very High',
+                'scalability': 'High'
+            },
+            'Biotechnology': {
+                'size': 'Medium',
+                'growth': 'Very High',
+                'competition': 'High',
+                'barriers': 'Very High',
+                'scalability': 'Medium'
+            },
+            'Pharmaceutical': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Very High',
+                'scalability': 'Low'
+            },
+            'Research & Development': {
+                'size': 'Medium',
+                'growth': 'High',
+                'competition': 'Medium',
+                'barriers': 'High',
+                'scalability': 'Medium'
+            },
+            
+            # === FINANCE & BUSINESS ===
+            'Finance': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'Very High',
+                'barriers': 'Very High',
+                'scalability': 'High'
+            },
+            'Insurance': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Very High',
+                'scalability': 'Medium'
+            },
+            'Real Estate': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Medium',
+                'scalability': 'Medium'
+            },
+            'Consulting': {
+                'size': 'Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Low',
+                'scalability': 'Medium'
+            },
+            'Legal Services': {
+                'size': 'Large',
+                'growth': 'Low',
+                'competition': 'High',
+                'barriers': 'Very High',
+                'scalability': 'Low'
+            },
+            'Marketing & Advertising': {
+                'size': 'Large',
+                'growth': 'High',
+                'competition': 'Very High',
+                'barriers': 'Low',
+                'scalability': 'High'
+            },
+            'Human Resources': {
+                'size': 'Medium',
+                'growth': 'High',
+                'competition': 'Medium',
+                'barriers': 'Medium',
+                'scalability': 'High'
+            },
+            
+            # === EDUCATION & TRAINING ===
+            'Education': {
                 'size': 'Large',
                 'growth': 'High',
                 'competition': 'High',
-                'barriers': 'High',
+                'barriers': 'Medium',
+                'scalability': 'Very High'
+            },
+            
+            # === RETAIL & COMMERCE ===
+            'Retail': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'Very High',
+                'barriers': 'Low',
+                'scalability': 'High'
+            },
+            'Food & Beverage': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Medium',
                 'scalability': 'Medium'
+            },
+            'Textile & Fashion': {
+                'size': 'Large',
+                'growth': 'Medium',
+                'competition': 'Very High',
+                'barriers': 'Low',
+                'scalability': 'High'
+            },
+            
+            # === MANUFACTURING & INDUSTRY ===
+            'Automotive': {
+                'size': 'Very Large',
+                'growth': 'Low',
+                'competition': 'High',
+                'barriers': 'Very High',
+                'scalability': 'Low'
+            },
+            'Aerospace': {
+                'size': 'Large',
+                'growth': 'Medium',
+                'competition': 'Medium',
+                'barriers': 'Very High',
+                'scalability': 'Low'
+            },
+            'Construction': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Medium',
+                'scalability': 'Low'
+            },
+            'Chemical': {
+                'size': 'Large',
+                'growth': 'Low',
+                'competition': 'Medium',
+                'barriers': 'Very High',
+                'scalability': 'Low'
             },
             'Energy': {
                 'size': 'Very Large',
@@ -221,6 +689,66 @@ class BusinessModelAnalyzer:
                 'competition': 'Medium',
                 'barriers': 'Very High',
                 'scalability': 'Medium'
+            },
+            'Logistics': {
+                'size': 'Large',
+                'growth': 'High',
+                'competition': 'High',
+                'barriers': 'High',
+                'scalability': 'Medium'
+            },
+            
+            # === SERVICES & ENTERTAINMENT ===
+            'Sports & Fitness': {
+                'size': 'Medium',
+                'growth': 'High',
+                'competition': 'High',
+                'barriers': 'Low',
+                'scalability': 'High'
+            },
+            'Travel & Tourism': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'Very High',
+                'barriers': 'Low',
+                'scalability': 'High'
+            },
+            'Events & Hospitality': {
+                'size': 'Large',
+                'growth': 'Medium',
+                'competition': 'High',
+                'barriers': 'Medium',
+                'scalability': 'Medium'
+            },
+            
+            # === PUBLIC & NON-PROFIT ===
+            'Government': {
+                'size': 'Very Large',
+                'growth': 'Low',
+                'competition': 'Low',
+                'barriers': 'Very High',
+                'scalability': 'Very Low'
+            },
+            'Non-profit': {
+                'size': 'Medium',
+                'growth': 'Medium',
+                'competition': 'Medium',
+                'barriers': 'Low',
+                'scalability': 'Low'
+            },
+            'Environmental': {
+                'size': 'Medium',
+                'growth': 'Very High',
+                'competition': 'Medium',
+                'barriers': 'High',
+                'scalability': 'Medium'
+            },
+            'Agriculture': {
+                'size': 'Very Large',
+                'growth': 'Medium',
+                'competition': 'Medium',
+                'barriers': 'High',
+                'scalability': 'Low'
             }
         }
 
