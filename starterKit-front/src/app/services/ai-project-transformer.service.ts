@@ -25,13 +25,15 @@ export interface AITask {
 })
 export class AIProjectTransformerService {
 
-  transformAIProjectToProjectData(aiProject: AIProject, index: number, originalDescription: string): ProjectCreationData {
+  transformAIProjectToProjectData(aiProject: AIProject, index: number, originalDescription: string, response?: any): ProjectCreationData {
+    const recommendedName = response?.project_name?.recommended_name;
+    
     return {
-      title: aiProject.name || aiProject.title || `Projet IA ${index + 1} - ${originalDescription.substring(0, 30)}`,
+      title: recommendedName || aiProject.name || aiProject.title || `Projet IA ${index + 1} - ${originalDescription.substring(0, 30)}`,
       description: aiProject.description || originalDescription,
       stage: ProjectStage.IDEE,
       progress: 0,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours par défaut
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       teamIds: [],
       priority: 'MEDIUM',
       tags: []

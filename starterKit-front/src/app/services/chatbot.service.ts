@@ -8,7 +8,21 @@ import { ProjectManagementStage } from '../models/project-management.model';
 import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
 import { ProjectCreationService } from './project-creation.service';
-import { AIGenerateRequest, AIAnalysisResponse } from '../models/ai-models';
+
+export interface GenerateProjectRequest {
+  description: string;
+  context?: string;
+  targetAudience?: string;
+  maxTasks?: number;
+}
+
+export interface ChatbotResponse {
+  success: boolean;
+  message: string;
+  projects: any[];
+  analysis: any;
+  suggestions: string[];
+}
 
 @Injectable({
   providedIn: 'root'
@@ -31,7 +45,27 @@ export class ChatbotService {
     };
   }
 
-  generateProject(request: AIGenerateRequest): Observable<AIAnalysisResponse> {
+  private generateProjectTitle(response: any, description: string): string {
+    if (response.analysis?.project_name?.recommended_name) {
+      return response.analysis.project_name.recommended_name;
+    }
+    
+    const projectType = response.analysis?.project_classification?.project_type;
+    const industry = response.analysis?.project_classification?.industry;
+    
+    if (projectType && projectType !== 'Application Web') {
+      return `${projectType}${industry ? ` - ${industry}` : ''}`;
+    }
+    
+    const firstWords = description.split(' ').slice(0, 4).join(' ');
+    if (firstWords.length > 5 && !firstWords.toLowerCase().startsWith('système')) {
+      return `Projet ${firstWords}`;
+    }
+    
+    return `Projet ${industry || 'Innovation'}`;
+  }
+
+  generateProject(request: GenerateProjectRequest): Observable<ChatbotResponse> {
     console.log('Appel du microservice IA:', request);
     
     return this.aiClient.generateProjects({
@@ -53,7 +87,7 @@ export class ChatbotService {
           
           try {
             const projectData = {
-              title: response.analysis.project_classification?.project_type || 'Projet IA',
+              title: this.generateProjectTitle(response, request.description),
               description: request.description,
               stage: ProjectStage.IDEE,
               priority: 'MEDIUM',
@@ -105,7 +139,7 @@ export class ChatbotService {
                 projects: [{ ...savedProject, tasks: savedTasks }],
                 analysis: response.analysis,
                 suggestions: ['Projet et tâches créés avec succès']
-              } as AIAnalysisResponse;
+              };
             }
           } catch (error) {
             console.error('Erreur création projet:', error);
@@ -119,7 +153,7 @@ export class ChatbotService {
           projects: [],
           analysis: response.analysis || {},
           suggestions: ['Aucune tâche générée par le ML']
-        } as AIAnalysisResponse;
+        };
       }),
       catchError(error => {
         console.error('Erreur microservice IA:', error);
@@ -129,7 +163,7 @@ export class ChatbotService {
           projects: [],
           analysis: {},
           suggestions: ['Microservice IA indisponible: ' + (error?.message || 'Erreur inconnue')]
-        } as AIAnalysisResponse);
+        });
       })
     );
   }
@@ -145,7 +179,7 @@ export class ChatbotService {
       maxTasks: request.maxTasks || 5,
       taskGeneration: true
     }).pipe(
-      switchMap(async (response: AIAnalysisResponse) => {
+      switchMap(async (response: any) => {
         console.log('Réponse IA pour tâches:', response);
         console.log('Structure détaillée:', response.analysis?.project_tasks);
         console.log('Tâches ML:', response.analysis?.project_tasks?.ml_generated_tasks);
