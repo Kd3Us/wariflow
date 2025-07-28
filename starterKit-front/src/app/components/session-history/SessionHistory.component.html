@@ -1,0 +1,614 @@
+<div class="max-w-7xl mx-auto p-6">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Historique des Séances</h1>
+    <p class="text-gray-600">Suivez vos séances de coaching et votre progression</p>
+  </div>
+
+  <div class="flex flex-wrap gap-4 mb-6">
+    <button
+      (click)="setViewMode('dashboard')"
+      [class]="'px-4 py-2 rounded-md font-medium transition-colors view-tab ' + 
+               (viewMode === 'dashboard' ? 'bg-blue-600 text-white active' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')"
+    >
+      Tableau de Bord
+    </button>
+    <button
+      (click)="setViewMode('history')"
+      [class]="'px-4 py-2 rounded-md font-medium transition-colors view-tab ' + 
+               (viewMode === 'history' ? 'bg-blue-600 text-white active' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')"
+    >
+      Historique
+    </button>
+    <button
+      (click)="setViewMode('feedback')"
+      [class]="'px-4 py-2 rounded-md font-medium transition-colors view-tab ' + 
+               (viewMode === 'feedback' ? 'bg-blue-600 text-white active' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')"
+    >
+      Feedbacks
+    </button>
+    <button
+      (click)="setViewMode('reports')"
+      [class]="'px-4 py-2 rounded-md font-medium transition-colors view-tab ' + 
+               (viewMode === 'reports' ? 'bg-blue-600 text-white active' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')"
+    >
+      Rapports
+    </button>
+  </div>
+
+  <div [ngSwitch]="viewMode">
+    <!-- Dashboard View -->
+    <div *ngSwitchCase="'dashboard'" class="space-y-6 animate-fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Séances</p>
+              <p class="text-3xl font-bold text-gray-900">{{dashboardStats.totalSessions}}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Séances Terminées</p>
+              <p class="text-3xl font-bold text-green-600">{{dashboardStats.completedSessions}}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Note Moyenne</p>
+              <p class="text-3xl font-bold text-yellow-600">{{dashboardStats.averageRating | number:'1.1-1'}}/5</p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Heures Totales</p>
+              <p class="text-3xl font-bold text-purple-600">{{dashboardStats.totalHours | number:'1.1-1'}}h</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Tendance de Progression</h3>
+          <div class="flex items-center">
+            <div class="flex-1">
+              <div class="flex items-center mb-2">
+                <span class="text-2xl font-bold" 
+                      [class]="dashboardStats.progressTrend >= 0 ? 'text-green-600' : 'text-red-600'">
+                  {{dashboardStats.progressTrend | number:'1.1-1'}}%
+                </span>
+                <svg *ngIf="dashboardStats.progressTrend >= 0" 
+                     class="w-6 h-6 text-green-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                </svg>
+                <svg *ngIf="dashboardStats.progressTrend < 0" 
+                     class="w-6 h-6 text-red-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
+                </svg>
+              </div>
+              <p class="text-sm text-gray-600">
+                {{dashboardStats.progressTrend >= 0 ? 'Amélioration' : 'Diminution'}} par rapport aux premières séances
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Sujets Populaires</h3>
+          <div class="space-y-3">
+            <div *ngFor="let topic of dashboardStats.mostFrequentTopics; let i = index" 
+                 class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-700">{{topic}}</span>
+              <div class="flex items-center">
+                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-blue-600 h-2 rounded-full" 
+                       [style.width.%]="(3-i) * 33"></div>
+                </div>
+                <span class="text-xs text-gray-500">{{(3-i) * 33}}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Séances Récentes</h3>
+        <div class="space-y-4">
+          <div *ngFor="let session of sessions.slice(0, 3)" 
+               class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-900">{{session.topic}}</h4>
+                <p class="text-sm text-gray-600 mt-1">
+                  avec {{session.coachName}} • {{session.date | date:'short':'fr-FR'}}
+                </p>
+                <div class="flex items-center mt-2">
+                  <div class="flex items-center mr-4">
+                    <span *ngFor="let star of renderStars(session.rating || 0); let i = index"
+                          [class]="'text-sm ' + (star ? 'text-yellow-400' : 'text-gray-300')">★</span>
+                  </div>
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [class]="getStatusColor(session.status)">
+                    {{getStatusText(session.status)}}
+                  </span>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-medium text-gray-900">{{session.duration}} min</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{session.progress.goalsAchieved}}/{{session.progress.totalGoals}} objectifs
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History View -->
+    <div *ngSwitchCase="'history'" class="space-y-6 animate-fade-in">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div class="flex-1">
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilters()"
+              placeholder="Rechercher par sujet, coach ou notes..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 search-input"
+            />
+          </div>
+          
+          <div class="flex flex-wrap gap-3">
+            <select
+              [(ngModel)]="filterStatus"
+              (ngModelChange)="applyFilters()"
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="completed">Terminées</option>
+              <option value="cancelled">Annulées</option>
+              <option value="rescheduled">Reportées</option>
+            </select>
+
+            <select
+              [(ngModel)]="filterPeriod"
+              (ngModelChange)="applyFilters()"
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Toutes les périodes</option>
+              <option value="week">Cette semaine</option>
+              <option value="month">Ce mois</option>
+              <option value="quarter">Ce trimestre</option>
+            </select>
+
+            <select
+              [(ngModel)]="sortBy"
+              (ngModelChange)="sortSessions()"
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="date">Trier par date</option>
+              <option value="rating">Trier par note</option>
+              <option value="duration">Trier par durée</option>
+              <option value="coach">Trier par coach</option>
+            </select>
+
+            <button
+              (click)="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'; sortSessions()"
+              class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path *ngIf="sortOrder === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                <path *ngIf="sortOrder === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div *ngFor="let session of filteredSessions" 
+               class="border rounded-lg p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-3">
+                  <h3 class="text-lg font-semibold text-gray-900">{{session.topic}}</h3>
+                  <span class="text-xs px-2 py-1 rounded" 
+                        [class]="getStatusColor(session.status)">
+                    {{getStatusText(session.status)}}
+                  </span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p class="text-sm text-gray-600">
+                      <strong>Coach:</strong> {{session.coachName}}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      <strong>Date:</strong> {{session.date | date:'full':'fr-FR'}}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      <strong>Durée:</strong> {{session.duration}} minutes
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div class="flex items-center mb-2">
+                      <span class="text-sm text-gray-600 mr-2"><strong>Note:</strong></span>
+                      <div class="flex items-center">
+                        <span *ngFor="let star of renderStars(session.rating || 0)"
+                              [class]="'text-sm ' + (star ? 'text-yellow-400' : 'text-gray-300')">★</span>
+                        <span class="ml-2 text-sm text-gray-600">{{session.rating || 0}}/5</span>
+                      </div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      <strong>Progression:</strong> {{session.progress.goalsAchieved}}/{{session.progress.totalGoals}} objectifs
+                      <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div class="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                             [style.width.%]="getProgressPercentage(session)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="session.notes" class="mb-4">
+                  <p class="text-sm text-gray-600"><strong>Notes:</strong></p>
+                  <p class="text-sm text-gray-700 mt-1 bg-gray-50 p-3 rounded-md">{{session.notes}}</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span *ngFor="let tag of session.tags" 
+                        class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    {{tag}}
+                  </span>
+                </div>
+
+                <div *ngIf="session.documents && session.documents.length > 0" class="mb-4">
+                  <p class="text-sm text-gray-600 mb-2"><strong>Documents:</strong></p>
+                  <div class="flex flex-wrap gap-2">
+                    <a *ngFor="let doc of session.documents" 
+                       [href]="doc.url" 
+                       target="_blank"
+                       class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors flex items-center">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      {{doc.name}}
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex flex-col gap-2 ml-4">
+                <button
+                  (click)="openFeedbackModal(session)"
+                  class="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Modifier Feedback
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="filteredSessions.length === 0" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune séance trouvée</h3>
+            <p class="mt-1 text-sm text-gray-500">Essayez de modifier vos filtres de recherche.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback View -->
+    <div *ngSwitchCase="'feedback'" class="space-y-6 animate-fade-in">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Gérer les Feedbacks</h3>
+        
+        <div class="space-y-6">
+          <div *ngFor="let session of sessions.filter(s => s.status === 'completed')" 
+               class="border rounded-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="font-medium text-gray-900">{{session.topic}}</h4>
+                <p class="text-sm text-gray-600">{{session.date | date:'short':'fr-FR'}} • {{session.coachName}}</p>
+              </div>
+              <button
+                (click)="openFeedbackModal(session)"
+                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {{session.feedback ? 'Modifier' : 'Ajouter'}} Feedback
+              </button>
+            </div>
+            
+            <div *ngIf="session.feedback" class="bg-gray-50 p-4 rounded-md">
+              <div class="flex items-center mb-2">
+                <span class="text-sm font-medium text-gray-700 mr-2">Note:</span>
+                <div class="flex items-center">
+                  <span *ngFor="let star of renderStars(session.rating || 0)"
+                        [class]="'text-sm ' + (star ? 'text-yellow-400' : 'text-gray-300')">★</span>
+                  <span class="ml-2 text-sm text-gray-600">{{session.rating}}/5</span>
+                </div>
+              </div>
+              <p class="text-sm text-gray-700">{{session.feedback}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports View -->
+    <div *ngSwitchCase="'reports'" class="space-y-6 animate-fade-in">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Rapports et Exports</h3>
+          <div class="flex gap-3">
+            <button
+              (click)="exportHistory('csv')"
+              class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </button>
+            <button
+              (click)="exportHistory('pdf')"
+              class="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors flex items-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="space-y-6">
+            <div class="border rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-3">Résumé Général</h4>
+              <dl class="space-y-2">
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Nombre total de séances</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{dashboardStats.totalSessions}}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Séances terminées</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{dashboardStats.completedSessions}}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Taux de completion</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{(dashboardStats.completedSessions / dashboardStats.totalSessions * 100) | number:'1.0-0'}}%
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Temps total investi</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{dashboardStats.totalHours | number:'1.1-1'}} heures</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Note moyenne</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{dashboardStats.averageRating | number:'1.1-1'}}/5</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="border rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-3">Analyse par Coach</h4>
+              <div class="space-y-3">
+                <div *ngFor="let session of sessions; trackBy: trackByCoach" class="flex justify-between items-center">
+                  <span class="text-sm text-gray-700">{{session.coachName}}</span>
+                  <div class="flex items-center">
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
+                      {{getSessionCountByCoach(session.coachName)}} séances
+                    </span>
+                    <div class="flex items-center">
+                      <span *ngFor="let star of renderStars(getAverageRatingByCoach(session.coachName))"
+                            [class]="'text-xs ' + (star ? 'text-yellow-400' : 'text-gray-300')">★</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="border rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-3">Évolution des Compétences</h4>
+              <div class="space-y-3">
+                <div *ngFor="let skill of getAllSkillsImproved()">
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm text-gray-700">{{skill.name}}</span>
+                    <span class="text-xs text-gray-500">{{skill.count}} mentions</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full" 
+                         [style.width.%]="skill.percentage"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-3">Objectifs et Résultats</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Objectifs totaux définis</span>
+                  <span class="text-sm font-medium">{{getTotalObjectives()}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Objectifs atteints</span>
+                  <span class="text-sm font-medium text-green-600">{{getTotalAchievedObjectives()}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Taux de réussite</span>
+                  <span class="text-sm font-medium">
+                    {{(getTotalAchievedObjectives() / getTotalObjectives() * 100) | number:'1.0-0'}}%
+                  </span>
+                </div>
+              </div>
+              <div class="mt-3 w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-green-500 h-3 rounded-full" 
+                     [style.width.%]="(getTotalAchievedObjectives() / getTotalObjectives() * 100)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div *ngIf="showFeedbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">
+            Feedback - {{selectedSession?.topic}}
+          </h3>
+          <button
+            (click)="closeFeedbackModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form [formGroup]="feedbackForm" (ngSubmit)="submitFeedback()">
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Note de la séance <span class="text-red-500">*</span>
+              </label>
+              <div class="flex items-center space-x-2">
+                <button
+                  *ngFor="let star of [1,2,3,4,5]; let i = index"
+                  type="button"
+                  (click)="feedbackForm.get('rating')?.setValue(star)"
+                  [class]="'text-2xl transition-colors ' + 
+                           (feedbackForm.get('rating')?.value >= star ? 'text-yellow-400' : 'text-gray-300')"
+                >
+                  ★
+                </button>
+                <span class="ml-2 text-sm text-gray-600">
+                  {{feedbackForm.get('rating')?.value}}/5
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Commentaire général <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                formControlName="feedback"
+                rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Partagez votre expérience de cette séance..."
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Objectifs de la séance
+                </label>
+                <textarea
+                  formControlName="objectives"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Quels étaient les objectifs ?"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Résultats obtenus
+                </label>
+                <textarea
+                  formControlName="outcomes"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Qu'avez-vous accompli ?"
+                ></textarea>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Prochaines étapes
+              </label>
+              <textarea
+                formControlName="nextSteps"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Quelles sont les actions à entreprendre ?"
+              ></textarea>
+            </div>
+
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="wouldRecommend"
+                id="recommend"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label for="recommend" class="ml-2 text-sm text-gray-700">
+                Je recommanderais ce coach à d'autres
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-8">
+            <button
+              type="button"
+              (click)="closeFeedbackModal()"
+              class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              [disabled]="feedbackForm.invalid"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
