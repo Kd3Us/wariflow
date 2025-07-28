@@ -44,14 +44,14 @@ import { ChatbotResponse } from '../../services/chatbot.service';
             <span class="material-icons text-lg">help</span>
             Guide
           </button>
-          <button
+          <!--<button
             (click)="openAIProjectForm()"
             [disabled]="!selectedProjectId"
             class="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-purple-700"
           >
             <span class="material-icons text-lg">auto_awesome</span>
             Générer avec IA
-          </button>
+          </button>-->
           <button
             (click)="openTaskForm()"
             class="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors hover:bg-primary-light"
@@ -243,12 +243,10 @@ import { ChatbotResponse } from '../../services/chatbot.service';
     <!-- AI Project Modal -->
     <app-ai-project-modal
       *ngIf="showAiProjectModal"
-      [projects]="projects"
-      [selectedProjectId]="selectedProjectId"
-      [mode]="'task-creation'"
       (close)="closeAIProjectModal()"
-      (projectsGenerated)="onProjectsGenerated($event)"
       (tasksGenerated)="onTasksGenerated($event)"
+      [generationType]="'add-tasks'"
+      [selectedProject]="selectedProject"
     ></app-ai-project-modal>
 
     <!-- Project Management Onboarding -->
@@ -399,12 +397,7 @@ export class ProjectManagementBoardComponent implements OnInit {
   onProjectsGenerated(result: ChatbotResponse): void {
     console.log('Projets générés par IA - Rechargement des projets');
     this.closeAIProjectModal();
-    
-    if (result && result.projects && result.projects.length > 0) {
-      this.projectService.refreshProjects();
-      
-      this.loadProjects();
-    }
+    this.loadProjects();
   }
 
   onTasksGenerated(tasks: any[]): void {

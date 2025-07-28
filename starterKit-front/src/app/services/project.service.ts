@@ -211,7 +211,8 @@ export class ProjectService {
     );
   }
 
-  
+  // Ajouter ces méthodes à la fin de ton ProjectService
+
   addUsersToProject(projectId: string, userIds: string[]): Observable<Project> {
     this.loaderService.startLoading();
     return this.http.post<Project>(`${this.apiUrl}/${projectId}/users`, { userIds }, { headers: this.getAuthHeaders() })
@@ -256,26 +257,5 @@ export class ProjectService {
         }),
         finalize(() => this.loaderService.stopLoading())
       );
-  }
-
-  refreshProjects(): void {
-    this.loaderService.startLoading();
-    console.log('Force refresh des projets...');
-    
-    this.http.get<any[]>(`${this.apiUrl}/my-organisation`, { headers: this.getAuthHeaders() })
-      .pipe(
-        map(projects => projects.map(project => ({
-          ...project,
-          deadline: project.deadline ? new Date(project.deadline) : undefined,
-          reminderDate: project.reminderDate ? new Date(project.reminderDate) : undefined,
-          createdAt: new Date(project.createdAt),
-          updatedAt: new Date(project.updatedAt)
-        }))),
-        finalize(() => this.loaderService.stopLoading())
-      )
-      .subscribe(projects => {
-        console.log('Projets rechargés:', projects.length);
-        this.projectsSubject.next(projects);
-      });
   }
 }

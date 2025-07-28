@@ -7,6 +7,5 @@ export const environment = {
     externaleAuthUrl: "https://startupkit.speedpresta.com/",
     revokeTokenUrl: "https://d331iii8637gut.cloudfront.net/auth/logout",
     verifyTokenUrl: "https://13.38.152.128:3009/auth/login",
-    jwtSecret: "votre_secret_jwt",
-    aiApiUrl: 'https://your-production-ai-api.com'
+    jwtSecret: "votre_secret_jwt"
 };

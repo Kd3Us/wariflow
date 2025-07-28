@@ -14,38 +14,6 @@
 
     <form (ngSubmit)="onSubmit()" #form="ngForm">
       <div class="space-y-6">
-        <!-- Affichage du projet sélectionné si mode task-creation -->
-        <div *ngIf="mode === 'task-creation' && selectedProjectId">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Projet sélectionné
-          </label>
-          <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <div class="flex items-center">
-              <span class="material-icons text-blue-600 mr-2">folder</span>
-              <span class="text-blue-800 font-medium">
-                {{ getSelectedProjectName() }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sélection de projet si mode project-creation et type add-tasks -->
-        <div *ngIf="mode === 'project-creation' && generationType === 'add-tasks'">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Sélectionner le projet
-          </label>
-          <select 
-            [(ngModel)]="selectedProjectId"
-            name="selectedProjectId"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Choisir un projet...</option>
-            <option *ngFor="let project of projects" [value]="project.id">
-              {{ project.title }}
-            </option>
-          </select>
-        </div>
-
         <div>
           <label *ngIf="generationType === 'new-project'" class="block text-sm font-medium text-gray-700 mb-2">
             Description du projet <span class="text-red-500">*</span>
@@ -92,36 +60,6 @@
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Nombre de tâches à générer
-          </label>
-          <div class="flex items-center space-x-4">
-            <input
-              type="range"
-              [(ngModel)]="maxTasks"
-              (ngModelChange)="onMaxTasksChange()"
-              name="maxTasks"
-              min="3"
-              max="15"
-              step="1"
-              class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div class="flex items-center space-x-2">
-              <input
-                type="number"
-                [(ngModel)]="maxTasks"
-                (ngModelChange)="onMaxTasksChange()"
-                name="maxTasksInput"
-                min="3"
-                max="15"
-                class="w-16 border border-gray-300 rounded-md px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-600">tâches</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="flex justify-end space-x-3 mt-8">
@@ -134,11 +72,11 @@
         </button>
         <button
           type="submit"
-          [disabled]="!form.valid || isLoading || (generationType === 'add-tasks' && !selectedProjectId)"
+          [disabled]="!form.valid || isLoading"
           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
         >
           <span *ngIf="isLoading" class="material-icons animate-spin mr-2 text-sm">hourglass_empty</span>
-          {{ isLoading ? 'Génération...' : (generationType === 'add-tasks' ? 'Générer les tâches' : 'Générer le projet') }}
+          {{ isLoading ? 'Génération...' : 'Générer les projets' }}
         </button>
       </div>
     </form>
