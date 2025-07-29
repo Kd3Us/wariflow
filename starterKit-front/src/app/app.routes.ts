@@ -24,6 +24,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'coaching',
+    loadComponent: () => import('./components/coaching/coach-manager.component').then(m => m.CoachManagerComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: 'kanban'
   }

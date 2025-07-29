@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CoachingService } from '../../services/coaching.service';
 
 export interface Coach {
   id: string;
@@ -21,6 +22,7 @@ export interface Coach {
   nextAvailableSlot?: Date;
   totalSessions: number;
   successRate: number;
+  matchScore?: number;
 }
 
 export interface Availability {
@@ -105,6 +107,8 @@ export class CoachManagerComponent implements OnInit {
     'Business Development', 'Digital Marketing', 'E-commerce'
   ];
 
+  constructor(private coachingService: CoachingService) {}
+
   ngOnInit(): void {
     this.loadCoaches();
     this.loadAvailabilities();
@@ -113,6 +117,19 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadCoaches(): void {
+    this.coachingService.getAllCoaches().subscribe({
+      next: (coaches) => {
+        this.coaches = coaches;
+        this.filteredCoaches = coaches;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des coaches:', error);
+        this.loadMockCoaches();
+      }
+    });
+  }
+
+  private loadMockCoaches(): void {
     const mockCoaches: Coach[] = [
       {
         id: '1',
@@ -124,46 +141,6 @@ export class CoachManagerComponent implements OnInit {
         reviewsCount: 127,
         hourlyRate: 150,
         bio: 'Expert en stratégie produit avec 8 ans d\'expérience chez des startups tech.',
-        experience: 8,
-        certifications: ['Certified Product Manager', 'Design Thinking'],
-        languages: ['Français', 'Anglais'],
-        timezone: 'Europe/Paris',
-        isOnline: true,
-        responseTime: '< 2h',
-        nextAvailableSlot: new Date(Date.now() + 86400000),
-        totalSessions: 340,
-        successRate: 94
-      },
-      {
-        id: '2',
-        name: 'Marc Dubois',
-        email: 'marc@example.com',
-        avatar: '/api/placeholder/64/64',
-        specialties: ['Marketing', 'Sales', 'Business Development'],
-        rating: 4.9,
-        reviewsCount: 89,
-        hourlyRate: 120,
-        bio: 'Consultant en marketing digital et growth hacking pour startups.',
-        experience: 6,
-        certifications: ['Google Ads', 'Facebook Blueprint'],
-        languages: ['Français', 'Anglais', 'Espagnol'],
-        timezone: 'Europe/Paris',
-        isOnline: false,
-        responseTime: '< 4h',
-        nextAvailableSlot: new Date(Date.now() + 172800000),
-        totalSessions: 280,
-        successRate: 96
-      },
-      {
-        id: '3',
-        name: 'Julie Rousseau',
-        email: 'julie@example.com',
-        avatar: '/api/placeholder/64/64',
-        specialties: ['UX/UI Design', 'Technology', 'Leadership'],
-        rating: 4.7,
-        reviewsCount: 156,
-        hourlyRate: 180,
-        bio: 'Designer UX senior et tech lead avec une expertise en design systems.',
         experience: 10,
         certifications: ['Google UX Design', 'Scrum Master'],
         languages: ['Français', 'Anglais'],
@@ -172,7 +149,50 @@ export class CoachManagerComponent implements OnInit {
         responseTime: '< 1h',
         nextAvailableSlot: new Date(Date.now() + 43200000),
         totalSessions: 520,
-        successRate: 98
+        successRate: 98,
+        matchScore: 85
+      },
+      {
+        id: '2',
+        name: 'Marc Dubois',
+        email: 'marc@example.com',
+        avatar: '/api/placeholder/64/64',
+        specialties: ['Digital Marketing', 'Sales', 'Business Development'],
+        rating: 4.6,
+        reviewsCount: 89,
+        hourlyRate: 120,
+        bio: 'Spécialiste en marketing digital et développement commercial avec 6 ans d\'expérience.',
+        experience: 6,
+        certifications: ['Google Ads', 'HubSpot Sales'],
+        languages: ['Français', 'Anglais', 'Espagnol'],
+        timezone: 'Europe/Paris',
+        isOnline: false,
+        responseTime: '< 2h',
+        nextAvailableSlot: new Date(Date.now() + 86400000),
+        totalSessions: 320,
+        successRate: 94,
+        matchScore: 72
+      },
+      {
+        id: '3',
+        name: 'Julie Lefèvre',
+        email: 'julie@example.com',
+        avatar: '/api/placeholder/64/64',
+        specialties: ['UX/UI Design', 'Technology', 'Product Strategy'],
+        rating: 4.9,
+        reviewsCount: 156,
+        hourlyRate: 180,
+        bio: 'Designer UX/UI senior avec une expertise en développement produit et innovation.',
+        experience: 12,
+        certifications: ['Adobe Certified Expert', 'Design Thinking'],
+        languages: ['Français', 'Anglais'],
+        timezone: 'Europe/Paris',
+        isOnline: true,
+        responseTime: '< 30min',
+        nextAvailableSlot: new Date(Date.now() + 21600000),
+        totalSessions: 680,
+        successRate: 99,
+        matchScore: 90
       }
     ];
     this.coaches = mockCoaches;
@@ -180,6 +200,22 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadAvailabilities(): void {
+    if (this.selectedCoach) {
+      this.coachingService.getCoachAvailability(this.selectedCoach.id).subscribe({
+        next: (availabilities) => {
+          this.availabilities = availabilities;
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des disponibilités:', error);
+          this.loadMockAvailabilities();
+        }
+      });
+    } else {
+      this.loadMockAvailabilities();
+    }
+  }
+
+  private loadMockAvailabilities(): void {
     const mockAvailabilities: Availability[] = [
       {
         coachId: '1',
@@ -205,6 +241,18 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadSessions(): void {
+    this.coachingService.getUserSessions().subscribe({
+      next: (sessions) => {
+        this.sessions = sessions;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des sessions:', error);
+        this.loadMockSessions();
+      }
+    });
+  }
+
+  private loadMockSessions(): void {
     const mockSessions: Session[] = [
       {
         id: '1',
@@ -232,6 +280,22 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadReviews(): void {
+    if (this.selectedCoach) {
+      this.coachingService.getCoachReviews(this.selectedCoach.id).subscribe({
+        next: (reviews) => {
+          this.reviews = reviews;
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des avis:', error);
+          this.loadMockReviews();
+        }
+      });
+    } else {
+      this.loadMockReviews();
+    }
+  }
+
+  private loadMockReviews(): void {
     const mockReviews: Review[] = [
       {
         id: '1',
@@ -261,88 +325,180 @@ export class CoachManagerComponent implements OnInit {
         rating: 4,
         comment: 'Julie a révolutionné notre interface utilisateur. Approche très méthodique.',
         date: new Date(Date.now() - 259200000),
-        sessionTopic: 'UX Design'
+        sessionTopic: 'Design UX'
       }
     ];
     this.reviews = mockReviews;
   }
 
+  // MÉTHODES MANQUANTES AJOUTÉES
+
   onSearchChange(): void {
-    this.filterAndSearchCoaches();
+    this.searchCoaches();
   }
 
   onSpecialtyFilterChange(): void {
-    this.filterAndSearchCoaches();
-  }
-
-  filterAndSearchCoaches(): void {
-    let filtered = this.coaches;
-
-    if (this.searchTerm) {
-      filtered = filtered.filter(coach =>
-        coach.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        coach.specialties.some(specialty => 
-          specialty.toLowerCase().includes(this.searchTerm.toLowerCase())
-        ) ||
-        coach.bio.toLowerCase().includes(this.searchTerm.toLowerCase())
-      );
-    }
-
-    if (this.filterSpecialty) {
-      filtered = filtered.filter(coach =>
-        coach.specialties.includes(this.filterSpecialty)
-      );
-    }
-
-    this.filteredCoaches = filtered;
-  }
-
-  calculateMatchingScore(coach: Coach, criteria: MatchingCriteria): number {
-    let score = 0;
-    
-    const specialtyMatch = criteria.specialties.length === 0 ? 1 : 
-      criteria.specialties.filter(s => coach.specialties.includes(s)).length / criteria.specialties.length;
-    score += specialtyMatch * 30;
-
-    const experienceMatch = coach.experience >= criteria.experience ? 1 : coach.experience / criteria.experience;
-    score += experienceMatch * 20;
-
-    const priceMatch = coach.hourlyRate <= criteria.maxHourlyRate ? 1 : criteria.maxHourlyRate / coach.hourlyRate;
-    score += priceMatch * 20;
-
-    const languageMatch = criteria.languages.length === 0 ? 1 :
-      criteria.languages.filter(l => coach.languages.includes(l)).length / criteria.languages.length;
-    score += languageMatch * 15;
-
-    const ratingBonus = (coach.rating / 5) * 10;
-    score += ratingBonus;
-
-    const availabilityBonus = coach.isOnline ? 5 : 0;
-    score += availabilityBonus;
-
-    return Math.min(100, score);
-  }
-
-  getMatchedCoaches(): Array<Coach & { matchScore: number }> {
-    return this.coaches
-      .map(coach => ({
-        ...coach,
-        matchScore: this.calculateMatchingScore(coach, this.matchingCriteria)
-      }))
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 5);
-  }
-
-  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history'): void {
-    this.viewMode = mode;
+    this.filterBySpecialty();
   }
 
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
 
+  getCoachFromSession(session: Session): Coach | undefined {
+    return this.coaches.find(coach => coach.id === session.coachId);
+  }
+
+  getCoachReviews(coachId: string): Review[] {
+    return this.reviews.filter(review => review.coachId === coachId);
+  }
+
+  goToCalendar(): void {
+    this.viewMode = 'calendar';
+  }
+
+  bookSession(topic: string): void {
+    if (!this.selectedCoach || !this.selectedTimeSlot || !topic.trim()) {
+      alert('Veuillez remplir tous les champs requis');
+      return;
+    }
+
+    const sessionData = {
+      coachId: this.selectedCoach.id,
+      date: this.selectedTimeSlot.date.toISOString(),
+      timeSlot: this.selectedTimeSlot.slot,
+      topic: topic,
+      duration: 60
+    };
+
+    this.coachingService.bookSession(sessionData).subscribe({
+      next: (session) => {
+        console.log('Session réservée:', session);
+        this.closeBookingModal();
+        this.loadSessions();
+        this.loadAvailabilities();
+      },
+      error: (error) => {
+        console.error('Erreur lors de la réservation:', error);
+        alert('Erreur lors de la réservation');
+      }
+    });
+  }
+
+  // MÉTHODES EXISTANTES
+
+  searchCoaches(): void {
+    if (this.searchTerm.trim()) {
+      this.coachingService.searchCoaches(this.searchTerm).subscribe({
+        next: (coaches) => {
+          this.filteredCoaches = coaches;
+        },
+        error: (error) => {
+          console.error('Erreur lors de la recherche:', error);
+          this.filterCoachesLocally();
+        }
+      });
+    } else {
+      this.filteredCoaches = this.coaches;
+    }
+  }
+
+  private filterCoachesLocally(): void {
+    this.filteredCoaches = this.coaches.filter(coach =>
+      coach.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      coach.specialties.some(s => s.toLowerCase().includes(this.searchTerm.toLowerCase()))
+    );
+  }
+
+  filterBySpecialty(): void {
+    if (this.filterSpecialty) {
+      this.filteredCoaches = this.coaches.filter(coach =>
+        coach.specialties.some(s => s.toLowerCase().includes(this.filterSpecialty.toLowerCase()))
+      );
+    } else {
+      this.filteredCoaches = this.coaches;
+    }
+  }
+
+  toggleSpecialtyFilter(specialty: string): void {
+    const index = this.matchingCriteria.specialties.indexOf(specialty);
+    if (index > -1) {
+      this.matchingCriteria.specialties.splice(index, 1);
+    } else {
+      this.matchingCriteria.specialties.push(specialty);
+    }
+  }
+
+  isSpecialtySelected(specialty: string): boolean {
+    return this.matchingCriteria.specialties.includes(specialty);
+  }
+
+  findMatchingCoaches(): void {
+    if (this.matchingCriteria.specialties.length === 0) {
+      alert('Veuillez sélectionner au moins une spécialité');
+      return;
+    }
+
+    this.coachingService.findMatchingCoaches(this.matchingCriteria).subscribe({
+      next: (coaches) => {
+        this.filteredCoaches = coaches;
+        this.viewMode = 'matched';
+      },
+      error: (error) => {
+        console.error('Erreur lors de la recherche de coaches:', error);
+        this.getMatchedCoachesLocally();
+      }
+    });
+  }
+
+  private getMatchedCoachesLocally(): void {
+    const matchedCoaches = this.coaches.map(coach => {
+      let score = 0;
+
+      if (this.matchingCriteria.specialties.length) {
+        const matchingSpecialties = coach.specialties.filter(s =>
+          this.matchingCriteria.specialties.some(cs => cs.toLowerCase() === s.toLowerCase())
+        );
+        score += (matchingSpecialties.length / this.matchingCriteria.specialties.length) * 40;
+      }
+
+      if (this.matchingCriteria.experience && coach.experience >= this.matchingCriteria.experience) {
+        score += 20;
+      }
+
+      if (this.matchingCriteria.maxHourlyRate && coach.hourlyRate <= this.matchingCriteria.maxHourlyRate) {
+        score += 15;
+      }
+
+      if (this.matchingCriteria.languages?.length) {
+        const matchingLanguages = coach.languages.filter(l =>
+          this.matchingCriteria.languages.some(cl => cl.toLowerCase() === l.toLowerCase())
+        );
+        score += (matchingLanguages.length / this.matchingCriteria.languages.length) * 15;
+      }
+
+      if (this.matchingCriteria.timezone && coach.timezone === this.matchingCriteria.timezone) {
+        score += 10;
+      }
+
+      return { ...coach, matchScore: Math.min(score, 100) };
+    });
+
+    this.filteredCoaches = matchedCoaches
+      .filter(coach => coach.matchScore >= 30)
+      .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    
+    this.viewMode = 'matched';
+  }
+
+  getMatchedCoaches(): Coach[] {
+    return this.filteredCoaches.filter(coach => coach.matchScore !== undefined);
+  }
+
   selectCoach(coach: Coach): void {
     this.selectedCoach = coach;
+    this.loadAvailabilities();
+    this.loadReviews();
   }
 
   closeCoachProfile(): void {
@@ -350,6 +506,7 @@ export class CoachManagerComponent implements OnInit {
   }
 
   openBookingModal(date: Date, slot: TimeSlot): void {
+    if (slot.isBooked) return;
     this.selectedTimeSlot = { date, slot };
     this.showBookingModal = true;
   }
@@ -359,55 +516,50 @@ export class CoachManagerComponent implements OnInit {
     this.selectedTimeSlot = null;
   }
 
-  bookSession(topic: string): void {
-    if (!this.selectedCoach || !this.selectedTimeSlot) return;
-
-    const newSession: Session = {
-      id: Date.now().toString(),
-      coachId: this.selectedCoach.id,
-      userId: 'current-user',
-      date: this.selectedTimeSlot.date,
-      duration: 60,
-      status: 'scheduled',
-      topic
-    };
-
-    this.sessions.push(newSession);
-    
-    this.availabilities = this.availabilities.map(availability => {
-      if (availability.coachId === this.selectedCoach!.id && 
-          availability.date.toDateString() === this.selectedTimeSlot!.date.toDateString()) {
-        return {
-          ...availability,
-          timeSlots: availability.timeSlots.map(slot => 
-            slot.start === this.selectedTimeSlot!.slot.start ? { ...slot, isBooked: true } : slot
-          )
-        };
-      }
-      return availability;
-    });
-
-    this.closeBookingModal();
+  confirmBooking(topic: string): void {
+    this.bookSession(topic);
   }
 
-  goToCalendar(): void {
-    this.setViewMode('calendar');
-    this.closeCoachProfile();
-  }
-
-  renderStars(rating: number): number[] {
-    return Array.from({ length: 5 }, (_, i) => i < Math.floor(rating) ? 1 : 0);
+  cancelSession(sessionId: string): void {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette session ?')) {
+      this.coachingService.cancelSession(sessionId).subscribe({
+        next: () => {
+          console.log('Session annulée');
+          this.loadSessions();
+        },
+        error: (error) => {
+          console.error('Erreur lors de l\'annulation:', error);
+          alert('Erreur lors de l\'annulation');
+        }
+      });
+    }
   }
 
   getCoachAvailability(coachId: string): Availability | undefined {
     return this.availabilities.find(a => a.coachId === coachId);
   }
 
-  getCoachReviews(coachId: string): Review[] {
-    return this.reviews.filter(r => r.coachId === coachId);
+  getUserSessions(): Session[] {
+    return this.sessions.filter(s => s.status === 'scheduled').sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
-  getCoachFromSession(session: Session): Coach | undefined {
-    return this.coaches.find(c => c.id === session.coachId);
+  getSessionHistory(): Session[] {
+    return this.sessions.filter(s => s.status === 'completed' || s.status === 'cancelled').sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  renderStars(rating: number): boolean[] {
+    return Array(5).fill(false).map((_, i) => i < Math.floor(rating));
+  }
+
+  getCoachName(coachId: string): string {
+    const coach = this.coaches.find(c => c.id === coachId);
+    return coach ? coach.name : 'Coach inconnu';
+  }
+
+  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history'): void {
+    this.viewMode = mode;
+    if (mode === 'browse') {
+      this.filteredCoaches = this.coaches;
+    }
   }
 }

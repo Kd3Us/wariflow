@@ -41,4 +41,17 @@
     </a>
   </nav>
 
+  <!-- NOUVEL ONGLET COACHING -->
+  <nav class="flex flex-col gap-2">
+    <a
+      routerLink="/coaching"
+      routerLinkActive="text-white before:bg-secondary"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="flex items-center justify-center h-12 w-full text-gray-400 cursor-pointer transition-colors duration-200 relative hover:text-white before:content-[''] before:absolute before:left-0 before:h-[60%] before:w-[3px] before:bg-transparent before:rounded-r before:transition-colors before:duration-200"
+      title="Coaching"
+    >
+      <span class="material-icons">psychology</span>
+    </a>
+  </nav>
+
 </aside>

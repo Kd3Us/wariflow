@@ -1,0 +1,211 @@
+/* Styles spécifiques au composant coaching intégrés au design system */
+
+/* Range sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #6b46c1; /* secondary color */
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #6b46c1; /* secondary color */
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Multi-select styling */
+select[multiple] {
+  min-height: 100px;
+}
+
+select[multiple] option {
+  @apply py-2 px-3;
+}
+
+select[multiple] option:checked {
+  @apply bg-secondary text-white;
+}
+
+/* Animation pour les cards */
+.card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Status indicators */
+.status-online {
+  @apply w-3 h-3 bg-green-500 rounded-full animate-pulse;
+}
+
+.status-offline {
+  @apply w-3 h-3 bg-gray-400 rounded-full;
+}
+
+/* Rating stars */
+.star-rating {
+  @apply flex items-center;
+}
+
+.star-rating .material-icons {
+  @apply transition-colors duration-200;
+}
+
+/* Specialty tags */
+.specialty-tag {
+  @apply bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-secondary hover:text-white cursor-pointer;
+}
+
+/* Match score badge */
+.match-score {
+  @apply bg-gradient-to-r from-secondary to-primary text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md;
+}
+
+/* Time slot buttons */
+.time-slot {
+  @apply transition-all duration-200 transform hover:scale-105;
+}
+
+.time-slot:hover:not(:disabled) {
+  @apply shadow-lg;
+}
+
+.time-slot:disabled {
+  @apply transform-none;
+}
+
+/* Modal animations */
+.modal-enter {
+  animation: modalEnter 0.3s ease-out;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scrollbar personnalisé pour les modales */
+.modal-scroll::-webkit-scrollbar {
+  @apply w-1;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  @apply bg-secondary rounded-full hover:bg-primary;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Empty states */
+.empty-state {
+  @apply text-center py-12;
+}
+
+.empty-state .material-icons {
+  @apply text-6xl text-gray-300 mb-4 block;
+}
+
+.empty-state p {
+  @apply text-gray-600 text-lg;
+}
+
+/* Navigation tabs active indicator */
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: linear-gradient(90deg, #6b46c1, #2e1a47);
+  border-radius: 2px;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .grid-responsive {
+    @apply grid-cols-1;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-responsive {
+    @apply grid-cols-2;
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid-responsive {
+    @apply grid-cols-3;
+  }
+}
+
+/* Focus states personnalisés */
+.form-input:focus {
+  @apply ring-2 ring-secondary/20 border-secondary;
+}
+
+.btn-primary:focus {
+  @apply ring-2 ring-secondary/30;
+}
+
+.btn-secondary:focus {
+  @apply ring-2 ring-gray-300;
+}
+
+/* Transitions fluides */
+* {
+  @apply transition-colors duration-200;
+}
+
+.card, .btn, .form-input {
+  @apply transition-all duration-200;
+}
