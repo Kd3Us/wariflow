@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoachingService } from '../../services/coaching.service';
+import { NotificationService } from '../../services/notification.service';
 
 export interface Coach {
   id: string;
@@ -103,13 +104,23 @@ export class CoachManagerComponent implements OnInit {
   showBookingModal: boolean = false;
   selectedTimeSlot: { date: Date; slot: TimeSlot } | null = null;
 
+  // États de chargement
+  isLoadingCoaches: boolean = false;
+  isLoadingAvailabilities: boolean = false;
+  isLoadingSessions: boolean = false;
+  isLoadingReviews: boolean = false;
+  isBookingSession: boolean = false;
+
   specialties: string[] = [
     'Product Strategy', 'UX/UI Design', 'Marketing', 'Sales', 
     'Technology', 'Leadership', 'Finance', 'Operations',
     'Business Development', 'Digital Marketing', 'E-commerce'
   ];
 
-  constructor(private coachingService: CoachingService) {}
+  constructor(
+    private coachingService: CoachingService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.loadCoaches();
@@ -119,230 +130,155 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadCoaches(): void {
+    console.log('Loading coaches from API...');
+    this.isLoadingCoaches = true;
+    
     this.coachingService.getAllCoaches().subscribe({
       next: (coaches) => {
+        console.log('Coaches loaded successfully:', coaches);
         this.coaches = coaches;
         this.filteredCoaches = coaches;
+        this.isLoadingCoaches = false;
+        
+        if (coaches.length > 0) {
+          this.notificationService.success(
+            'Coaches chargés',
+            `${coaches.length} coach(s) disponible(s)`
+          );
+        }
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des coaches:', error);
-        this.loadMockCoaches();
+        console.error('Error loading coaches from API:', error);
+        this.isLoadingCoaches = false;
+        this.notificationService.error(
+          'Erreur de chargement',
+          'Impossible de charger les coaches. Vérifiez votre connexion.'
+        );
       }
     });
-  }
-
-  private loadMockCoaches(): void {
-    const mockCoaches: Coach[] = [
-      {
-        id: '1',
-        name: 'Sarah Martin',
-        email: 'sarah@example.com',
-        avatar: '/api/placeholder/64/64',
-        specialties: ['Product Strategy', 'UX/UI Design', 'Leadership'],
-        rating: 4.8,
-        reviewsCount: 127,
-        hourlyRate: 150,
-        bio: 'Expert en stratégie produit avec 8 ans d\'expérience chez des startups tech.',
-        experience: 10,
-        certifications: ['Google UX Design', 'Scrum Master'],
-        languages: ['Français', 'Anglais'],
-        timezone: 'Europe/Paris',
-        isOnline: true,
-        responseTime: '< 1h',
-        nextAvailableSlot: new Date(Date.now() + 43200000),
-        totalSessions: 520,
-        successRate: 98,
-        matchScore: 85
-      },
-      {
-        id: '2',
-        name: 'Marc Dubois',
-        email: 'marc@example.com',
-        avatar: '/api/placeholder/64/64',
-        specialties: ['Digital Marketing', 'Sales', 'Business Development'],
-        rating: 4.6,
-        reviewsCount: 89,
-        hourlyRate: 120,
-        bio: 'Spécialiste en marketing digital et développement commercial avec 6 ans d\'expérience.',
-        experience: 6,
-        certifications: ['Google Ads', 'HubSpot Sales'],
-        languages: ['Français', 'Anglais', 'Espagnol'],
-        timezone: 'Europe/Paris',
-        isOnline: false,
-        responseTime: '< 2h',
-        nextAvailableSlot: new Date(Date.now() + 86400000),
-        totalSessions: 320,
-        successRate: 94,
-        matchScore: 72
-      },
-      {
-        id: '3',
-        name: 'Julie Lefèvre',
-        email: 'julie@example.com',
-        avatar: '/api/placeholder/64/64',
-        specialties: ['UX/UI Design', 'Technology', 'Product Strategy'],
-        rating: 4.9,
-        reviewsCount: 156,
-        hourlyRate: 180,
-        bio: 'Designer UX/UI senior avec une expertise en développement produit et innovation.',
-        experience: 12,
-        certifications: ['Adobe Certified Expert', 'Design Thinking'],
-        languages: ['Français', 'Anglais'],
-        timezone: 'Europe/Paris',
-        isOnline: true,
-        responseTime: '< 30min',
-        nextAvailableSlot: new Date(Date.now() + 21600000),
-        totalSessions: 680,
-        successRate: 99,
-        matchScore: 90
-      }
-    ];
-    this.coaches = mockCoaches;
-    this.filteredCoaches = mockCoaches;
   }
 
   loadAvailabilities(): void {
-    if (this.selectedCoach) {
-      this.coachingService.getCoachAvailability(this.selectedCoach.id).subscribe({
-        next: (availabilities) => {
-          this.availabilities = [{
-            coachId: this.selectedCoach!.id,
-            date: new Date(),
-            timeSlots: availabilities.map(av => ({
-              start: av.startTime,
-              end: av.endTime,
-              isBooked: av.isBooked,
-              price: av.price
-            }))
-          }];
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des disponibilités:', error);
-          this.loadMockAvailabilities();
-        }
-      });
-    } else {
-      this.loadMockAvailabilities();
-    }
-  }
-
-  private loadMockAvailabilities(): void {
-    const mockAvailabilities: Availability[] = [
-      {
-        coachId: '1',
-        date: new Date(),
-        timeSlots: [
-          { start: '09:00', end: '10:00', isBooked: false, price: 150 },
-          { start: '10:00', end: '11:00', isBooked: true, price: 150 },
-          { start: '14:00', end: '15:00', isBooked: false, price: 150 },
-          { start: '15:00', end: '16:00', isBooked: false, price: 150 }
-        ]
-      },
-      {
-        coachId: '2',
-        date: new Date(),
-        timeSlots: [
-          { start: '10:00', end: '11:00', isBooked: false, price: 120 },
-          { start: '11:00', end: '12:00', isBooked: false, price: 120 },
-          { start: '16:00', end: '17:00', isBooked: true, price: 120 }
-        ]
-      }
-    ];
-    this.availabilities = mockAvailabilities;
-  }
-
-  loadSessions(): void {
-    this.coachingService.getUserSessions().subscribe({
-      next: (sessions) => {
-        this.sessions = sessions;
+    if (!this.selectedCoach) return;
+    
+    console.log('Loading availabilities for coach:', this.selectedCoach.id);
+    this.isLoadingAvailabilities = true;
+    
+    this.coachingService.getCoachAvailability(this.selectedCoach.id).subscribe({
+      next: (availabilities) => {
+        console.log('Availabilities loaded successfully:', availabilities);
+        this.availabilities = [{
+          coachId: this.selectedCoach!.id,
+          date: new Date(),
+          timeSlots: availabilities.map(av => ({
+            start: av.startTime,
+            end: av.endTime,
+            isBooked: av.isBooked,
+            price: av.price
+          }))
+        }];
+        this.isLoadingAvailabilities = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des sessions:', error);
-        this.loadMockSessions();
+        console.error('Error loading availabilities:', error);
+        this.isLoadingAvailabilities = false;
+        this.notificationService.warning(
+          'Disponibilités indisponibles',
+          'Impossible de charger les créneaux du coach.'
+        );
       }
     });
   }
 
-  private loadMockSessions(): void {
-    const mockSessions: Session[] = [
-      {
-        id: '1',
-        coachId: '1',
-        userId: 'user1',
-        date: new Date(Date.now() - 86400000),
-        duration: 60,
-        status: 'completed',
-        topic: 'Stratégie produit',
-        notes: 'Session très productive sur la roadmap produit',
-        rating: 5,
-        feedback: 'Excellent conseil, très structuré'
+  loadSessions(): void {
+    console.log('Loading user sessions...');
+    this.isLoadingSessions = true;
+    
+    this.coachingService.getUserSessions().subscribe({
+      next: (sessions) => {
+        console.log('Sessions loaded successfully:', sessions);
+        this.sessions = sessions;
+        this.isLoadingSessions = false;
       },
-      {
-        id: '2',
-        coachId: '2',
-        userId: 'user1',
-        date: new Date(Date.now() + 86400000),
-        duration: 60,
-        status: 'scheduled',
-        topic: 'Marketing digital'
+      error: (error) => {
+        console.error('Error loading sessions:', error);
+        this.isLoadingSessions = false;
+        this.notificationService.warning(
+          'Historique indisponible',
+          'Impossible de charger vos sessions.'
+        );
       }
-    ];
-    this.sessions = mockSessions;
+    });
   }
 
   loadReviews(): void {
-    if (this.selectedCoach) {
-      this.coachingService.getCoachReviews(this.selectedCoach.id).subscribe({
-        next: (reviews) => {
-          this.reviews = reviews;
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des avis:', error);
-          this.loadMockReviews();
+    if (!this.selectedCoach) return;
+    
+    console.log('Loading reviews for coach:', this.selectedCoach.id);
+    this.isLoadingReviews = true;
+    
+    this.coachingService.getCoachReviews(this.selectedCoach.id).subscribe({
+      next: (reviews) => {
+        console.log('Reviews loaded successfully:', reviews);
+        this.reviews = reviews;
+        this.isLoadingReviews = false;
+      },
+      error: (error) => {
+        console.error('Error loading reviews:', error);
+        this.isLoadingReviews = false;
+        this.notificationService.warning(
+          'Avis indisponibles',
+          'Impossible de charger les avis du coach.'
+        );
+      }
+    });
+  }
+
+  // Méthode améliorée pour vérifier la disponibilité en temps réel
+  checkSlotAvailability(coachId: string, slot: TimeSlot): void {
+    this.coachingService.getCoachAvailability(coachId).subscribe({
+      next: (availabilities) => {
+        const currentAvailability = availabilities.find(av => av.startTime === slot.start);
+        if (currentAvailability && currentAvailability.isBooked) {
+          // Le créneau a été réservé par quelqu'un d'autre
+          this.notificationService.warning(
+            'Créneau indisponible',
+            'Ce créneau vient d\'être réservé par un autre utilisateur'
+          );
+          this.loadAvailabilities(); // Recharger les disponibilités
+          this.closeBookingModal();
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors de la vérification:', error);
+      }
+    });
+  }
+
+  // Méthode pour marquer un slot comme réservé immédiatement (mise à jour optimiste)
+  private markSlotAsBooked(slot: TimeSlot): void {
+    this.availabilities.forEach(availability => {
+      availability.timeSlots.forEach(timeSlot => {
+        if (timeSlot.start === slot.start && timeSlot.end === slot.end) {
+          timeSlot.isBooked = true;
         }
       });
-    } else {
-      this.loadMockReviews();
+    });
+  }
+
+  // Méthode pour rafraîchir automatiquement les disponibilités
+  private autoRefreshAvailabilities(): void {
+    if (this.selectedCoach) {
+      // Rafraîchir toutes les 30 secondes quand un coach est sélectionné
+      const refreshInterval = setInterval(() => {
+        if (this.selectedCoach && this.showCoachModal) {
+          this.loadAvailabilities();
+        } else {
+          clearInterval(refreshInterval);
+        }
+      }, 30000);
     }
   }
-
-  private loadMockReviews(): void {
-    const mockReviews: Review[] = [
-      {
-        id: '1',
-        coachId: '1',
-        userId: 'user1',
-        userName: 'Pierre L.',
-        rating: 5,
-        comment: 'Sarah m\'a aidé à structurer ma stratégie produit. Très professionnelle et à l\'écoute.',
-        date: new Date(Date.now() - 86400000),
-        sessionTopic: 'Stratégie produit'
-      },
-      {
-        id: '2',
-        coachId: '2',
-        userId: 'user2',
-        userName: 'Marie D.',
-        rating: 5,
-        comment: 'Marc a transformé notre approche marketing. ROI visible dès le premier mois.',
-        date: new Date(Date.now() - 172800000),
-        sessionTopic: 'Marketing digital'
-      },
-      {
-        id: '3',
-        coachId: '3',
-        userId: 'user3',
-        userName: 'Thomas K.',
-        rating: 4,
-        comment: 'Julie a révolutionné notre interface utilisateur. Approche très méthodique.',
-        date: new Date(Date.now() - 259200000),
-        sessionTopic: 'Design UX'
-      }
-    ];
-    this.reviews = mockReviews;
-  }
-
-  // MÉTHODES MANQUANTES AJOUTÉES
 
   onSearchChange(): void {
     this.searchCoaches();
@@ -368,16 +304,35 @@ export class CoachManagerComponent implements OnInit {
     this.setViewMode('calendar');
   }
 
+  // Méthode améliorée de réservation avec vérifications
   bookSession(topic: string): void {
     if (!this.selectedCoach || !this.selectedTimeSlot || !topic.trim()) {
-      alert('Veuillez remplir tous les champs requis');
+      this.notificationService.warning(
+        'Informations manquantes',
+        'Veuillez remplir tous les champs requis'
+      );
       return;
     }
 
+    // Vérification finale avant envoi
+    if (this.selectedTimeSlot.slot.isBooked) {
+      this.notificationService.error(
+        'Créneau indisponible',
+        'Ce créneau n\'est plus disponible'
+      );
+      this.closeBookingModal();
+      this.loadAvailabilities();
+      return;
+    }
+
+    this.isBookingSession = true;
+
     const sessionData = {
       coachId: this.selectedCoach.id,
+      userId: 'current-user', // À remplacer par l'ID utilisateur réel
       date: this.selectedTimeSlot.date.toISOString(),
-      timeSlot: this.selectedTimeSlot.slot,
+      startTime: this.selectedTimeSlot.slot.start,
+      endTime: this.selectedTimeSlot.slot.end,
       topic: topic,
       duration: 60
     };
@@ -385,18 +340,38 @@ export class CoachManagerComponent implements OnInit {
     this.coachingService.bookSession(sessionData).subscribe({
       next: (session) => {
         console.log('Session réservée:', session);
+        this.isBookingSession = false;
+        
+        // Marquer immédiatement le slot comme réservé (optimistic update)
+        this.markSlotAsBooked(this.selectedTimeSlot!.slot);
+        
+        this.notificationService.success(
+          'Session réservée !',
+          `Votre session avec ${this.selectedCoach!.name} est confirmée`
+        );
+        
         this.closeBookingModal();
+        
+        // Recharger les données pour synchroniser
         this.loadSessions();
-        this.loadAvailabilities();
+        setTimeout(() => {
+          this.loadAvailabilities(); // Délai pour laisser le backend se synchroniser
+        }, 500);
       },
       error: (error) => {
         console.error('Erreur lors de la réservation:', error);
-        alert('Erreur lors de la réservation');
+        this.isBookingSession = false;
+        
+        let errorMessage = 'Impossible de réserver la session. Veuillez réessayer.';
+        if (error.error?.message?.includes('plus disponible')) {
+          errorMessage = 'Ce créneau n\'est plus disponible.';
+          this.loadAvailabilities(); // Recharger pour voir l'état actuel
+        }
+        
+        this.notificationService.error('Erreur de réservation', errorMessage);
       }
     });
   }
-
-  // MÉTHODES EXISTANTES
 
   searchCoaches(): void {
     if (this.searchTerm.trim()) {
@@ -406,6 +381,10 @@ export class CoachManagerComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur lors de la recherche:', error);
+          this.notificationService.warning(
+            'Erreur de recherche',
+            'Impossible de rechercher les coaches. Utilisation du filtre local.'
+          );
           this.filterCoachesLocally();
         }
       });
@@ -446,7 +425,10 @@ export class CoachManagerComponent implements OnInit {
 
   findMatchingCoaches(): void {
     if (this.matchingCriteria.specialties.length === 0) {
-      alert('Veuillez sélectionner au moins une spécialité');
+      this.notificationService.warning(
+        'Sélection manquante',
+        'Veuillez sélectionner au moins une spécialité'
+      );
       return;
     }
 
@@ -454,9 +436,17 @@ export class CoachManagerComponent implements OnInit {
       next: (coaches) => {
         this.filteredCoaches = coaches;
         this.viewMode = 'matched';
+        this.notificationService.success(
+          'Coaches correspondants',
+          `${coaches.length} coach(s) trouvé(s) selon vos critères`
+        );
       },
       error: (error) => {
         console.error('Erreur lors de la recherche de coaches:', error);
+        this.notificationService.warning(
+          'Erreur de matching',
+          'Utilisation de l\'algorithme local de correspondance'
+        );
         this.getMatchedCoachesLocally();
       }
     });
@@ -506,12 +496,16 @@ export class CoachManagerComponent implements OnInit {
     return this.filteredCoaches.filter(coach => coach.matchScore !== undefined);
   }
 
+  // Modifier la méthode selectCoach pour inclure le rafraîchissement auto
   selectCoach(coach: Coach): void {
     this.selectedCoach = coach;
     this.lastSelectedCoach = coach;
     this.showCoachModal = true;
     this.loadAvailabilities();
     this.loadReviews();
+    
+    // Démarrer le rafraîchissement automatique
+    this.autoRefreshAvailabilities();
   }
 
   closeCoachProfile(): void {
@@ -523,8 +517,21 @@ export class CoachManagerComponent implements OnInit {
     this.showCoachModal = false;
   }
 
+  // Méthode améliorée pour ouvrir le modal de réservation
   openBookingModal(date: Date, slot: TimeSlot): void {
-    if (slot.isBooked) return;
+    if (slot.isBooked) {
+      this.notificationService.info(
+        'Créneau réservé',
+        'Ce créneau n\'est plus disponible'
+      );
+      return;
+    }
+
+    // Vérifier la disponibilité en temps réel avant d'ouvrir le modal
+    if (this.selectedCoach) {
+      this.checkSlotAvailability(this.selectedCoach.id, slot);
+    }
+
     this.selectedTimeSlot = { date, slot };
     this.showBookingModal = true;
   }
@@ -539,18 +546,31 @@ export class CoachManagerComponent implements OnInit {
   }
 
   cancelSession(sessionId: string): void {
-    if (confirm('Êtes-vous sûr de vouloir annuler cette session ?')) {
-      this.coachingService.cancelSession(sessionId).subscribe({
-        next: () => {
-          console.log('Session annulée');
-          this.loadSessions();
-        },
-        error: (error) => {
-          console.error('Erreur lors de l\'annulation:', error);
-          alert('Erreur lors de l\'annulation');
-        }
-      });
+    if (!confirm('Êtes-vous sûr de vouloir annuler cette session ?')) {
+      return;
     }
+
+    this.coachingService.cancelSession(sessionId).subscribe({
+      next: () => {
+        console.log('Session annulée');
+        this.notificationService.info(
+          'Session annulée',
+          'Votre session a été annulée avec succès'
+        );
+        this.loadSessions();
+        // Recharger les disponibilités pour rendre le créneau à nouveau disponible
+        if (this.selectedCoach) {
+          this.loadAvailabilities();
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors de l\'annulation:', error);
+        this.notificationService.error(
+          'Erreur d\'annulation',
+          'Impossible d\'annuler la session'
+        );
+      }
+    });
   }
 
   getCoachAvailability(coachId: string): Availability | undefined {

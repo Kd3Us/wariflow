@@ -238,31 +238,35 @@ export class CoachingService implements OnModuleInit {
   }
 
   async bookSession(sessionData: any) {
+    console.log('Booking session with data:', sessionData);
+    
+    const availability = await this.availabilityRepository.findOne({
+      where: {
+        coachId: sessionData.coachId,
+        startTime: sessionData.timeSlot?.start || sessionData.startTime,
+        isBooked: false
+      }
+    });
+
+    if (!availability) {
+      throw new Error('Ce créneau n\'est plus disponible');
+    }
+
     const session = this.sessionRepository.create({
       coachId: sessionData.coachId,
       userId: sessionData.userId,
       date: new Date(sessionData.date),
-      duration: sessionData.duration,
+      duration: sessionData.duration || 60,
       status: SessionStatus.SCHEDULED,
       topic: sessionData.topic
     });
 
     const savedSession = await this.sessionRepository.save(session);
 
-    if (sessionData.timeSlot) {
-      const availability = await this.availabilityRepository.findOne({
-        where: {
-          coachId: sessionData.coachId,
-          startTime: sessionData.timeSlot.split('-')[0]
-        }
-      });
+    availability.isBooked = true;
+    await this.availabilityRepository.save(availability);
 
-      if (availability) {
-        availability.isBooked = true;
-        await this.availabilityRepository.save(availability);
-      }
-    }
-
+    console.log('Session booked and availability updated:', savedSession.id);
     return savedSession;
   }
 

@@ -4,11 +4,12 @@ import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { CommonModule } from '@angular/common';
 import { EmbedService } from './services/embed.service';
+import { ToastNotificationComponent } from './components/shared/toast-notification.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, SidebarComponent, CommonModule],
+  imports: [RouterOutlet, HeaderComponent, SidebarComponent, CommonModule, ToastNotificationComponent],
   template: `
     <div class="flex w-full h-screen overflow-hidden">
       <app-sidebar/>
@@ -16,6 +17,7 @@ import { EmbedService } from './services/embed.service';
         <app-header *ngIf="!isEmbedRoute" />
         <router-outlet />
       </main>
+      <app-toast-notification></app-toast-notification>
     </div>
   `,
 })
