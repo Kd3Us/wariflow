@@ -1,169 +1,185 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like, Between } from 'typeorm';
+import { Coach } from './entities/coach.entity';
+import { Session, SessionStatus } from './entities/session.entity';
+import { Review } from './entities/review.entity';
+import { Availability } from './entities/availability.entity';
 
 @Injectable()
-export class CoachingService {
-  private coaches = [
-    {
-      id: '1',
-      name: 'Sarah Martin',
-      email: 'sarah@example.com',
-      avatar: '/api/placeholder/64/64',
-      specialties: ['Product Strategy', 'UX/UI Design', 'Leadership'],
-      rating: 4.8,
-      reviewsCount: 127,
-      hourlyRate: 150,
-      bio: 'Expert en stratégie produit avec 8 ans d\'expérience chez des startups tech.',
-      experience: 8,
-      certifications: ['Google UX Design', 'Scrum Master'],
-      languages: ['Français', 'Anglais'],
-      timezone: 'Europe/Paris',
-      isOnline: true,
-      responseTime: '< 1h',
-      nextAvailableSlot: new Date(Date.now() + 43200000),
-      totalSessions: 320,
-      successRate: 96
-    },
-    {
-      id: '2',
-      name: 'Marc Dubois',
-      email: 'marc@example.com',
-      avatar: '/api/placeholder/64/64',
-      specialties: ['Marketing', 'Sales', 'Business Development'],
-      rating: 4.9,
-      reviewsCount: 89,
-      hourlyRate: 120,
-      bio: 'Consultant marketing digital avec 6 ans d\'expérience en growth hacking.',
-      experience: 6,
-      certifications: ['Google Ads', 'Facebook Marketing'],
-      languages: ['Français', 'Anglais', 'Espagnol'],
-      timezone: 'Europe/Paris',
-      isOnline: false,
-      responseTime: '< 2h',
-      nextAvailableSlot: new Date(Date.now() + 86400000),
-      totalSessions: 180,
-      successRate: 94
-    },
-    {
-      id: '3',
-      name: 'Julie Chen',
-      email: 'julie@example.com',
-      avatar: '/api/placeholder/64/64',
-      specialties: ['Technology', 'Operations', 'Finance'],
-      rating: 4.7,
-      reviewsCount: 156,
-      hourlyRate: 180,
-      bio: 'CTO experte en scaling tech avec 10 ans d\'expérience en startup.',
-      experience: 10,
-      certifications: ['AWS Certified', 'Kubernetes'],
-      languages: ['Français', 'Anglais', 'Mandarin'],
-      timezone: 'Europe/Paris',
-      isOnline: true,
-      responseTime: '< 30min',
-      nextAvailableSlot: new Date(Date.now() + 21600000),
-      totalSessions: 420,
-      successRate: 98
-    }
-  ];
+export class CoachingService implements OnModuleInit {
+  constructor(
+    @InjectRepository(Coach)
+    private coachRepository: Repository<Coach>,
+    @InjectRepository(Session)
+    private sessionRepository: Repository<Session>,
+    @InjectRepository(Review)
+    private reviewRepository: Repository<Review>,
+    @InjectRepository(Availability)
+    private availabilityRepository: Repository<Availability>,
+  ) {}
 
-  private sessions = [
-    {
-      id: '1',
-      coachId: '1',
-      userId: 'user1',
-      date: new Date(Date.now() - 86400000),
-      duration: 60,
-      status: 'completed',
-      topic: 'Stratégie produit',
-      notes: 'Session très productive sur la roadmap produit',
-      rating: 5,
-      feedback: 'Excellent conseil, très structuré'
-    },
-    {
-      id: '2',
-      coachId: '2',
-      userId: 'user1',
-      date: new Date(Date.now() + 86400000),
-      duration: 60,
-      status: 'scheduled',
-      topic: 'Marketing digital'
-    }
-  ];
+  async onModuleInit() {
+    await this.initializeCoaches();
+  }
 
-  private reviews = [
-    {
-      id: '1',
-      coachId: '1',
-      userId: 'user1',
-      userName: 'Pierre L.',
-      rating: 5,
-      comment: 'Sarah m\'a aidé à structurer ma stratégie produit. Très professionnelle et à l\'écoute.',
-      date: new Date(Date.now() - 86400000),
-      sessionTopic: 'Stratégie produit'
-    },
-    {
-      id: '2',
-      coachId: '2',
-      userId: 'user2',
-      userName: 'Marie D.',
-      rating: 5,
-      comment: 'Marc a transformé notre approche marketing. ROI visible dès le premier mois.',
-      date: new Date(Date.now() - 172800000),
-      sessionTopic: 'Marketing digital'
-    }
-  ];
+  private async initializeCoaches() {
+    const count = await this.coachRepository.count();
+    if (count === 0) {
+      console.log('Initialisation des coaches par défaut...');
+      const initialCoaches = [
+        {
+          name: 'Sarah Martin',
+          email: 'sarah@example.com',
+          avatar: '/api/placeholder/64/64',
+          specialties: ['Product Strategy', 'UX/UI Design', 'Leadership'],
+          rating: 4.8,
+          reviewsCount: 127,
+          hourlyRate: 150,
+          bio: 'Expert en stratégie produit avec 8 ans d\'expérience chez des startups tech.',
+          experience: 8,
+          certifications: ['Google UX Design', 'Scrum Master'],
+          languages: ['Français', 'Anglais'],
+          timezone: 'Europe/Paris',
+          isOnline: true,
+          responseTime: '< 1h',
+          nextAvailableSlot: new Date(Date.now() + 43200000),
+          totalSessions: 320,
+          successRate: 96
+        },
+        {
+          name: 'Marc Dubois',
+          email: 'marc@example.com',
+          avatar: '/api/placeholder/64/64',
+          specialties: ['Marketing', 'Sales', 'Business Development'],
+          rating: 4.9,
+          reviewsCount: 89,
+          hourlyRate: 120,
+          bio: 'Consultant marketing digital avec 6 ans d\'expérience en growth hacking.',
+          experience: 6,
+          certifications: ['Google Ads', 'Facebook Marketing'],
+          languages: ['Français', 'Anglais', 'Espagnol'],
+          timezone: 'Europe/Paris',
+          isOnline: false,
+          responseTime: '< 2h',
+          nextAvailableSlot: new Date(Date.now() + 86400000),
+          totalSessions: 180,
+          successRate: 94
+        },
+        {
+          name: 'Julie Chen',
+          email: 'julie@example.com',
+          avatar: '/api/placeholder/64/64',
+          specialties: ['Technology', 'Operations', 'Finance'],
+          rating: 4.7,
+          reviewsCount: 156,
+          hourlyRate: 180,
+          bio: 'CTO experte en scaling tech avec 10 ans d\'expérience en startup.',
+          experience: 10,
+          certifications: ['AWS Certified', 'Kubernetes'],
+          languages: ['Français', 'Anglais', 'Mandarin'],
+          timezone: 'Europe/Paris',
+          isOnline: true,
+          responseTime: '< 30min',
+          nextAvailableSlot: new Date(Date.now() + 21600000),
+          totalSessions: 420,
+          successRate: 98
+        }
+      ];
 
-  private availabilities = [
-    {
-      coachId: '1',
-      date: new Date(),
-      timeSlots: [
-        { start: '09:00', end: '10:00', isBooked: false, price: 150 },
-        { start: '10:00', end: '11:00', isBooked: true, price: 150 },
-        { start: '14:00', end: '15:00', isBooked: false, price: 150 },
-        { start: '15:00', end: '16:00', isBooked: false, price: 150 }
-      ]
-    },
-    {
-      coachId: '2',
-      date: new Date(),
-      timeSlots: [
-        { start: '10:00', end: '11:00', isBooked: false, price: 120 },
-        { start: '11:00', end: '12:00', isBooked: false, price: 120 },
-        { start: '16:00', end: '17:00', isBooked: true, price: 120 }
-      ]
-    }
-  ];
+      for (const coachData of initialCoaches) {
+        const coach = this.coachRepository.create(coachData);
+        await this.coachRepository.save(coach);
+      }
 
-  findAllCoaches(filters: any = {}) {
-    let result = [...this.coaches];
+      await this.initializeAvailabilities();
+    }
+  }
+
+  private async initializeAvailabilities() {
+    const coaches = await this.coachRepository.find();
+    const today = new Date();
+    
+    for (const coach of coaches) {
+      const availabilities = [
+        {
+          coachId: coach.id,
+          date: today,
+          startTime: '09:00',
+          endTime: '10:00',
+          isBooked: false,
+          price: coach.hourlyRate
+        },
+        {
+          coachId: coach.id,
+          date: today,
+          startTime: '10:00',
+          endTime: '11:00',
+          isBooked: Math.random() > 0.7,
+          price: coach.hourlyRate
+        },
+        {
+          coachId: coach.id,
+          date: today,
+          startTime: '14:00',
+          endTime: '15:00',
+          isBooked: false,
+          price: coach.hourlyRate
+        },
+        {
+          coachId: coach.id,
+          date: today,
+          startTime: '15:00',
+          endTime: '16:00',
+          isBooked: false,
+          price: coach.hourlyRate
+        }
+      ];
+
+      for (const availabilityData of availabilities) {
+        const availability = this.availabilityRepository.create(availabilityData);
+        await this.availabilityRepository.save(availability);
+      }
+    }
+  }
+
+  async findAllCoaches(filters: any = {}) {
+    const queryBuilder = this.coachRepository.createQueryBuilder('coach');
 
     if (filters.specialty) {
-      result = result.filter(coach =>
-        coach.specialties.some(s => s.toLowerCase().includes(filters.specialty.toLowerCase()))
-      );
+      queryBuilder.andWhere('coach.specialties ILIKE :specialty', {
+        specialty: `%${filters.specialty}%`
+      });
     }
 
     if (filters.minRating) {
-      result = result.filter(coach => coach.rating >= parseFloat(filters.minRating));
+      queryBuilder.andWhere('coach.rating >= :minRating', {
+        minRating: parseFloat(filters.minRating)
+      });
     }
 
     if (filters.maxRate) {
-      result = result.filter(coach => coach.hourlyRate <= parseFloat(filters.maxRate));
+      queryBuilder.andWhere('coach.hourlyRate <= :maxRate', {
+        maxRate: parseFloat(filters.maxRate)
+      });
     }
 
-    return result;
+    return await queryBuilder.getMany();
   }
 
-  searchCoaches(searchTerm: string) {
-    return this.coaches.filter(coach =>
-      coach.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coach.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coach.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+  async searchCoaches(searchTerm: string) {
+    return await this.coachRepository
+      .createQueryBuilder('coach')
+      .where('coach.name ILIKE :term', { term: `%${searchTerm}%` })
+      .orWhere('coach.bio ILIKE :term', { term: `%${searchTerm}%` })
+      .orWhere('coach.specialties ILIKE :term', { term: `%${searchTerm}%` })
+      .getMany();
   }
 
-  findMatchingCoaches(criteria: any) {
-    const matchedCoaches = this.coaches.map(coach => {
+  async findMatchingCoaches(criteria: any) {
+    const coaches = await this.coachRepository.find();
+    
+    const matchedCoaches = coaches.map(coach => {
       let score = 0;
 
       if (criteria.specialties?.length) {
@@ -200,114 +216,182 @@ export class CoachingService {
       .sort((a, b) => b.matchScore - a.matchScore);
   }
 
-  findCoachById(id: string) {
-    return this.coaches.find(c => c.id === id);
+  async findCoachById(id: string) {
+    return await this.coachRepository.findOne({
+      where: { id },
+      relations: ['sessions', 'reviews', 'availabilities']
+    });
   }
 
-  getCoachAvailability(coachId: string) {
-    return this.availabilities.filter(a => a.coachId === coachId);
+  async getCoachAvailability(coachId: string) {
+    return await this.availabilityRepository.find({
+      where: { coachId },
+      order: { date: 'ASC', startTime: 'ASC' }
+    });
   }
 
-  getCoachReviews(coachId: string) {
-    return this.reviews.filter(r => r.coachId === coachId);
+  async getCoachReviews(coachId: string) {
+    return await this.reviewRepository.find({
+      where: { coachId },
+      order: { date: 'DESC' }
+    });
   }
 
-  bookSession(sessionData: any) {
-    const newSession = {
-      id: Date.now().toString(),
+  async bookSession(sessionData: any) {
+    const session = this.sessionRepository.create({
       coachId: sessionData.coachId,
       userId: sessionData.userId,
       date: new Date(sessionData.date),
       duration: sessionData.duration,
-      status: 'scheduled',
+      status: SessionStatus.SCHEDULED,
       topic: sessionData.topic
-    };
+    });
 
-    this.sessions.push(newSession);
+    const savedSession = await this.sessionRepository.save(session);
 
-    const availability = this.availabilities.find(a => a.coachId === sessionData.coachId);
-    if (availability && sessionData.timeSlot) {
-      const slot = availability.timeSlots.find(s => s.start === sessionData.timeSlot.split('-')[0]);
-      if (slot) {
-        slot.isBooked = true;
+    if (sessionData.timeSlot) {
+      const availability = await this.availabilityRepository.findOne({
+        where: {
+          coachId: sessionData.coachId,
+          startTime: sessionData.timeSlot.split('-')[0]
+        }
+      });
+
+      if (availability) {
+        availability.isBooked = true;
+        await this.availabilityRepository.save(availability);
       }
     }
 
-    return newSession;
+    return savedSession;
   }
 
-  getUserSessions(userId: string) {
-    return this.sessions.filter(s => s.userId === userId);
+  async getUserSessions(userId: string) {
+    return await this.sessionRepository.find({
+      where: { userId },
+      relations: ['coach'],
+      order: { date: 'DESC' }
+    });
   }
 
-  getSessionById(id: string) {
-    return this.sessions.find(s => s.id === id);
+  async getSessionById(id: string) {
+    return await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['coach']
+    });
   }
 
-  updateSession(id: string, updateData: any) {
-    const sessionIndex = this.sessions.findIndex(s => s.id === id);
-    if (sessionIndex !== -1) {
-      this.sessions[sessionIndex] = { ...this.sessions[sessionIndex], ...updateData };
-      return this.sessions[sessionIndex];
-    }
-    return null;
+  async updateSession(id: string, updateData: any) {
+    const session = await this.sessionRepository.findOne({ where: { id } });
+    if (!session) return null;
+
+    Object.assign(session, updateData);
+    return await this.sessionRepository.save(session);
   }
 
-  cancelSession(id: string) {
-    const sessionIndex = this.sessions.findIndex(s => s.id === id);
-    if (sessionIndex !== -1) {
-      this.sessions[sessionIndex].status = 'cancelled';
-      return { success: true };
-    }
-    return { success: false };
+  async cancelSession(id: string) {
+    const session = await this.sessionRepository.findOne({ where: { id } });
+    if (!session) return { success: false };
+
+    session.status = SessionStatus.CANCELLED;
+    await this.sessionRepository.save(session);
+    
+    return { success: true };
   }
 
-  createReview(reviewData: any) {
-    const newReview = {
-      id: Date.now().toString(),
+  async createReview(reviewData: any) {
+    const review = this.reviewRepository.create({
       coachId: reviewData.coachId,
       userId: reviewData.userId,
       userName: reviewData.userName || 'Utilisateur',
       rating: reviewData.rating,
       comment: reviewData.comment,
-      date: new Date(),
       sessionTopic: reviewData.sessionTopic
-    };
+    });
 
-    this.reviews.push(newReview);
+    const savedReview = await this.reviewRepository.save(review);
 
-    const coachIndex = this.coaches.findIndex(c => c.id === reviewData.coachId);
-    if (coachIndex !== -1) {
-      const coach = this.coaches[coachIndex];
+    const coach = await this.coachRepository.findOne({
+      where: { id: reviewData.coachId }
+    });
+
+    if (coach) {
       const totalRating = (coach.rating * coach.reviewsCount) + reviewData.rating;
       coach.reviewsCount += 1;
       coach.rating = Math.round((totalRating / coach.reviewsCount) * 10) / 10;
+      await this.coachRepository.save(coach);
     }
 
-    return newReview;
+    return savedReview;
   }
 
-  getDashboardStats(userId: string) {
-    const userSessions = this.sessions.filter(s => s.userId === userId);
-    const completedSessions = userSessions.filter(s => s.status === 'completed');
-    const upcomingSessions = userSessions.filter(s => s.status === 'scheduled');
+  async getDashboardStats(userId: string) {
+    const userSessions = await this.sessionRepository.find({
+      where: { userId },
+      relations: ['coach']
+    });
+
+    const completedSessions = userSessions.filter(s => s.status === SessionStatus.COMPLETED);
+    const upcomingSessions = userSessions.filter(s => s.status === SessionStatus.SCHEDULED);
+
+    const averageRating = completedSessions.length > 0
+      ? completedSessions.reduce((sum, s) => sum + (s.rating || 0), 0) / completedSessions.length
+      : 0;
+
+    const totalHours = completedSessions.reduce((sum, s) => sum + s.duration, 0) / 60;
+
+    const specialtyCount = {};
+    completedSessions.forEach(session => {
+      session.coach.specialties.forEach(specialty => {
+        specialtyCount[specialty] = (specialtyCount[specialty] || 0) + 1;
+      });
+    });
+
+    const favoriteSpecialties = Object.entries(specialtyCount)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 3)
+      .map(([specialty]) => specialty);
+
+    const monthlyStats = await this.getMonthlySessionStats(userId);
 
     return {
       totalSessions: userSessions.length,
       completedSessions: completedSessions.length,
       upcomingSessions: upcomingSessions.length,
-      averageRating: completedSessions.reduce((sum, s) => sum + (s.rating || 0), 0) / completedSessions.length || 0,
-      totalHours: completedSessions.reduce((sum, s) => sum + s.duration, 0) / 60,
-      favoriteSpecialties: ['Product Strategy', 'Marketing'],
-      monthlyProgress: [
-        { month: 'Jan', sessions: 2 },
-        { month: 'Feb', sessions: 3 },
-        { month: 'Mar', sessions: 1 }
-      ]
+      averageRating,
+      totalHours,
+      favoriteSpecialties,
+      monthlyProgress: monthlyStats
     };
   }
 
-  sendSessionReminder(sessionId: string, type: string) {
+  private async getMonthlySessionStats(userId: string) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    
+    const stats = [];
+    
+    for (let i = 0; i < 12; i++) {
+      const monthStart = new Date(currentYear, i, 1);
+      const monthEnd = new Date(currentYear, i + 1, 0);
+      
+      const count = await this.sessionRepository.count({
+        where: {
+          userId,
+          date: Between(monthStart, monthEnd)
+        }
+      });
+      
+      stats.push({
+        month: months[i],
+        sessions: count
+      });
+    }
+    
+    return stats;
+  }
+
+  async sendSessionReminder(sessionId: string, type: string) {
     console.log(`Rappel ${type} envoyé pour la session ${sessionId}`);
     return { success: true };
   }

@@ -82,6 +82,8 @@ export class CoachManagerComponent implements OnInit {
   coaches: Coach[] = [];
   filteredCoaches: Coach[] = [];
   selectedCoach: Coach | null = null;
+  showCoachModal: boolean = false;
+  lastSelectedCoach: Coach | null = null;
   availabilities: Availability[] = [];
   sessions: Session[] = [];
   reviews: Review[] = [];
@@ -203,7 +205,16 @@ export class CoachManagerComponent implements OnInit {
     if (this.selectedCoach) {
       this.coachingService.getCoachAvailability(this.selectedCoach.id).subscribe({
         next: (availabilities) => {
-          this.availabilities = availabilities;
+          this.availabilities = [{
+            coachId: this.selectedCoach!.id,
+            date: new Date(),
+            timeSlots: availabilities.map(av => ({
+              start: av.startTime,
+              end: av.endTime,
+              isBooked: av.isBooked,
+              price: av.price
+            }))
+          }];
         },
         error: (error) => {
           console.error('Erreur lors du chargement des disponibilités:', error);
@@ -354,7 +365,7 @@ export class CoachManagerComponent implements OnInit {
   }
 
   goToCalendar(): void {
-    this.viewMode = 'calendar';
+    this.setViewMode('calendar');
   }
 
   bookSession(topic: string): void {
@@ -497,12 +508,19 @@ export class CoachManagerComponent implements OnInit {
 
   selectCoach(coach: Coach): void {
     this.selectedCoach = coach;
+    this.lastSelectedCoach = coach;
+    this.showCoachModal = true;
     this.loadAvailabilities();
     this.loadReviews();
   }
 
   closeCoachProfile(): void {
+    this.showCoachModal = false;
     this.selectedCoach = null;
+  }
+
+  closeModal(): void {
+    this.showCoachModal = false;
   }
 
   openBookingModal(date: Date, slot: TimeSlot): void {
