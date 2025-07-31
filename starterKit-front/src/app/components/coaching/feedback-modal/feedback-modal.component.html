@@ -1,0 +1,372 @@
+<!-- Modal Overlay -->
+<div *ngIf="isVisible" class="fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="close()"></div>
+
+    <!-- Modal panel -->
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+      
+      <!-- Header -->
+      <div class="bg-white px-6 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">
+              Feedback - {{session?.topic}}
+            </h3>
+            <p class="text-sm text-gray-500 mt-1">
+              Séance avec {{session?.coachName}} • {{session?.date | date:'short':'fr-FR'}}
+            </p>
+          </div>
+          <button
+            (click)="close()"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-4">
+          <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+            <span>Étape {{currentStep}} sur {{totalSteps}}</span>
+            <span>{{getProgressPercentage()}}% complété</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              [style.width.%]="getProgressPercentage()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Content -->
+      <form [formGroup]="feedbackForm" (ngSubmit)="submitFeedback()">
+        <div class="px-6 py-4">
+
+          <!-- Step 1: Note globale et commentaire -->
+          <div *ngIf="currentStep === 1" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Note globale de la séance <span class="text-red-500">*</span>
+              </label>
+              <div class="flex items-center justify-center space-x-2 mb-2">
+                <button
+                  *ngFor="let star of [1,2,3,4,5]; let i = index"
+                  type="button"
+                  (click)="setRating(star)"
+                  [class]="'text-3xl transition-colors hover:scale-110 ' + 
+                           (feedbackForm.get('rating')?.value >= star ? 'text-yellow-400' : 'text-gray-300')"
+                >
+                  ★
+                </button>
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                {{feedbackForm.get('rating')?.value}}/5 - 
+                <span *ngIf="feedbackForm.get('rating')?.value === 5">Excellent</span>
+                <span *ngIf="feedbackForm.get('rating')?.value === 4">Très bien</span>
+                <span *ngIf="feedbackForm.get('rating')?.value === 3">Bien</span>
+                <span *ngIf="feedbackForm.get('rating')?.value === 2">Moyen</span>
+                <span *ngIf="feedbackForm.get('rating')?.value === 1">Décevant</span>
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Commentaire général <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                formControlName="comment"
+                rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Partagez votre expérience de cette séance de coaching..."
+              ></textarea>
+              <div *ngIf="feedbackForm.get('comment')?.invalid && feedbackForm.get('comment')?.touched" 
+                   class="mt-1 text-sm text-red-600">
+                Le commentaire doit contenir au moins 10 caractères
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Notes par catégories -->
+          <div *ngIf="currentStep === 2" class="space-y-6">
+            <div>
+              <h4 class="text-md font-medium text-gray-900 mb-4">
+                Évaluez par catégories
+              </h4>
+              <div class="space-y-4">
+                <div *ngFor="let category of categories" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <span class="text-2xl">{{category.icon}}</span>
+                    <span class="font-medium text-gray-900">{{category.label}}</span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      *ngFor="let star of [1,2,3,4,5]"
+                      type="button"
+                      (click)="setCategoryRating(category.key, star)"
+                      [class]="'text-lg transition-colors ' + 
+                               (feedbackForm.get('categories')?.get(category.key)?.value >= star ? 'text-yellow-400' : 'text-gray-300')"
+                    >
+                      ★
+                    </button>
+                    <span class="ml-2 text-sm text-gray-600 min-w-[2rem]">
+                      {{feedbackForm.get('categories')?.get(category.key)?.value}}/5
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-blue-800">Moyenne générale:</span>
+                  <span class="ml-2 text-lg font-bold text-blue-900">{{getOverallAverage() | number:'1.1-1'}}/5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Aspects positifs et améliorations -->
+          <div *ngIf="currentStep === 3" class="space-y-6">
+            
+            <!-- Aspects positifs -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                🎯 Aspects positifs
+              </label>
+              <div class="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  *ngFor="let aspect of predefinedPositiveAspects"
+                  type="button"
+                  (click)="addPositiveAspect(aspect)"
+                  [class]="'px-3 py-2 text-sm border rounded-md transition-colors ' + 
+                           (positiveAspectsArray.value.includes(aspect) 
+                            ? 'bg-green-100 border-green-300 text-green-800' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50')"
+                >
+                  {{aspect}}
+                </button>
+              </div>
+              
+              <div class="flex gap-2 mb-3">
+                <input
+                  #customPositiveInput
+                  type="text"
+                  placeholder="Ajouter un aspect personnalisé..."
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  (keyup.enter)="addCustomPositiveAspect(customPositiveInput)"
+                >
+                <button
+                  type="button"
+                  (click)="addCustomPositiveAspect(customPositiveInput)"
+                  class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Ajouter
+                </button>
+              </div>
+
+              <div *ngIf="positiveAspectsArray.length > 0" class="space-y-2">
+                <h5 class="text-sm font-medium text-gray-700">Aspects sélectionnés:</h5>
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    *ngFor="let aspect of positiveAspectsArray.controls; let i = index"
+                    class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
+                  >
+                    {{aspect.value}}
+                    <button
+                      type="button"
+                      (click)="removePositiveAspect(i)"
+                      class="ml-2 text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Points d'amélioration -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                🔧 Points d'amélioration
+              </label>
+              <div class="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  *ngFor="let area of predefinedImprovementAreas"
+                  type="button"
+                  (click)="addImprovementArea(area)"
+                  [class]="'px-3 py-2 text-sm border rounded-md transition-colors ' + 
+                           (improvementAreasArray.value.includes(area) 
+                            ? 'bg-orange-100 border-orange-300 text-orange-800' 
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50')"
+                >
+                  {{area}}
+                </button>
+              </div>
+              
+              <div class="flex gap-2 mb-3">
+                <input
+                  #customImprovementInput
+                  type="text"
+                  placeholder="Ajouter une suggestion personnalisée..."
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  (keyup.enter)="addCustomImprovementArea(customImprovementInput)"
+                >
+                <button
+                  type="button"
+                  (click)="addCustomImprovementArea(customImprovementInput)"
+                  class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                >
+                  Ajouter
+                </button>
+              </div>
+
+              <div *ngIf="improvementAreasArray.length > 0" class="space-y-2">
+                <h5 class="text-sm font-medium text-gray-700">Suggestions sélectionnées:</h5>
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    *ngFor="let area of improvementAreasArray.controls; let i = index"
+                    class="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full"
+                  >
+                    {{area.value}}
+                    <button
+                      type="button"
+                      (click)="removeImprovementArea(i)"
+                      class="ml-2 text-orange-600 hover:text-orange-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recommandation et visibilité -->
+            <div class="space-y-4 pt-4 border-t border-gray-200">
+              <div class="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="wouldRecommend"
+                  formControlName="wouldRecommend"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                >
+                <label for="wouldRecommend" class="text-sm font-medium text-gray-700">
+                  Je recommande ce coach
+                </label>
+              </div>
+
+              <div class="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="isPublic"
+                  formControlName="isPublic"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                >
+                <label for="isPublic" class="text-sm font-medium text-gray-700">
+                  Rendre ce feedback public (visible par autres utilisateurs)
+                </label>
+              </div>
+            </div>
+
+            <!-- Informations additionnelles (optionnel) -->
+            <div class="space-y-4 pt-4 border-t border-gray-200">
+              <h5 class="text-sm font-medium text-gray-700">Informations additionnelles (optionnel)</h5>
+              
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">Objectifs de la séance</label>
+                <textarea
+                  formControlName="objectives"
+                  rows="2"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Quels étaient les objectifs ? (un par ligne)"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">Résultats obtenus</label>
+                <textarea
+                  formControlName="outcomes"
+                  rows="2"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Qu'avez-vous accompli ? (un par ligne)"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">Prochaines étapes</label>
+                <textarea
+                  formControlName="nextSteps"
+                  rows="2"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Que faire ensuite ? (une action par ligne)"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-gray-50 px-6 py-4 flex justify-between">
+          <button
+            *ngIf="currentStep > 1"
+            type="button"
+            (click)="previousStep()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Précédent
+          </button>
+          
+          <div class="flex space-x-3">
+            <button
+              type="button"
+              (click)="close()"
+              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            
+            <button
+              *ngIf="currentStep < totalSteps"
+              type="button"
+              (click)="nextStep()"
+              [disabled]="!canProceedToNextStep()"
+              [class]="'inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium ' +
+                       (canProceedToNextStep() 
+                        ? 'text-white bg-blue-600 hover:bg-blue-700' 
+                        : 'text-gray-400 bg-gray-200 cursor-not-allowed')"
+            >
+              Suivant
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+            
+            <button
+              *ngIf="currentStep === totalSteps"
+              type="submit"
+              [disabled]="!feedbackForm.valid || isSubmitting"
+              [class]="'inline-flex items-center px-6 py-2 rounded-md shadow-sm text-sm font-medium ' +
+                       (feedbackForm.valid && !isSubmitting
+                        ? 'text-white bg-green-600 hover:bg-green-700' 
+                        : 'text-gray-400 bg-gray-200 cursor-not-allowed')"
+            >
+              <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{isSubmitting ? 'Envoi...' : 'Envoyer le feedback'}}
+            </button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>

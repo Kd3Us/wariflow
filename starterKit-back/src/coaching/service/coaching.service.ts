@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
-import { Coach } from './entities/coach.entity';
-import { Session, SessionStatus } from './entities/session.entity';
-import { Review } from './entities/review.entity';
-import { Availability } from './entities/availability.entity';
+import { Coach } from '../entities/coach.entity';
+import { Session, SessionStatus } from '../entities/session.entity';
+import { Review } from '../entities/review.entity';
+import { Availability } from '../entities/availability.entity';
+import { SessionHistoryService } from './session-history.service';
 
 @Injectable()
 export class CoachingService implements OnModuleInit {
@@ -17,6 +18,7 @@ export class CoachingService implements OnModuleInit {
     private reviewRepository: Repository<Review>,
     @InjectRepository(Availability)
     private availabilityRepository: Repository<Availability>,
+    private sessionHistoryService: SessionHistoryService,
   ) {}
 
   async onModuleInit() {
@@ -252,6 +254,11 @@ export class CoachingService implements OnModuleInit {
       throw new Error('Ce créneau n\'est plus disponible');
     }
 
+    const coach = await this.findCoachById(sessionData.coachId);
+    if (!coach) {
+      throw new Error('Coach introuvable');
+    }
+
     const session = this.sessionRepository.create({
       coachId: sessionData.coachId,
       userId: sessionData.userId,
@@ -266,8 +273,51 @@ export class CoachingService implements OnModuleInit {
     availability.isBooked = true;
     await this.availabilityRepository.save(availability);
 
+    await this.sessionHistoryService.createSessionHistory({
+      sessionId: savedSession.id,
+      coachId: sessionData.coachId,
+      userId: sessionData.userId,
+      coachName: coach.name,
+      date: new Date(sessionData.date),
+      duration: sessionData.duration || 60,
+      topic: sessionData.topic
+    });
+
     console.log('Session booked and availability updated:', savedSession.id);
     return savedSession;
+  }
+
+  async completeSession(sessionId: string, completionData: {
+    notes?: string;
+    rating?: number;
+    feedback?: string;
+    objectives?: string[];
+    outcomes?: string[];
+    nextSteps?: string[];
+  }) {
+    const session = await this.sessionRepository.findOne({ where: { id: sessionId } });
+    if (!session) {
+      throw new Error('Session introuvable');
+    }
+
+    session.status = SessionStatus.COMPLETED;
+    if (completionData.notes) session.notes = completionData.notes;
+    if (completionData.rating) session.rating = completionData.rating;
+    if (completionData.feedback) session.feedback = completionData.feedback;
+
+    const updatedSession = await this.sessionRepository.save(session);
+
+    if (completionData.rating || completionData.feedback) {
+      await this.sessionHistoryService.addFeedback(sessionId, {
+        rating: completionData.rating || 0,
+        feedback: completionData.feedback || '',
+        objectives: completionData.objectives || [],
+        outcomes: completionData.outcomes || [],
+        nextSteps: completionData.nextSteps || []
+      });
+    }
+
+    return updatedSession;
   }
 
   async getUserSessions(userId: string) {
@@ -299,6 +349,15 @@ export class CoachingService implements OnModuleInit {
 
     session.status = SessionStatus.CANCELLED;
     await this.sessionRepository.save(session);
+    
+    const availability = await this.availabilityRepository.findOne({
+      where: { coachId: session.coachId, isBooked: true }
+    });
+    
+    if (availability) {
+      availability.isBooked = false;
+      await this.availabilityRepository.save(availability);
+    }
     
     return { success: true };
   }
@@ -358,6 +417,8 @@ export class CoachingService implements OnModuleInit {
 
     const monthlyStats = await this.getMonthlySessionStats(userId);
 
+    const historyStats = await this.sessionHistoryService.getDashboardStats(userId);
+
     return {
       totalSessions: userSessions.length,
       completedSessions: completedSessions.length,
@@ -365,7 +426,8 @@ export class CoachingService implements OnModuleInit {
       averageRating,
       totalHours,
       favoriteSpecialties,
-      monthlyProgress: monthlyStats
+      monthlyProgress: monthlyStats,
+      detailedStats: historyStats
     };
   }
 
@@ -398,5 +460,33 @@ export class CoachingService implements OnModuleInit {
   async sendSessionReminder(sessionId: string, type: string) {
     console.log(`Rappel ${type} envoyé pour la session ${sessionId}`);
     return { success: true };
+  }
+
+  async getSessionHistory(userId: string, filters?: any) {
+    return await this.sessionHistoryService.getUserSessionHistory(userId, filters);
+  }
+
+  async addSessionFeedback(sessionId: string, feedbackData: any) {
+    return await this.sessionHistoryService.addFeedback(sessionId, feedbackData);
+  }
+
+  async createDetailedFeedback(sessionHistoryId: string, feedbackData: any) {
+    return await this.sessionHistoryService.createDetailedFeedback(sessionHistoryId, feedbackData);
+  }
+
+  async uploadSessionDocument(sessionHistoryId: string, documentData: any) {
+    return await this.sessionHistoryService.uploadSessionDocument(sessionHistoryId, documentData);
+  }
+
+  async trackSessionProgress(sessionHistoryId: string, progressData: any) {
+    return await this.sessionHistoryService.trackProgress(sessionHistoryId, progressData);
+  }
+
+  async generateSessionReport(userId: string, filters?: any) {
+    return await this.sessionHistoryService.generateSessionReport(userId, filters);
+  }
+
+  async exportSessionHistory(userId: string, format: 'json' | 'csv') {
+    return await this.sessionHistoryService.exportHistory(userId, format);
   }
 }

@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { Coach } from './coach.entity';
+import { SessionHistory } from './session-history.entity';
 
 export enum SessionStatus {
   SCHEDULED = 'scheduled',
@@ -52,4 +53,7 @@ export class Session {
   @ManyToOne(() => Coach, coach => coach.sessions)
   @JoinColumn({ name: 'coachId' })
   coach: Coach;
+
+  @OneToOne(() => SessionHistory, sessionHistory => sessionHistory.sessionId, { cascade: true })
+  sessionHistory: SessionHistory;
 }

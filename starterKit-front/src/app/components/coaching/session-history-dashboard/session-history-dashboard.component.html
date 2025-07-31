@@ -1,0 +1,274 @@
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Header avec actions -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Tableau de Bord Coaching</h1>
+      <p class="text-gray-600 mt-2">Suivez votre progression et vos séances</p>
+    </div>
+    
+    <div class="flex space-x-4">
+      <button
+        (click)="refreshData()"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        [disabled]="isLoading"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Actualiser
+      </button>
+      
+      <div class="relative">
+        <button
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          type="button"
+          id="export-menu"
+          aria-expanded="false"
+          aria-haspopup="true"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Exporter
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        
+        <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          <div class="py-1" role="menu">
+            <button
+              (click)="exportData('csv')"
+              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              role="menuitem"
+            >
+              Exporter en CSV
+            </button>
+            <button
+              (click)="exportData('json')"
+              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              role="menuitem"
+            >
+              Exporter en JSON
+            </button>
+            <button
+              (click)="generateReport()"
+              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              role="menuitem"
+            >
+              Générer un rapport
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && stats" class="space-y-8">
+    
+    <!-- Statistiques principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Total Séances</p>
+            <p class="text-2xl font-semibold text-gray-900">{{stats.totalSessions}}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Séances Terminées</p>
+            <p class="text-2xl font-semibold text-gray-900">{{stats.completedSessions}}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Note Moyenne</p>
+            <p class="text-2xl font-semibold text-gray-900">{{stats.averageRating}}/5</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Total Heures</p>
+            <p class="text-2xl font-semibold text-gray-900">{{stats.totalHours}}h</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Graphique progression mensuelle -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Progression Mensuelle</h3>
+        <div class="h-64">
+          <canvas 
+            baseChart
+            [data]="chartData"
+            [options]="chartOptions"
+            [type]="'line'"
+            *ngIf="chartData">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Graphique compétences -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Progression des Compétences</h3>
+        <div class="h-64">
+          <canvas 
+            baseChart
+            [data]="skillsChartData"
+            [options]="skillsChartOptions"
+            [type]="'bar'"
+            *ngIf="skillsChartData">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sujets populaires et séances récentes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Sujets les plus travaillés -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Sujets les Plus Travaillés</h3>
+        <div class="space-y-4">
+          <div *ngFor="let topic of stats.topTopics" class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-900">{{topic.topic}}</span>
+            <div class="flex items-center space-x-2">
+              <div class="w-24 bg-gray-200 rounded-full h-2">
+                <div 
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  [style.width.%]="getProgressBarWidth(topic.count, stats.totalSessions)">
+                </div>
+              </div>
+              <span class="text-sm text-gray-500">{{topic.count}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Séances récentes -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Séances Récentes</h3>
+        <div class="space-y-4">
+          <div *ngFor="let session of recentSessions" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900">{{session.topic}}</p>
+              <p class="text-xs text-gray-500">{{session.coachName}} • {{session.date | date:'short':'fr-FR'}}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500">{{formatDuration(session.duration)}}</span>
+              <div *ngIf="session.rating" class="flex">
+                <span 
+                  *ngFor="let star of getRatingStars(session.rating)" 
+                  [class]="'text-xs ' + (star.filled ? 'text-yellow-400' : 'text-gray-300')">
+                  ★
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="recentSessions.length === 0" class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune séance</h3>
+            <p class="mt-1 text-sm text-gray-500">Commencez par réserver votre première session.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progression des compétences détaillée -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">Détail des Compétences</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let skill of stats.skillsProgress" class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-900">{{skill.skill}}</span>
+            <span [class]="'text-sm font-medium ' + getSkillLevelColor(skill.level)">
+              {{getSkillLevelText(skill.level)}} ({{skill.level}}%)
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              [class]="'h-2 rounded-full transition-all duration-500 ' + getProgressBarColor(skill.level)"
+              [style.width.%]="skill.level">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="stats.skillsProgress.length === 0" class="text-center py-8">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune progression enregistrée</h3>
+        <p class="mt-1 text-sm text-gray-500">Les compétences apparaîtront ici après vos premières séances.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !stats" class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune donnée disponible</h3>
+    <p class="mt-1 text-sm text-gray-500">Commencez par réserver votre première session de coaching.</p>
+    <div class="mt-6">
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+      >
+        Réserver une session
+      </button>
+    </div>
+  </div>
+</div>

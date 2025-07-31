@@ -29,6 +29,15 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'session-history',
+    loadChildren: () => import('./modules/session-history/session-history.module').then(m => m.SessionHistoryModule),
+    canActivate: [authGuard],
+    data: { 
+      title: 'Historique & Feedbacks',
+      description: 'Gestion de l\'historique des séances et feedbacks de coaching'
+    }
+  },
+  {
     path: '**',
     redirectTo: 'kanban'
   }

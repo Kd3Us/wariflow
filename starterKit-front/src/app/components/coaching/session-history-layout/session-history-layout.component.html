@@ -1,0 +1,134 @@
+<div class="min-h-screen bg-gray-50">
+  
+  <!-- Navigation Header -->
+  <nav class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        
+        <!-- Logo et titre -->
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <h1 class="text-xl font-bold text-gray-900">
+              📚 Historique & Feedbacks
+            </h1>
+          </div>
+        </div>
+
+        <!-- Navigation principale -->
+        <div class="hidden md:flex items-center space-x-8">
+          <button
+            *ngFor="let item of navigationItems"
+            (click)="navigate(item.route)"
+            [class]="'inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors ' +
+                     (isActive(item.route) 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300')"
+          >
+            <span [innerHTML]="getIconSvg(item.icon)" class="mr-2"></span>
+            {{item.label}}
+          </button>
+        </div>
+
+        <!-- Menu mobile -->
+        <div class="md:hidden flex items-center">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            aria-expanded="false"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation mobile (cachée par défaut) -->
+    <div class="md:hidden">
+      <div class="pt-2 pb-3 space-y-1">
+        <button
+          *ngFor="let item of navigationItems"
+          (click)="navigate(item.route)"
+          [class]="'block w-full text-left pl-3 pr-4 py-2 text-base font-medium transition-colors ' +
+                   (isActive(item.route)
+                    ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')"
+        >
+          <div class="flex items-center">
+            <span [innerHTML]="getIconSvg(item.icon)" class="mr-3"></span>
+            <div>
+              <div>{{item.label}}</div>
+              <div class="text-sm text-gray-400">{{item.description}}</div>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Breadcrumb (optionnel) -->
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center space-x-4 py-3">
+        <nav class="flex" aria-label="Breadcrumb">
+          <ol class="flex items-center space-x-4">
+            <li>
+              <div>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                  </svg>
+                  <span class="sr-only">Accueil</span>
+                </a>
+              </div>
+            </li>
+            
+            <li>
+              <div class="flex items-center">
+                <svg class="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-4 text-sm font-medium text-gray-500">Coaching</span>
+              </div>
+            </li>
+            
+            <li>
+              <div class="flex items-center">
+                <svg class="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-4 text-sm font-medium text-gray-900">Historique</span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer (optionnel) -->
+  <footer class="bg-white border-t border-gray-200 mt-auto">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          © 2025 StartupKit. Système d'historique et feedbacks de coaching.
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-sm text-gray-500 hover:text-gray-900">
+            Support
+          </a>
+          <a href="#" class="text-sm text-gray-500 hover:text-gray-900">
+            Documentation
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
