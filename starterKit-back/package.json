@@ -30,7 +30,7 @@
     "db:dev:stop": "docker-compose -f docker-compose.dev.yml down",
     "db:dev:reset": "docker-compose -f docker-compose.dev.yml down -v && docker-compose -f docker-compose.dev.yml up -d",
     "db:dev:logs": "docker-compose -f docker-compose.dev.yml logs -f postgres-coaching-dev",
-    "start:dev:coaching": "NODE_ENV=development npm run start:dev",
+    "start:dev:coaching": "npm run start:dev",
     "coaching:dev": "npm run db:dev:start && npm run start:dev:coaching"
   },
   "dependencies": {

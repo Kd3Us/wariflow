@@ -7,6 +7,7 @@ import { Review } from '../entities/review.entity';
 import { Availability } from '../entities/availability.entity';
 import { SessionHistoryService } from './session-history.service';
 
+
 @Injectable()
 export class CoachingService implements OnModuleInit {
   constructor(
@@ -149,8 +150,8 @@ export class CoachingService implements OnModuleInit {
     const queryBuilder = this.coachRepository.createQueryBuilder('coach');
 
     if (filters.specialty) {
-      queryBuilder.andWhere('coach.specialties ILIKE :specialty', {
-        specialty: `%${filters.specialty}%`
+      queryBuilder.andWhere(':specialty = ANY(coach.specialties)', {
+        specialty: filters.specialty
       });
     }
 
@@ -174,7 +175,7 @@ export class CoachingService implements OnModuleInit {
       .createQueryBuilder('coach')
       .where('coach.name ILIKE :term', { term: `%${searchTerm}%` })
       .orWhere('coach.bio ILIKE :term', { term: `%${searchTerm}%` })
-      .orWhere('coach.specialties ILIKE :term', { term: `%${searchTerm}%` })
+      .orWhere('array_to_string(coach.specialties, \',\') ILIKE :term', { term: `%${searchTerm}%` })
       .getMany();
   }
 

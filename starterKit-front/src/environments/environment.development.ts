@@ -4,7 +4,7 @@ export const environment = {
     apiWorkspaceURL: 'http://localhost:3009/workspaces',
     apiProjectManagementURL: 'http://localhost:3009/project-management',
     apiTeamsURL: 'http://localhost:3009/teams',
-    apiCoachingURL: 'http://localhost:3001/coaching',
+    apiCoachingURL: 'http://localhost:3009/coaching',
     apiSessionHistoryURL: 'http://localhost:3001/session-history',
     apiFeedbackURL: 'http://localhost:3001/feedbacks',
     externaleAuthUrl: "https://startupkit.speedpresta.com/",
