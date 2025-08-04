@@ -1,11 +1,15 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SessionHistoryService, SessionHistory, DetailedFeedback } from '../../../services/session-history.service';
 
 @Component({
   selector: 'app-feedback-modal',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './feedback-modal.component.html',
-  styleUrls: ['./feedback-modal.component.scss']
+  styleUrls: ['./feedback-modal.component.css']
 })
 export class FeedbackModalComponent implements OnInit, OnChanges {
   @Input() session: SessionHistory | null = null;
@@ -245,7 +249,6 @@ export class FeedbackModalComponent implements OnInit, OnChanges {
     this.sessionHistoryService.createDetailedFeedback(feedbackData).subscribe({
       next: (feedback) => {
         this.isSubmitting = false;
-        console.log('Feedback envoyé avec succès');
         this.onFeedbackSubmitted.emit(feedback);
         this.close();
 
@@ -256,7 +259,6 @@ export class FeedbackModalComponent implements OnInit, OnChanges {
       error: (error) => {
         console.error('Error submitting feedback:', error);
         this.isSubmitting = false;
-        console.error('Impossible d\'enregistrer le feedback');
       }
     });
   }

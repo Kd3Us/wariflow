@@ -21,7 +21,7 @@ import { CoachingModule } from './coaching/coaching.module';
     LoggerModule,
     WorkspacesModule,
     ProjectManagementModule,
-    CoachingModule,
+    //CoachingModule,
   ],
 })
 export class AppModule {}

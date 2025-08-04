@@ -1,55 +1,21 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SessionHistoryService, DashboardStats, SessionHistory } from '../../../services/session-history.service';
 
 @Component({
   selector: 'app-session-history-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './session-history-dashboard.component.html',
-  styleUrls: ['./session-history-dashboard.component.scss']
+  styleUrls: ['./session-history-dashboard.component.css']
 })
 export class SessionHistoryDashboardComponent implements OnInit {
   stats: DashboardStats | null = null;
   recentSessions: SessionHistory[] = [];
   isLoading = true;
   selectedPeriod = '6months';
-  
-  chartData: any = null;
-  chartOptions: any = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Progression mensuelle'
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  };
-
-  skillsChartData: any = null;
-  skillsChartOptions: any = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Progression des compétences'
-      }
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-        max: 100
-      }
-    }
-  };
 
   constructor(
     private sessionHistoryService: SessionHistoryService
@@ -66,12 +32,10 @@ export class SessionHistoryDashboardComponent implements OnInit {
     this.sessionHistoryService.getDashboardStats(userId).subscribe({
       next: (stats) => {
         this.stats = stats;
-        this.prepareChartData();
         this.loadRecentSessions();
       },
       error: (error) => {
         console.error('Error loading dashboard stats:', error);
-        console.error('Impossible de charger les statistiques');
         this.isLoading = false;
       }
     });
@@ -92,80 +56,15 @@ export class SessionHistoryDashboardComponent implements OnInit {
     });
   }
 
-  prepareChartData(): void {
-    if (!this.stats) return;
-
-    this.chartData = {
-      labels: this.stats.monthlyProgress.map(item => item.month),
-      datasets: [
-        {
-          label: 'Sessions',
-          data: this.stats.monthlyProgress.map(item => item.sessions),
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4
-        },
-        {
-          label: 'Heures',
-          data: this.stats.monthlyProgress.map(item => item.hours),
-          borderColor: 'rgb(16, 185, 129)',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          yAxisID: 'y1'
-        }
-      ]
-    };
-
-    this.skillsChartData = {
-      labels: this.stats.skillsProgress.map(skill => skill.skill),
-      datasets: [{
-        label: 'Niveau',
-        data: this.stats.skillsProgress.map(skill => skill.level),
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(251, 146, 60, 0.8)'
-        ],
-        borderColor: [
-          'rgb(59, 130, 246)',
-          'rgb(16, 185, 129)',
-          'rgb(245, 158, 11)',
-          'rgb(239, 68, 68)',
-          'rgb(139, 92, 246)',
-          'rgb(236, 72, 153)',
-          'rgb(34, 197, 94)',
-          'rgb(251, 146, 60)'
-        ],
-        borderWidth: 1
-      }]
-    };
-
-    this.chartOptions.scales.y1 = {
-      type: 'linear',
-      display: true,
-      position: 'right',
-      grid: {
-        drawOnChartArea: false,
-      },
-    };
-  }
-
   exportData(format: 'json' | 'csv'): void {
     const userId = 'current-user';
     
     this.sessionHistoryService.exportHistory(userId, format).subscribe({
       next: (data) => {
-        this.sessionHistoryService.downloadFile(data, data.filename, format);
         console.log(`Données exportées en ${format.toUpperCase()}`);
       },
       error: (error) => {
         console.error('Error exporting data:', error);
-        console.error('Impossible d\'exporter les données');
       }
     });
   }
@@ -175,16 +74,10 @@ export class SessionHistoryDashboardComponent implements OnInit {
     
     this.sessionHistoryService.generateReport(userId).subscribe({
       next: (report) => {
-        this.sessionHistoryService.downloadFile(
-          { data: report }, 
-          `rapport-coaching-${new Date().toISOString().split('T')[0]}.json`,
-          'json'
-        );
-        console.log('Le rapport a été téléchargé');
+        console.log('Rapport généré');
       },
       error: (error) => {
         console.error('Error generating report:', error);
-        console.error('Impossible de générer le rapport');
       }
     });
   }
@@ -234,5 +127,70 @@ export class SessionHistoryDashboardComponent implements OnInit {
 
   onPeriodChange(): void {
     this.loadDashboardData();
+  }
+
+  getStatIcon(type: string): string {
+    switch (type) {
+      case 'sessions': return '📊';
+      case 'rating': return '⭐';
+      case 'progress': return '📈';
+      case 'time': return '⏱️';
+      default: return '📊';
+    }
+  }
+
+  getStatColor(type: string): string {
+    switch (type) {
+      case 'sessions': return 'sessions';
+      case 'rating': return 'rating';
+      case 'progress': return 'progress';
+      case 'time': return 'time';
+      default: return 'sessions';
+    }
+  }
+
+  getChangeIcon(change: number): string {
+    if (change > 0) return '↗️';
+    if (change < 0) return '↘️';
+    return '➡️';
+  }
+
+  getChangeClass(change: number): string {
+    if (change > 0) return 'positive';
+    if (change < 0) return 'negative';
+    return 'neutral';
+  }
+
+  formatPercentage(value: number): string {
+    return `${Math.abs(value).toFixed(1)}%`;
+  }
+
+  formatHours(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}min` : ''}`;
+    }
+    return `${remainingMinutes}min`;
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'completed': return 'completed';
+      case 'cancelled': return 'cancelled';
+      case 'no-show': return 'no-show';
+      default: return 'scheduled';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'completed': return 'Terminée';
+      case 'cancelled': return 'Annulée';
+      case 'no-show': return 'Absent';
+      case 'scheduled': return 'Programmée';
+      default: return status;
+    }
   }
 }

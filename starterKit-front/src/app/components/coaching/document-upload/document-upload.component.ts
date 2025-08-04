@@ -1,11 +1,15 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SessionHistoryService, SessionHistory, SessionDocument } from '../../../services/session-history.service';
 
 @Component({
   selector: 'app-document-upload',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './document-upload.component.html',
-  styleUrls: ['./document-upload.component.scss']
+  styleUrls: ['./document-upload.component.css']
 })
 export class DocumentUploadComponent implements OnInit, OnChanges {
   @Input() session: SessionHistory | null = null;
@@ -45,7 +49,7 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
     'Fiche récap'
   ];
   
-  maxFileSize = 10 * 1024 * 1024; // 10MB
+  maxFileSize = 10 * 1024 * 1024;
   allowedExtensions = [
     'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx',
     'jpg', 'jpeg', 'png', 'gif', 'svg',
@@ -135,13 +139,11 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
   }
 
   validateFile(file: File): boolean {
-    // Vérifier la taille
     if (file.size > this.maxFileSize) {
       console.error(`Fichier trop volumineux: ${file.name} (${this.formatFileSize(file.size)})`);
       return false;
     }
 
-    // Vérifier l'extension
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension && !this.allowedExtensions.includes(extension)) {
       console.error(`Type de fichier non autorisé: ${file.name}`);
@@ -198,8 +200,6 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
       this.isUploading = false;
       this.uploadProgress = 100;
       
-      console.log('Documents uploadés avec succès');
-      
       uploadedDocuments.forEach(doc => {
         if (doc) {
           this.onDocumentUploaded.emit(doc);
@@ -212,7 +212,6 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
     }).catch((error) => {
       console.error('Error uploading documents:', error);
       this.isUploading = false;
-      console.error('Erreur lors de l\'upload');
     });
   }
 
@@ -238,7 +237,6 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
       return;
     }
 
-    // TODO: Implémenter la suppression côté backend
     console.log('Delete document:', document.id);
   }
 
@@ -299,7 +297,7 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
   }
 
   canUploadMoreFiles(): boolean {
-    return this.selectedFiles.length < 5; // Limite de 5 fichiers par upload
+    return this.selectedFiles.length < 5;
   }
 
   getAcceptedFileTypes(): string {

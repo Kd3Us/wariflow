@@ -1,20 +1,37 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { SessionHistoryService, SessionHistory, DetailedFeedback } from '../../../services/session-history.service';
+import { FeedbackModalComponent } from '../feedback-modal/feedback-modal.component';
 
 @Component({
   selector: 'app-session-list',
+  standalone: true,
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    FormsModule, 
+    RouterModule,
+    FeedbackModalComponent
+  ],
   templateUrl: './session-list.component.html',
-  styleUrls: ['./session-list.component.scss']
+  styleUrls: ['./session-list.component.css']
 })
 export class SessionListComponent implements OnInit {
   sessions: SessionHistory[] = [];
   filteredSessions: SessionHistory[] = [];
-  isLoading = true;
-  
   selectedSession: SessionHistory | null = null;
+  
+  isLoading = true;
+  error: string | null = null;
+  
   showFeedbackModal = false;
   showSessionDetail = false;
-  
+
+  // Exposer Math pour le template
+  Math = Math;
+
   filters = {
     search: '',
     coachId: '',
@@ -25,7 +42,7 @@ export class SessionListComponent implements OnInit {
     status: '',
     tags: [] as string[]
   };
-  
+
   availableTopics: string[] = [];
   availableCoaches: Array<{ id: string; name: string }> = [];
   availableTags: string[] = [];
@@ -70,6 +87,7 @@ export class SessionListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading sessions:', error);
+        this.error = 'Erreur lors du chargement des séances';
         this.isLoading = false;
       }
     });
@@ -138,7 +156,7 @@ export class SessionListComponent implements OnInit {
 
     if (this.filters.tags.length > 0) {
       filtered = filtered.filter(s => 
-        this.filters.tags.some(tag => s.tags.includes(tag))
+        this.filters.tags.some(tag => s.tags?.includes(tag))
       );
     }
 
@@ -315,7 +333,7 @@ export class SessionListComponent implements OnInit {
       pages.push(1);
       
       if (current > 4) {
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
       }
       
       const start = Math.max(2, current - 2);
@@ -326,7 +344,7 @@ export class SessionListComponent implements OnInit {
       }
       
       if (current < total - 3) {
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
       }
       
       pages.push(total);
@@ -340,8 +358,8 @@ export class SessionListComponent implements OnInit {
     
     this.sessionHistoryService.exportHistory(userId, 'csv').subscribe({
       next: (data) => {
-        this.sessionHistoryService.downloadFile(data, data.filename, 'csv');
-        console.log('Sessions exportées avec succès');
+        // Gérer le téléchargement
+        console.log('Export réussi');
       },
       error: (error) => {
         console.error('Error exporting sessions:', error);

@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  postgres-coaching-dev:
+    image: postgres:15
+    container_name: coaching-postgres-dev
+    environment:
+      POSTGRES_DB: coaching_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5434:5432"  # Port différent pour éviter les conflits
+    volumes:
+      - postgres_coaching_dev_data:/var/lib/postgresql/data
+      - ./init-coaching-dev.sql:/docker-entrypoint-initdb.d/init-coaching-dev.sql
+    restart: unless-stopped
+    networks:
+      - coaching-dev-network
+
+  pgadmin-coaching-dev:
+    image: dpage/pgadmin4:latest
+    container_name: coaching-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@coaching.local
+      PGADMIN_DEFAULT_PASSWORD: dev123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5052:80"  # Port différent
+    depends_on:
+      - postgres-coaching-dev
+    restart: unless-stopped
+    networks:
+      - coaching-dev-network
+
+volumes:
+  postgres_coaching_dev_data:
+    driver: local
+
+networks:
+  coaching-dev-network:
+    driver: bridge
