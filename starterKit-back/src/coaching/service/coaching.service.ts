@@ -6,6 +6,7 @@ import { Session, SessionStatus } from '../entities/session.entity';
 import { Review } from '../entities/review.entity';
 import { Availability } from '../entities/availability.entity';
 import { SessionHistoryService } from './session-history.service';
+import { CreateCoachDto } from '../dto/create-coach.dto';
 
 
 @Injectable()
@@ -430,6 +431,26 @@ export class CoachingService implements OnModuleInit {
       monthlyProgress: monthlyStats,
       detailedStats: historyStats
     };
+  }
+
+  async createCoach(createCoachDto: CreateCoachDto): Promise<Coach> {
+    const coach = this.coachRepository.create({
+      ...createCoachDto,
+      rating: 0,
+      reviewsCount: 0,
+      isOnline: false,
+      totalSessions: 0,
+      successRate: 0,
+      certifications: createCoachDto.certifications || [],
+    });
+
+    return await this.coachRepository.save(coach);
+  }
+
+  async getAllCoaches(): Promise<Coach[]> {
+    return await this.coachRepository.find({
+      order: { createdAt: 'DESC' }
+    });
   }
 
   private async getMonthlySessionStats(userId: string) {

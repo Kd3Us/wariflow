@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoachingService } from '../../services/coaching.service';
 import { NotificationService } from '../../services/notification.service';
+import { CoachCreationTabComponent } from './coach-creation-tab/coach-creation-tab.component';
+import { JwtService } from '../../services/jwt.service';
 
 export interface Coach {
   id: string;
@@ -75,7 +77,7 @@ export interface MatchingCriteria {
 @Component({
   selector: 'app-coach-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachCreationTabComponent],
   templateUrl: './coach-manager.component.html',
   styleUrls: ['./coach-manager.component.css']
 })
@@ -100,9 +102,12 @@ export class CoachManagerComponent implements OnInit {
   searchTerm: string = '';
   filterSpecialty: string = '';
   showFilters: boolean = false;
-  viewMode: 'browse' | 'matched' | 'calendar' | 'history' = 'browse';
+  viewMode: 'browse' | 'matched' | 'calendar' | 'history' | 'admin' = 'browse';
   showBookingModal: boolean = false;
   selectedTimeSlot: { date: Date; slot: TimeSlot } | null = null;
+
+  // Nouvelles propriétés pour l'admin
+  isUserAdmin = false;
 
   // États de chargement
   isLoadingCoaches: boolean = false;
@@ -119,14 +124,41 @@ export class CoachManagerComponent implements OnInit {
 
   constructor(
     private coachingService: CoachingService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private jwtService: JwtService
   ) {}
 
   ngOnInit(): void {
+    this.checkAdminRights();
     this.loadCoaches();
     this.loadAvailabilities();
     this.loadSessions();
     this.loadReviews();
+  }
+
+  private checkAdminRights(): void {
+    const decodedToken = this.jwtService.decodeToken();
+    
+    if (!decodedToken) {
+      this.isUserAdmin = false;
+      return;
+    }
+
+    this.isUserAdmin = true ;
+     // decodedToken['role'] === 'admin' || 
+     // decodedToken['role'] === 'ADMIN' ||
+     // decodedToken['isAdmin'] === true ||
+     // (Array.isArray(decodedToken['roles']) && decodedToken['roles'].includes('admin'));
+  }
+
+  setActiveTab(tab: string): void {
+    this.viewMode = tab as 'browse' | 'matched' | 'calendar' | 'history' | 'admin';
+  }
+
+  onCoachCreated(coach: any): void {
+    console.log('Coach créé:', coach);
+    // Recharger la liste des coachs
+    this.loadCoaches();
   }
 
   loadCoaches(): void {
@@ -594,7 +626,7 @@ export class CoachManagerComponent implements OnInit {
     return coach ? coach.name : 'Coach inconnu';
   }
 
-  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history'): void {
+  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history' | 'admin'): void {
     this.viewMode = mode;
     if (mode === 'browse') {
       this.filteredCoaches = this.coaches;

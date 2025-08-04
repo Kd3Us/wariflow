@@ -1,0 +1,183 @@
+<div class="coach-tab-container">
+  <!-- En-tête avec bouton pour afficher/masquer le formulaire -->
+  <div class="tab-header">
+    <h2>Gestion des Coachs</h2>
+    <button 
+      class="btn btn-primary" 
+      (click)="toggleCreateForm()"
+      *ngIf="!showCreateForm"
+    >
+      <i class="fas fa-plus"></i>
+      Ajouter un Coach
+    </button>
+  </div>
+
+  <!-- Formulaire de création (masqué par défaut) -->
+  <div class="create-form-container" *ngIf="showCreateForm">
+    <div class="form-header">
+      <h3>Créer un nouveau coach</h3>
+      <button class="close-btn" (click)="hideCreateForm()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div class="success-alert" *ngIf="showSuccess">
+      <i class="fas fa-check-circle"></i>
+      Coach créé avec succès !
+    </div>
+
+    <div class="error-alert" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Formulaire compact -->
+    <form [formGroup]="coachForm" (ngSubmit)="onSubmit()" class="compact-form">
+      
+      <!-- Informations de base -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="name">Nom complet *</label>
+          <input id="name" type="text" formControlName="name" class="form-input" placeholder="Sarah Martin">
+          <div class="error-text" *ngIf="coachForm.get('name')?.invalid && coachForm.get('name')?.touched">
+            Nom requis (min. 2 caractères)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input id="email" type="email" formControlName="email" class="form-input" placeholder="sarah@example.com">
+          <div class="error-text" *ngIf="coachForm.get('email')?.invalid && coachForm.get('email')?.touched">
+            Email valide requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="experience">Expérience (années) *</label>
+          <input id="experience" type="number" formControlName="experience" class="form-input" min="0">
+          <div class="error-text" *ngIf="coachForm.get('experience')?.invalid && coachForm.get('experience')?.touched">
+            Expérience requise
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="hourlyRate">Tarif/h (€) *</label>
+          <input id="hourlyRate" type="number" formControlName="hourlyRate" class="form-input" min="1">
+          <div class="error-text" *ngIf="coachForm.get('hourlyRate')?.invalid && coachForm.get('hourlyRate')?.touched">
+            Tarif requis (min. 1€)
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo de profil -->
+      <div class="form-group">
+        <label for="avatar">Photo de profil (URL - optionnel)</label>
+        <input id="avatar" type="url" formControlName="avatar" class="form-input" placeholder="https://example.com/photo.jpg">
+      </div>
+
+      <!-- Spécialités -->
+      <div class="form-group">
+        <label>Spécialités *</label>
+        <div class="multi-select">
+          <select (change)="onSpecialtyChange($event)" class="form-select">
+            <option value="">Ajouter une spécialité</option>
+            <option *ngFor="let specialty of availableSpecialties" [value]="specialty">{{ specialty }}</option>
+          </select>
+          <div class="tags-container" *ngIf="specialtiesFormArray.length > 0">
+            <span class="tag" *ngFor="let specialty of specialtiesFormArray.controls; let i = index">
+              {{ specialty.value }}
+              <button type="button" (click)="removeSpecialty(i)">×</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Langues -->
+      <div class="form-group">
+        <label>Langues *</label>
+        <div class="multi-select">
+          <select (change)="onLanguageChange($event)" class="form-select">
+            <option value="">Ajouter une langue</option>
+            <option *ngFor="let language of availableLanguages" [value]="language">{{ language }}</option>
+          </select>
+          <div class="tags-container" *ngIf="languagesFormArray.length > 0">
+            <span class="tag" *ngFor="let language of languagesFormArray.controls; let i = index">
+              {{ language.value }}
+              <button type="button" (click)="removeLanguage(i)">×</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="timezone">Fuseau horaire *</label>
+          <select id="timezone" formControlName="timezone" class="form-select">
+            <option *ngFor="let tz of availableTimezones" [value]="tz">{{ tz }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="responseTime">Temps de réponse *</label>
+          <select id="responseTime" formControlName="responseTime" class="form-select">
+            <option *ngFor="let time of responseTimeOptions" [value]="time">{{ time }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Biographie -->
+      <div class="form-group">
+        <label for="bio">Biographie * (min. 50 caractères)</label>
+        <textarea id="bio" formControlName="bio" class="form-textarea" rows="3" 
+                  placeholder="Décrivez l'approche et l'expérience du coach..."></textarea>
+        <div class="char-info">{{ coachForm.get('bio')?.value?.length || 0 }}/50 min</div>
+        <div class="error-text" *ngIf="coachForm.get('bio')?.invalid && coachForm.get('bio')?.touched">
+          Biographie requise (minimum 50 caractères)
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="resetForm()">
+          Réinitialiser
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="coachForm.invalid || isLoading">
+          <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+          {{ isLoading ? 'Création...' : 'Créer le coach' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste des coachs existants -->
+  <div class="coaches-list" *ngIf="!showCreateForm">
+    <h3>Coachs existants</h3>
+    <div class="coach-item" *ngFor="let coach of coaches">
+      <div class="coach-info">
+        <img [src]="coach.avatar || '/assets/default-avatar.png'" [alt]="coach.name" class="coach-avatar">
+        <div class="coach-details">
+          <h4>{{ coach.name }}</h4>
+          <p>{{ coach.email }}</p>
+          <div class="coach-meta">
+            <span>{{ coach.experience }} ans • {{ coach.hourlyRate }}€/h</span>
+            <div class="specialties-mini">
+              <span class="specialty-mini" *ngFor="let specialty of coach.specialties.slice(0, 2)">{{ specialty }}</span>
+              <span *ngIf="coach.specialties.length > 2" class="more-mini">+{{ coach.specialties.length - 2 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="coach-actions">
+        <span class="status online" *ngIf="coach.isOnline">En ligne</span>
+        <span class="status offline" *ngIf="!coach.isOnline">Hors ligne</span>
+      </div>
+    </div>
+    
+    <div class="no-coaches" *ngIf="coaches.length === 0">
+      <i class="fas fa-users"></i>
+      <p>Aucun coach créé pour le moment</p>
+    </div>
+  </div>
+</div>

@@ -169,6 +169,26 @@ select[multiple] option:checked {
   border-radius: 2px;
 }
 
+/* NOUVEAU : Styles pour l'onglet admin */
+.admin-tab {
+  margin-left: auto;
+  color: #ff9800;
+  font-weight: 500;
+}
+
+.admin-tab.active {
+  color: #ff9800;
+  border-bottom-color: #ff9800;
+}
+
+.admin-tab.active::after {
+  background: linear-gradient(90deg, #ff9800, #f57c00);
+}
+
+.admin-tab i {
+  margin-right: 0.5rem;
+}
+
 /* Responsive grid adjustments */
 @media (max-width: 768px) {
   .grid-responsive {

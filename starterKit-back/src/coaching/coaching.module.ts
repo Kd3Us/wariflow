@@ -14,6 +14,7 @@ import { Feedback } from './entities/feedback.entity';
 import { SessionDocument } from './entities/session-document.entity';
 import { ProgressTracking } from './entities/progress-tracking.entity';
 import { CommonModule } from '../common/common.module';
+import { CoachController } from './controllers/coach.controller';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { CommonModule } from '../common/common.module';
       SessionHistory,
       Feedback,
       SessionDocument,
-      ProgressTracking
+      ProgressTracking,
+      CoachController
     ]),
     CommonModule
   ],

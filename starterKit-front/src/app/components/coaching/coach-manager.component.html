@@ -41,6 +41,17 @@
       <span class="material-icons text-lg">history</span>
       Historique
     </button>
+    
+    <!-- AJOUT : Onglet Admin -->
+    <button
+      *ngIf="isUserAdmin"
+      (click)="setViewMode('admin')"
+      [class]="'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors duration-200 admin-tab ml-auto ' + 
+               (viewMode === 'admin' ? 'bg-orange-500 text-white' : 'bg-white hover:bg-orange-50 text-orange-600 border border-orange-200')"
+    >
+      <span class="material-icons text-lg">admin_panel_settings</span>
+      Administration
+    </button>
   </div>
 
   <!-- Main Content Area -->
@@ -321,6 +332,11 @@
             <p class="text-gray-600">Aucune séance dans l'historique</p>
           </div>
         </div>
+      </div>
+
+      <!-- AJOUT : Admin View -->
+      <div *ngIf="viewMode === 'admin' && isUserAdmin">
+        <app-coach-creation-tab (coachCreated)="onCoachCreated($event)"></app-coach-creation-tab>
       </div>
 
     </div>
