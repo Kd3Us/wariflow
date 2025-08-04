@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CoachingController } from './controllers/coaching.controller';
 import { SessionHistoryController } from './controllers/session-history.controller';
 import { FeedbackController } from './controllers/feedback.controller';
+import { CoachController } from './controllers/coach.controller';
 import { CoachingService } from './service/coaching.service';
 import { SessionHistoryService } from './service/session-history.service';
 import { Coach } from './entities/coach.entity';
@@ -14,7 +15,6 @@ import { Feedback } from './entities/feedback.entity';
 import { SessionDocument } from './entities/session-document.entity';
 import { ProgressTracking } from './entities/progress-tracking.entity';
 import { CommonModule } from '../common/common.module';
-import { CoachController } from './controllers/coach.controller';
 
 @Module({
   imports: [
@@ -26,12 +26,16 @@ import { CoachController } from './controllers/coach.controller';
       SessionHistory,
       Feedback,
       SessionDocument,
-      ProgressTracking,
-      CoachController
+      ProgressTracking
     ]),
     CommonModule
   ],
-  controllers: [CoachingController, SessionHistoryController, FeedbackController],
+  controllers: [
+    CoachingController, 
+    SessionHistoryController, 
+    FeedbackController,
+    CoachController
+  ],
   providers: [CoachingService, SessionHistoryService],
   exports: [CoachingService, SessionHistoryService]
 })

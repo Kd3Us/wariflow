@@ -479,6 +479,38 @@ export class CoachingService implements OnModuleInit {
     return stats;
   }
 
+  async deleteCoach(id: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const coach = await this.coachRepository.findOne({ where: { id } });
+      
+      if (!coach) {
+        return { success: false, message: 'Coach non trouvé' };
+      }
+
+      // Vérifier s'il y a des sessions en cours
+      const activeSessions = await this.sessionRepository.find({
+        where: { 
+          coachId: id, 
+          status: SessionStatus.SCHEDULED 
+        }
+      });
+
+      if (activeSessions.length > 0) {
+        return { 
+          success: false, 
+          message: 'Impossible de supprimer un coach avec des sessions programmées' 
+        };
+      }
+
+      await this.coachRepository.remove(coach);
+      
+      return { success: true, message: 'Coach supprimé avec succès' };
+    } catch (error) {
+      console.error('Erreur lors de la suppression du coach:', error);
+      return { success: false, message: 'Erreur lors de la suppression' };
+    }
+  }
+
   async sendSessionReminder(sessionId: string, type: string) {
     console.log(`Rappel ${type} envoyé pour la session ${sessionId}`);
     return { success: true };

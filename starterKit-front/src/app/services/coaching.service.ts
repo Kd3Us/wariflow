@@ -176,6 +176,10 @@ export class CoachingService {
     });
   }
 
+  deleteCoach(coachId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/coaching/coaches/${coachId}`);
+  }
+
   sendSessionReminder(sessionId: string, type: string = 'email'): Observable<any> {
     console.log('Sending session reminder for:', sessionId, 'type:', type);
     return this.http.post(`${this.baseUrl}/notifications/reminder`, {

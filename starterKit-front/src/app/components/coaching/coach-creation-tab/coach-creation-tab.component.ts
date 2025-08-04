@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { CoachManagementService, CreateCoachDto } from '../../../services/coach-management.service';
@@ -13,13 +13,14 @@ import { catchError } from 'rxjs/operators';
 })
 export class CoachCreationTabComponent implements OnInit {
   @Output() coachCreated = new EventEmitter<any>();
+  @Output() coachDeleted = new EventEmitter<any>();
+  @Input() coaches: any[] = [];
 
   coachForm: FormGroup;
   showCreateForm = false;
   isLoading = false;
   showSuccess = false;
   errorMessage = '';
-  coaches: any[] = [];
 
   availableSpecialties = [
     'Leadership', 'Management', 'Entrepreneuriat', 'Innovation', 
@@ -109,7 +110,8 @@ export class CoachCreationTabComponent implements OnInit {
   loadCoaches(): void {
     this.coachManagementService.getAllCoaches().subscribe({
       next: (coaches) => {
-        this.coaches = coaches;
+        // Note: Les coaches sont maintenant passés par @Input depuis le parent
+        // Cette méthode peut être gardée pour la compatibilité
       },
       error: (error) => {
         console.error('Erreur lors du chargement des coachs:', error);
@@ -135,6 +137,10 @@ export class CoachCreationTabComponent implements OnInit {
 
   removeLanguage(index: number): void {
     this.languagesFormArray.removeAt(index);
+  }
+
+  onDeleteCoach(coach: any): void {
+    this.coachDeleted.emit(coach);
   }
 
   onSubmit(): void {

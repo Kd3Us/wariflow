@@ -161,6 +161,42 @@ export class CoachManagerComponent implements OnInit {
     this.loadCoaches();
   }
 
+  onCoachDeleted(coach: any): void {
+    console.log('Coach supprimé depuis le composant enfant:', coach);
+    this.deleteCoach(coach);
+  }
+
+  deleteCoach(coach: Coach): void {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le coach ${coach.name} ?`)) {
+      return;
+    }
+
+    this.coachingService.deleteCoach(coach.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Coach supprimé',
+            response.message
+          );
+          this.loadCoaches();
+        } else {
+          this.notificationService.error(
+            'Erreur de suppression',
+            response.message
+          );
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors de la suppression:', error);
+        this.notificationService.error(
+          'Erreur de suppression',
+          'Impossible de supprimer le coach'
+        );
+      }
+    });
+  }
+  
+
   loadCoaches(): void {
     console.log('Loading coaches from API...');
     this.isLoadingCoaches = true;

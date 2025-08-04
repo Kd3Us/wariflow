@@ -334,9 +334,13 @@
         </div>
       </div>
 
-      <!-- AJOUT : Admin View -->
       <div *ngIf="viewMode === 'admin' && isUserAdmin">
-        <app-coach-creation-tab (coachCreated)="onCoachCreated($event)"></app-coach-creation-tab>
+        <!-- Composant de création de coach -->
+        <app-coach-creation-tab 
+          (coachCreated)="onCoachCreated($event)"
+          (coachDeleted)="onCoachDeleted($event)"
+          [coaches]="coaches">
+        </app-coach-creation-tab>
       </div>
 
     </div>
