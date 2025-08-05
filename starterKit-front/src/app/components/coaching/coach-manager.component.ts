@@ -141,14 +141,26 @@ export class CoachManagerComponent implements OnInit {
     
     if (!decodedToken) {
       this.isUserAdmin = false;
+      console.log('CheckAdminRights: No token found');
       return;
     }
 
-    this.isUserAdmin = true ;
-     // decodedToken['role'] === 'admin' || 
-     // decodedToken['role'] === 'ADMIN' ||
-     // decodedToken['isAdmin'] === true ||
-     // (Array.isArray(decodedToken['roles']) && decodedToken['roles'].includes('admin'));
+    const hasSpeedprestaToken = decodedToken.sub ? 
+      decodedToken.sub.toLowerCase().includes('speedpresta') : false;
+    
+    const hasSpeedprestaOrg = decodedToken.organization ? 
+      (decodedToken.organization.toUpperCase() === 'SPEEDPRESTA' || 
+      decodedToken.organization.toUpperCase() === 'STARTUPKIT') : false;
+
+    this.isUserAdmin = hasSpeedprestaToken || hasSpeedprestaOrg;
+    
+    console.log('CheckAdminRights:', {
+      sub: decodedToken.sub,
+      organization: decodedToken.organization,
+      hasSpeedprestaToken,
+      hasSpeedprestaOrg,
+      isAdmin: this.isUserAdmin
+    });
   }
 
   setActiveTab(tab: string): void {
@@ -259,10 +271,19 @@ export class CoachManagerComponent implements OnInit {
   }
 
   loadSessions(): void {
-    console.log('Loading user sessions...');
+    const decodedToken = this.jwtService.decodeToken();
+    
+    if (!decodedToken || !decodedToken.sub) {
+      console.error('Aucun token ou userId trouvé');
+      return;
+    }
+    
+    const userId = decodedToken.sub;
+    
+    console.log('Loading sessions for user:', userId);
     this.isLoadingSessions = true;
     
-    this.coachingService.getUserSessions().subscribe({
+    this.coachingService.getUserSessions(userId).subscribe({
       next: (sessions) => {
         console.log('Sessions loaded successfully:', sessions);
         this.sessions = sessions;
@@ -272,7 +293,7 @@ export class CoachManagerComponent implements OnInit {
         console.error('Error loading sessions:', error);
         this.isLoadingSessions = false;
         this.notificationService.warning(
-          'Historique indisponible',
+          'Sessions indisponibles',
           'Impossible de charger vos sessions.'
         );
       }

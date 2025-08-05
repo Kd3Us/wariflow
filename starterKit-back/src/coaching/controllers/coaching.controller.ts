@@ -73,6 +73,15 @@ export class CoachingController {
     return await this.coachingService.getUserSessions(userId);
   }
 
+  @Put('sessions/:id/complete')
+  @ApiOperation({ summary: 'Marquer une session comme terminée' })
+  @ApiParam({ name: 'id', description: 'ID de la session' })
+  @ApiResponse({ status: 200, description: 'Session marquée comme terminée' })
+  @ApiResponse({ status: 404, description: 'Session non trouvée' })
+  async completeSession(@Param('id') sessionId: string, @Body() completionData: any) {
+    return await this.coachingService.completeSession(sessionId, completionData);
+  }
+
   @Get('sessions/:id')
   @ApiOperation({ summary: 'Récupérer une session par ID' })
   @ApiParam({ name: 'id', description: 'ID de la session' })
@@ -89,15 +98,6 @@ export class CoachingController {
   @ApiResponse({ status: 404, description: 'Session non trouvée' })
   async updateSession(@Param('id') id: string, @Body() updateData: any) {
     return await this.coachingService.updateSession(id, updateData);
-  }
-
-  @Put('sessions/:id/complete')
-  @ApiOperation({ summary: 'Marquer une session comme terminée' })
-  @ApiParam({ name: 'id', description: 'ID de la session' })
-  @ApiResponse({ status: 200, description: 'Session marquée comme terminée' })
-  @ApiResponse({ status: 404, description: 'Session non trouvée' })
-  async completeSession(@Param('id') sessionId: string, @Body() completionData: any) {
-    return await this.coachingService.completeSession(sessionId, completionData);
   }
 
   @Delete('sessions/:id')

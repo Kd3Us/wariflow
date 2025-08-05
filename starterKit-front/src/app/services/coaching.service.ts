@@ -102,16 +102,10 @@ export class CoachingService {
     );
   }
 
-  getUserSessions(userId?: string): Observable<any[]> {
-    let httpParams = new HttpParams();
-    if (userId) {
-      httpParams = httpParams.set('userId', userId);
-    }
-
-    console.log('Fetching user sessions');
-    return this.http.get<any[]>(`${this.baseUrl}/sessions`, {
-      headers: this.getAuthHeaders(),
-      params: httpParams
+  getUserSessions(userId: string): Observable<any[]> {
+    console.log('Fetching user sessions for userId:', userId);
+    return this.http.get<any[]>(`${this.baseUrl}/sessions/user/${userId}`, {
+      headers: this.getAuthHeaders()
     }).pipe(
       map((sessions: any[]) => sessions.map((session: any) => ({
         ...session,
@@ -177,7 +171,10 @@ export class CoachingService {
   }
 
   deleteCoach(coachId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/coaching/coaches/${coachId}`);
+    console.log('Deleting coach:', coachId);
+    return this.http.delete(`${this.baseUrl}/coaches/${coachId}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   sendSessionReminder(sessionId: string, type: string = 'email'): Observable<any> {
