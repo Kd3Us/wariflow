@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtService } from './jwt.service';
 
@@ -92,13 +92,26 @@ export class CoachingService {
 
   bookSession(sessionData: any): Observable<any> {
     console.log('Booking session with data:', sessionData);
-    return this.http.post<any>(`${this.baseUrl}/sessions`, sessionData, {
+    
+    // Enrichir les données avec les informations utilisateur pour les notifications
+    const enrichedSessionData = {
+      ...sessionData,
+      userName: this.getCurrentUserName(),
+      userEmail: this.getCurrentUserEmail(),
+      coachName: this.getCoachName(sessionData.coachId)
+    };
+    
+    return this.http.post<any>(`${this.baseUrl}/sessions`, enrichedSessionData, {
       headers: this.getAuthHeaders()
     }).pipe(
       map((session: any) => ({
         ...session,
         date: new Date(session.date)
-      }))
+      })),
+      tap((session: any) => {
+        console.log('Session booked with notifications:', session);
+        // Les notifications sont programmées automatiquement par le backend
+      })
     );
   }
 
@@ -142,7 +155,14 @@ export class CoachingService {
     console.log('Cancelling session:', id);
     return this.http.delete(`${this.baseUrl}/sessions/${id}`, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      tap(() => {
+        // Annuler automatiquement les notifications
+        this.cancelSessionNotifications(id).catch(error => {
+          console.error('Error cancelling notifications:', error);
+        });
+      })
+    );
   }
 
   createReview(reviewData: any): Observable<any> {
@@ -185,5 +205,58 @@ export class CoachingService {
     }, {
       headers: this.getAuthHeaders()
     });
+  }
+
+  // ==================== NOUVELLES MÉTHODES NOTIFICATIONS ====================
+
+  async scheduleSessionNotifications(sessionId: string, sessionData: any): Promise<any> {
+    console.log('Programming notifications for session:', sessionId);
+    return this.http.post(`${this.baseUrl}/sessions/${sessionId}/notifications/schedule`, sessionData, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  async cancelSessionNotifications(sessionId: string): Promise<any> {
+    console.log('Cancelling notifications for session:', sessionId);
+    return this.http.delete(`${this.baseUrl}/sessions/${sessionId}/notifications`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  async rescheduleSessionNotifications(sessionId: string, newSessionData: any): Promise<any> {
+    console.log('Rescheduling notifications for session:', sessionId);
+    return this.http.put(`${this.baseUrl}/sessions/${sessionId}/notifications/reschedule`, newSessionData, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  async getUserNotificationPreferences(userId: string): Promise<any> {
+    console.log('Getting notification preferences for user:', userId);
+    return this.http.get(`${this.baseUrl}/users/${userId}/notification-preferences`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  async updateUserNotificationPreferences(userId: string, preferences: any): Promise<any> {
+    console.log('Updating notification preferences for user:', userId);
+    return this.http.put(`${this.baseUrl}/users/${userId}/notification-preferences`, preferences, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  // ==================== MÉTHODES UTILITAIRES ====================
+
+  private getCurrentUserName(): string {
+    return sessionStorage.getItem('userName') || 'Utilisateur';
+  }
+
+  private getCurrentUserEmail(): string {
+    return sessionStorage.getItem('userEmail') || 'user@example.com';
+  }
+
+  private getCoachName(coachId: string): string {
+    // Si tu as une liste de coaches en cache, utilise-la
+    // Sinon, retourne une valeur par défaut
+    return 'Coach';
   }
 }

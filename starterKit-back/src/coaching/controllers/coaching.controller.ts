@@ -1,11 +1,15 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { CoachingService } from '../service/coaching.service';
+import { SmartNotificationService } from '../service/smart-notification.service';
 
 @ApiTags('Coaching')
 @Controller('coaching')
 export class CoachingController {
-  constructor(private readonly coachingService: CoachingService) {}
+  constructor(
+    private readonly coachingService: CoachingService,
+    private readonly smartNotificationService: SmartNotificationService
+  ) {}
 
   @Get('coaches')
   @ApiOperation({ summary: 'Récupérer tous les coaches' })
@@ -195,5 +199,79 @@ export class CoachingController {
   @ApiResponse({ status: 200, description: 'Données exportées' })
   async exportHistory(@Param('userId') userId: string, @Query('format') format: 'json' | 'csv' = 'json') {
     return await this.coachingService.exportSessionHistory(userId, format);
+  }
+
+  // ==================== NOUVELLES ROUTES NOTIFICATIONS ====================
+
+  @Post('sessions/:sessionId/notifications/schedule')
+  @ApiOperation({ summary: 'Programmer les notifications pour une session' })
+  @ApiParam({ name: 'sessionId', description: 'ID de la session' })
+  @ApiResponse({ status: 201, description: 'Notifications programmées' })
+  async scheduleNotifications(@Param('sessionId') sessionId: string, @Body() sessionData: any) {
+    await this.smartNotificationService.scheduleSessionNotifications({
+      sessionId,
+      ...sessionData
+    });
+    
+    return {
+      success: true,
+      message: 'Notifications programmées avec succès'
+    };
+  }
+
+  @Delete('sessions/:sessionId/notifications')
+  @ApiOperation({ summary: 'Annuler les notifications d\'une session' })
+  @ApiParam({ name: 'sessionId', description: 'ID de la session' })
+  @ApiResponse({ status: 200, description: 'Notifications annulées' })
+  async cancelNotifications(@Param('sessionId') sessionId: string) {
+    await this.smartNotificationService.cancelSessionNotifications(sessionId);
+    
+    return {
+      success: true,
+      message: 'Notifications annulées'
+    };
+  }
+
+  @Put('sessions/:sessionId/notifications/reschedule')
+  @ApiOperation({ summary: 'Reprogrammer les notifications d\'une session' })
+  @ApiParam({ name: 'sessionId', description: 'ID de la session' })
+  @ApiResponse({ status: 200, description: 'Notifications reprogrammées' })
+  async rescheduleNotifications(@Param('sessionId') sessionId: string, @Body() newSessionData: any) {
+    await this.smartNotificationService.rescheduleSessionNotifications(sessionId, {
+      sessionId,
+      ...newSessionData
+    });
+    
+    return {
+      success: true,
+      message: 'Notifications reprogrammées'
+    };
+  }
+
+  @Get('users/:userId/notification-preferences')
+  @ApiOperation({ summary: 'Récupérer les préférences de notification' })
+  @ApiParam({ name: 'userId', description: 'ID de l\'utilisateur' })
+  @ApiResponse({ status: 200, description: 'Préférences récupérées' })
+  async getNotificationPreferences(@Param('userId') userId: string) {
+    const preferences = await this.smartNotificationService.getUserPreferences(userId);
+    
+    return {
+      success: true,
+      data: preferences
+    };
+  }
+
+  @Put('users/:userId/notification-preferences')
+  @ApiOperation({ summary: 'Mettre à jour les préférences de notification' })
+  @ApiParam({ name: 'userId', description: 'ID de l\'utilisateur' })
+  @ApiResponse({ status: 200, description: 'Préférences mises à jour' })
+  async updateNotificationPreferences(@Param('userId') userId: string, @Body() preferences: any) {
+    const updated = await this.smartNotificationService.updateUserPreferences(userId, preferences);
+    
+    return {
+      success: true,
+      data: updated,
+      message: 'Préférences mises à jour'
+    };
   }
 }
