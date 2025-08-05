@@ -22,6 +22,12 @@ export class CoachCreationTabComponent implements OnInit {
   showSuccess = false;
   errorMessage = '';
 
+  selectedAvatarFile: File | null = null;
+  selectedAvatarName = '';
+  currentAvatarBase64 = '';
+  currentAvatarMimeType = '';
+  isProcessingAvatar = false;
+
   availableSpecialties = [
     'Leadership', 'Management', 'Entrepreneuriat', 'Innovation', 
     'Marketing Digital', 'Stratégie', 'Communication', 'Développement Personnel',
@@ -76,6 +82,56 @@ export class CoachCreationTabComponent implements OnInit {
     return this.coachForm.get('languages') as FormArray;
   }
 
+  onAvatarChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux. Taille maximale : 10MB');
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        alert('Veuillez sélectionner un fichier image valide');
+        return;
+      }
+
+      this.selectedAvatarName = file.name;
+      this.selectedAvatarFile = file;
+      
+      this.convertToBase64(file);
+    }
+  }
+
+  private convertToBase64(file: File): void {
+    this.isProcessingAvatar = true;
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64Data = result.split(',')[1];
+      
+      this.currentAvatarBase64 = base64Data;
+      this.currentAvatarMimeType = file.type;
+      this.isProcessingAvatar = false;
+    };
+    
+    reader.onerror = () => {
+      this.isProcessingAvatar = false;
+      alert('Erreur lors de la lecture du fichier');
+    };
+    
+    reader.readAsDataURL(file);
+  }
+
+  removeAvatar(): void {
+    this.currentAvatarBase64 = '';
+    this.currentAvatarMimeType = '';
+    this.selectedAvatarName = '';
+    this.selectedAvatarFile = null;
+  }
+
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
     if (this.showCreateForm) {
@@ -107,11 +163,23 @@ export class CoachCreationTabComponent implements OnInit {
     this.showSuccess = false;
   }
 
+  resetForm(): void {
+    this.coachForm.reset();
+    this.specialtiesFormArray.clear();
+    this.languagesFormArray.clear();
+    this.coachForm.patchValue({
+      timezone: 'Europe/Paris',
+      responseTime: '< 24h'
+    });
+    this.selectedAvatarName = '';
+    this.selectedAvatarFile = null;
+    this.currentAvatarBase64 = '';
+    this.currentAvatarMimeType = '';
+  }
+
   loadCoaches(): void {
     this.coachManagementService.getAllCoaches().subscribe({
       next: (coaches) => {
-        // Note: Les coaches sont maintenant passés par @Input depuis le parent
-        // Cette méthode peut être gardée pour la compatibilité
       },
       error: (error) => {
         console.error('Erreur lors du chargement des coachs:', error);
@@ -152,7 +220,9 @@ export class CoachCreationTabComponent implements OnInit {
         ...this.coachForm.value,
         specialties: this.specialtiesFormArray.value,
         certifications: [],
-        languages: this.languagesFormArray.value
+        languages: this.languagesFormArray.value,
+        avatarBase64: this.currentAvatarBase64,
+        avatarMimeType: this.currentAvatarMimeType
       };
 
       if (formData.specialties.length === 0) {
@@ -167,55 +237,25 @@ export class CoachCreationTabComponent implements OnInit {
         return;
       }
 
-      this.coachManagementService.createCoach(formData).pipe(
-        catchError((error) => {
-          console.error('Erreur lors de la création du coach:', error);
-          this.isLoading = false;
-          
-          if (error.status === 403) {
-            this.errorMessage = 'Accès refusé : droits administrateur requis';
-          } else if (error.status === 401) {
-            this.errorMessage = 'Token invalide ou expiré';
-          } else if (error.status === 409) {
-            this.errorMessage = 'Un coach avec cet email existe déjà';
-          } else {
-            this.errorMessage = 'Erreur lors de la création du coach';
-          }
-          
-          throw error;
-        })
-      ).subscribe({
-        next: (response) => {
-          this.isLoading = false;
+      this.coachManagementService.createCoach(formData).subscribe({
+        next: (coach) => {
           this.showSuccess = true;
-          this.coachCreated.emit(response);
-          this.loadCoaches();
+          this.resetForm();
+          this.coachCreated.emit(coach);
           
           setTimeout(() => {
-            this.hideCreateForm();
             this.showSuccess = false;
+            this.hideCreateForm();
           }, 2000);
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Erreur lors de la création du coach';
+          this.isLoading = false;
+        },
+        complete: () => {
+          this.isLoading = false;
         }
       });
-    }
-  }
-
-  resetForm(): void {
-    this.coachForm.reset();
-    this.clearFormArrays();
-    this.coachForm.patchValue({
-      timezone: 'Europe/Paris',
-      responseTime: '< 24h'
-    });
-    this.errorMessage = '';
-  }
-
-  clearFormArrays(): void {
-    while (this.specialtiesFormArray.length !== 0) {
-      this.specialtiesFormArray.removeAt(0);
-    }
-    while (this.languagesFormArray.length !== 0) {
-      this.languagesFormArray.removeAt(0);
     }
   }
 }

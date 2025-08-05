@@ -7,11 +7,13 @@ export interface CreateCoachDto {
   name: string;
   email: string;
   avatar?: string;
+  avatarBase64?: string;
+  avatarMimeType?: string;
   specialties: string[];
   hourlyRate: number;
   bio: string;
   experience: number;
-  certifications?: string[];
+  certifications: string[];
   languages: string[];
   timezone: string;
   responseTime: string;
