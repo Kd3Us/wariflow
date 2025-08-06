@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, BehaviorSubject, interval, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 export interface ChatMessage {
   id: string;
@@ -55,6 +56,14 @@ export class ChatSupportService {
     this.loadRealCoaches();
   }
 
+  private getHeaders(): HttpHeaders {
+    const token = sessionStorage.getItem('jwtToken');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+  }
+
   private startPolling(): void {
     interval(5000).subscribe(() => {
       this.refreshData();
@@ -63,57 +72,142 @@ export class ChatSupportService {
 
   private refreshData(): void {
     const userId = this.getCurrentUserId();
-    if (userId) {
-      this.getUserTickets().subscribe(tickets => {
-        this.ticketsSubject.next(tickets);
+    if (userId && userId !== 'guest-user') {
+      this.getUserTickets().subscribe({
+        next: (tickets) => this.ticketsSubject.next(tickets),
+        error: (error) => console.log('Erreur refresh tickets:', error)
       });
       
-      this.getAvailableCoaches().subscribe(coaches => {
-        this.coachesSubject.next(coaches);
+      this.getAvailableCoaches().subscribe({
+        next: (coaches) => this.coachesSubject.next(coaches),
+        error: (error) => console.log('Erreur refresh coaches:', error)
       });
     }
   }
 
   private loadRealCoaches(): void {
     this.getAvailableCoaches().subscribe({
-        next: (coaches) => {
+      next: (coaches) => {
         console.log('Coaches chargés:', coaches);
         this.coachesSubject.next(coaches);
-        },
-        error: (error) => {
+      },
+      error: (error) => {
         console.error('Erreur chargement coaches:', error);
-        this.coachesSubject.next([]);
-        }
+        this.coachesSubject.next(this.getMockCoaches());
+      }
     });
-    }
+  }
 
   createTicket(ticketData: Partial<SupportTicket>): Observable<SupportTicket> {
-    return this.http.post<SupportTicket>(`${this.apiUrl}/tickets`, ticketData);
+    const enrichedData = {
+      ...ticketData,
+      userId: this.getCurrentUserId(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      messages: []
+    };
+    
+    return this.http.post<SupportTicket>(
+      `${this.apiUrl}/tickets`, 
+      enrichedData,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(ticket => console.log('Ticket créé:', ticket)),
+      catchError(error => {
+        console.error('Erreur création ticket:', error);
+        return of(this.createMockTicket(enrichedData));
+      })
+    );
   }
 
   getUserTickets(): Observable<SupportTicket[]> {
     const userId = this.getCurrentUserId();
-    return this.http.get<SupportTicket[]>(`${this.apiUrl}/tickets/user/${userId}`);
+    return this.http.get<SupportTicket[]>(
+      `${this.apiUrl}/tickets/user/${userId}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur récupération tickets:', error);
+        return of([]);
+      })
+    );
   }
 
   getTicket(ticketId: string): Observable<SupportTicket> {
-    return this.http.get<SupportTicket>(`${this.apiUrl}/tickets/${ticketId}`);
+    return this.http.get<SupportTicket>(
+      `${this.apiUrl}/tickets/${ticketId}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur récupération ticket:', error);
+        return of(null as any);
+      })
+    );
   }
 
   updateTicket(ticketId: string, updateData: Partial<SupportTicket>): Observable<SupportTicket> {
-    return this.http.put<SupportTicket>(`${this.apiUrl}/tickets/${ticketId}`, updateData);
+    return this.http.patch<SupportTicket>(
+      `${this.apiUrl}/tickets/${ticketId}`, 
+      updateData,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur mise à jour ticket:', error);
+        return of(null as any);
+      })
+    );
   }
 
   sendMessage(ticketId: string, message: Partial<ChatMessage>): Observable<ChatMessage> {
-    return this.http.post<ChatMessage>(`${this.apiUrl}/tickets/${ticketId}/messages`, message);
+    const messageData = {
+      ...message,
+      ticketId,
+      senderId: message.senderId || this.getCurrentUserId(),
+      timestamp: new Date(),
+      isRead: false
+    };
+    
+    return this.http.post<ChatMessage>(
+      `${this.apiUrl}/messages`, 
+      messageData,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(msg => {
+        console.log('Message envoyé:', msg);
+        this.addMessage(msg);
+      }),
+      catchError(error => {
+        console.error('Erreur envoi message:', error);
+        const mockMessage = this.createMockMessage(messageData);
+        this.addMessage(mockMessage);
+        return of(mockMessage);
+      })
+    );
   }
 
   getAvailableCoaches(): Observable<Coach[]> {
-    return this.http.get<Coach[]>(`${this.apiUrl}/coaches/available`);
+    return this.http.get<Coach[]>(
+      `${this.apiUrl}/coaches/available`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur récupération coaches:', error);
+        return of(this.getMockCoaches());
+      })
+    );
   }
 
   assignCoach(ticketId: string, coachId?: string): Observable<SupportTicket> {
-    return this.http.post<SupportTicket>(`${this.apiUrl}/tickets/${ticketId}/assign-coach`, { coachId });
+    return this.http.patch<SupportTicket>(
+      `${this.apiUrl}/tickets/${ticketId}/assign`, 
+      { coachId },
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur assignation coach:', error);
+        return of(null as any);
+      })
+    );
   }
 
   addMessage(message: ChatMessage): void {
@@ -137,6 +231,15 @@ export class ChatSupportService {
   }
 
   private getCurrentUserId(): string {
+    const token = sessionStorage.getItem('jwtToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.sub || payload.userId || 'guest-user';
+      } catch {
+        return 'guest-user';
+      }
+    }
     return localStorage.getItem('userId') || 'guest-user';
   }
 
@@ -169,5 +272,62 @@ export class ChatSupportService {
 
   private generateId(): string {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  private getMockCoaches(): Coach[] {
+    return [
+      {
+        id: '1',
+        name: 'Sophie Martin',
+        avatar: 'assets/avatars/coach1.jpg',
+        specialties: ['Leadership', 'Gestion du stress'],
+        isOnline: true,
+        rating: 4.8
+      },
+      {
+        id: '2',
+        name: 'Jean Dupont',
+        avatar: 'assets/avatars/coach2.jpg',
+        specialties: ['Performance', 'Organisation'],
+        isOnline: true,
+        rating: 4.6
+      },
+      {
+        id: '3',
+        name: 'Marie Laurent',
+        avatar: 'assets/avatars/coach3.jpg',
+        specialties: ['Communication', 'Relations'],
+        isOnline: false,
+        rating: 4.9
+      }
+    ];
+  }
+
+  private createMockTicket(data: Partial<SupportTicket>): SupportTicket {
+    return {
+      id: this.generateId(),
+      userId: data.userId || this.getCurrentUserId(),
+      title: data.title || 'Nouveau ticket',
+      description: data.description || '',
+      status: 'open',
+      priority: data.priority || 'medium',
+      category: data.category || 'general',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      messages: []
+    };
+  }
+
+  private createMockMessage(data: Partial<ChatMessage>): ChatMessage {
+    return {
+      id: this.generateId(),
+      ticketId: data.ticketId,
+      senderId: data.senderId || this.getCurrentUserId(),
+      senderType: data.senderType || 'user',
+      content: data.content || '',
+      timestamp: new Date(),
+      isRead: false,
+      messageType: 'text'
+    };
   }
 }

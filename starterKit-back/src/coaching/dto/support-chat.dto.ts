@@ -1,110 +1,84 @@
-import { IsNotEmpty, IsString, IsOptional, IsEnum, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEnum, IsUUID, IsBoolean } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export enum TicketStatus {
-  OPEN = 'open',
-  ASSIGNED = 'assigned',
-  IN_PROGRESS = 'in_progress',
-  RESOLVED = 'resolved',
-  CLOSED = 'closed'
-}
-
-export enum TicketPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent'
-}
-
-export enum MessageType {
-  TEXT = 'text',
-  FILE = 'file',
-  SYSTEM = 'system'
-}
-
-export enum SenderType {
-  USER = 'user',
-  COACH = 'coach',
-  BOT = 'bot'
-}
+export type SenderType = 'user' | 'coach' | 'bot';
+export type MessageType = 'text' | 'file' | 'system';
 
 export class CreateTicketDto {
   @ApiProperty({ description: 'ID de l\'utilisateur' })
-  @IsNotEmpty()
   @IsString()
   userId: string;
 
   @ApiProperty({ description: 'Titre du ticket' })
-  @IsNotEmpty()
   @IsString()
-  @MinLength(5)
   title: string;
 
   @ApiProperty({ description: 'Description du problème' })
-  @IsNotEmpty()
   @IsString()
-  @MinLength(10)
   description: string;
 
   @ApiProperty({ description: 'Catégorie du ticket' })
-  @IsNotEmpty()
   @IsString()
   category: string;
 
-  @ApiProperty({ description: 'Priorité du ticket', enum: TicketPriority })
-  @IsEnum(TicketPriority)
-  priority: TicketPriority;
+  @ApiPropertyOptional({ enum: ['low', 'medium', 'high', 'urgent'] })
+  @IsOptional()
+  @IsEnum(['low', 'medium', 'high', 'urgent'])
+  priority?: string;
+
+  @ApiPropertyOptional({ description: 'Message initial' })
+  @IsOptional()
+  @IsString()
+  initialMessage?: string;
 }
 
 export class UpdateTicketDto {
-  @ApiProperty({ description: 'Titre du ticket', required: false })
+  @ApiPropertyOptional({ description: 'Titre du ticket' })
   @IsOptional()
   @IsString()
-  @MinLength(5)
   title?: string;
 
-  @ApiProperty({ description: 'Description du ticket', required: false })
+  @ApiPropertyOptional({ description: 'Description du problème' })
   @IsOptional()
   @IsString()
-  @MinLength(10)
   description?: string;
 
-  @ApiProperty({ description: 'Statut du ticket', enum: TicketStatus, required: false })
+  @ApiPropertyOptional({ enum: ['open', 'assigned', 'in_progress', 'resolved', 'closed'] })
   @IsOptional()
-  @IsEnum(TicketStatus)
-  status?: TicketStatus;
+  @IsEnum(['open', 'assigned', 'in_progress', 'resolved', 'closed'])
+  status?: string;
 
-  @ApiProperty({ description: 'Priorité du ticket', enum: TicketPriority, required: false })
+  @ApiPropertyOptional({ enum: ['low', 'medium', 'high', 'urgent'] })
   @IsOptional()
-  @IsEnum(TicketPriority)
-  priority?: TicketPriority;
+  @IsEnum(['low', 'medium', 'high', 'urgent'])
+  priority?: string;
 
-  @ApiProperty({ description: 'ID du coach assigné', required: false })
+  @ApiPropertyOptional({ description: 'ID du coach assigné' })
   @IsOptional()
   @IsString()
   coachId?: string;
 }
 
 export class SendMessageDto {
+  @ApiProperty({ description: 'ID du ticket' })
+  @IsString()
+  ticketId: string;
+
   @ApiProperty({ description: 'ID de l\'expéditeur' })
-  @IsNotEmpty()
   @IsString()
   senderId: string;
 
-  @ApiProperty({ description: 'Type d\'expéditeur', enum: SenderType })
-  @IsEnum(SenderType)
-  senderType: SenderType;
+  @ApiPropertyOptional({ enum: ['user', 'coach', 'bot'] })
+  @IsOptional()
+  @IsEnum(['user', 'coach', 'bot'])
+  senderType?: string;
 
   @ApiProperty({ description: 'Contenu du message' })
-  @IsNotEmpty()
   @IsString()
   content: string;
 
-  @ApiProperty({ description: 'Type de message', enum: MessageType })
-  @IsEnum(MessageType)
-  messageType: MessageType;
-
-  @ApiProperty({ description: 'Message lu', required: false })
+  @ApiPropertyOptional({ enum: ['text', 'file', 'system'] })
   @IsOptional()
-  isRead?: boolean;
+  @IsEnum(['text', 'file', 'system'])
+  messageType?: string;
 }

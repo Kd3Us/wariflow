@@ -1,18 +1,25 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Put, Patch, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { SupportChatService } from '../service/support-chat.service';
 import { CreateTicketDto, UpdateTicketDto, SendMessageDto } from '../dto/support-chat.dto';
+import { TokenAuthGuard } from '../../common/guards/token-auth.guard';
 
 @ApiTags('Support Chat')
-@Controller('coaching/support')
+@Controller('api/coaching/support')
+@UseGuards(TokenAuthGuard)
+@ApiBearerAuth()
 export class SupportChatController {
   constructor(private readonly supportChatService: SupportChatService) {}
 
   @Post('tickets')
   @ApiOperation({ summary: 'Créer un nouveau ticket de support' })
   @ApiResponse({ status: 201, description: 'Ticket créé avec succès' })
-  async createTicket(@Body() createTicketDto: CreateTicketDto) {
-    return await this.supportChatService.createTicket(createTicketDto);
+  async createTicket(@Body() createTicketDto: CreateTicketDto, @Request() req: any) {
+    const userId = req.user?.sub || req.user?.userId || createTicketDto.userId;
+    return await this.supportChatService.createTicket({
+      ...createTicketDto,
+      userId
+    });
   }
 
   @Get('tickets/user/:userId')
@@ -31,7 +38,7 @@ export class SupportChatController {
     return await this.supportChatService.getTicket(ticketId);
   }
 
-  @Put('tickets/:id')
+  @Patch('tickets/:id')
   @ApiOperation({ summary: 'Mettre à jour un ticket' })
   @ApiParam({ name: 'id', description: 'ID du ticket' })
   @ApiResponse({ status: 200, description: 'Ticket mis à jour' })
@@ -39,12 +46,32 @@ export class SupportChatController {
     return await this.supportChatService.updateTicket(ticketId, updateTicketDto);
   }
 
-  @Post('tickets/:id/messages')
-  @ApiOperation({ summary: 'Ajouter un message à un ticket' })
+  @Post('messages')
+  @ApiOperation({ summary: 'Envoyer un message' })
+  @ApiResponse({ status: 201, description: 'Message envoyé' })
+  async sendMessage(@Body() sendMessageDto: SendMessageDto, @Request() req: any) {
+    const senderId = sendMessageDto.senderId || req.user?.sub || req.user?.userId;
+    return await this.supportChatService.addMessage(sendMessageDto.ticketId, {
+      ...sendMessageDto,
+      senderId
+    });
+  }
+
+  @Get('tickets/:id/messages')
+  @ApiOperation({ summary: 'Récupérer les messages d\'un ticket' })
   @ApiParam({ name: 'id', description: 'ID du ticket' })
-  @ApiResponse({ status: 201, description: 'Message ajouté' })
-  async addMessage(@Param('id') ticketId: string, @Body() sendMessageDto: SendMessageDto) {
-    return await this.supportChatService.addMessage(ticketId, sendMessageDto);
+  @ApiResponse({ status: 200, description: 'Liste des messages' })
+  async getMessages(@Param('id') ticketId: string) {
+    return await this.supportChatService.getMessages(ticketId);
+  }
+
+  @Patch('messages/:id/read')
+  @ApiOperation({ summary: 'Marquer un message comme lu' })
+  @ApiParam({ name: 'id', description: 'ID du message' })
+  @ApiResponse({ status: 200, description: 'Message marqué comme lu' })
+  async markMessageAsRead(@Param('id') messageId: string) {
+    await this.supportChatService.markMessageAsRead(messageId);
+    return { success: true };
   }
 
   @Get('coaches/available')
@@ -54,11 +81,27 @@ export class SupportChatController {
     return await this.supportChatService.getAvailableCoaches();
   }
 
-  @Post('tickets/:id/assign-coach')
+  @Patch('tickets/:id/assign')
   @ApiOperation({ summary: 'Assigner un coach à un ticket' })
   @ApiParam({ name: 'id', description: 'ID du ticket' })
   @ApiResponse({ status: 200, description: 'Coach assigné au ticket' })
   async assignCoach(@Param('id') ticketId: string, @Body() data: { coachId?: string }) {
     return await this.supportChatService.assignCoach(ticketId, data.coachId);
+  }
+
+  @Patch('tickets/:id/close')
+  @ApiOperation({ summary: 'Fermer un ticket' })
+  @ApiParam({ name: 'id', description: 'ID du ticket' })
+  @ApiResponse({ status: 200, description: 'Ticket fermé' })
+  async closeTicket(@Param('id') ticketId: string) {
+    return await this.supportChatService.closeTicket(ticketId);
+  }
+
+  @Post('bot/response')
+  @ApiOperation({ summary: 'Obtenir une réponse du bot' })
+  @ApiResponse({ status: 200, description: 'Réponse du bot' })
+  async getBotResponse(@Body() data: { message: string; category?: string }) {
+    const response = await this.supportChatService.getBotResponse(data.message, data.category);
+    return { response };
   }
 }

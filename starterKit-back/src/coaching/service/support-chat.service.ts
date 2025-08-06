@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SupportTicket, ChatMessage } from '../entities/support-ticket.entity';
@@ -26,34 +26,52 @@ export class SupportChatService {
 
     const savedTicket = await this.ticketRepository.save(ticket);
 
+    if (createTicketDto.initialMessage) {
+      const message = this.messageRepository.create({
+        ticketId: savedTicket.id,
+        senderId: createTicketDto.userId,
+        senderType: 'user',
+        content: createTicketDto.initialMessage,
+        timestamp: new Date(),
+        isRead: false,
+        messageType: 'text',
+      });
+      await this.messageRepository.save(message);
+    }
+
     const botMessage = this.messageRepository.create({
       ticketId: savedTicket.id,
       senderId: 'bot',
       senderType: 'bot',
-      content: 'Votre ticket a été créé. Un coach va vous contacter bientôt.',
+      content: 'Bonjour! Un coach va prendre en charge votre demande dans quelques instants.',
       timestamp: new Date(),
       isRead: false,
       messageType: 'system',
     });
-
     await this.messageRepository.save(botMessage);
 
-    return await this.getTicket(savedTicket.id);
+    return this.getTicket(savedTicket.id);
   }
 
   async getUserTickets(userId: string): Promise<SupportTicket[]> {
     return await this.ticketRepository.find({
       where: { userId },
-      relations: ['messages'],
+      relations: ['messages', 'coach'],
       order: { updatedAt: 'DESC' },
     });
   }
 
   async getTicket(ticketId: string): Promise<SupportTicket> {
-    return await this.ticketRepository.findOne({
+    const ticket = await this.ticketRepository.findOne({
       where: { id: ticketId },
-      relations: ['messages'],
+      relations: ['messages', 'coach'],
     });
+
+    if (!ticket) {
+      throw new NotFoundException(`Ticket ${ticketId} non trouvé`);
+    }
+
+    return ticket;
   }
 
   async updateTicket(ticketId: string, updateTicketDto: UpdateTicketDto): Promise<SupportTicket> {
@@ -62,14 +80,20 @@ export class SupportChatService {
       updatedAt: new Date(),
     });
 
-    return await this.getTicket(ticketId);
+    return this.getTicket(ticketId);
   }
 
   async addMessage(ticketId: string, sendMessageDto: SendMessageDto): Promise<ChatMessage> {
+    const ticket = await this.getTicket(ticketId);
+
     const message = this.messageRepository.create({
       ticketId,
-      ...sendMessageDto,
+      senderId: sendMessageDto.senderId,
+      senderType: sendMessageDto.senderType || 'user',
+      content: sendMessageDto.content,
       timestamp: new Date(),
+      isRead: false,
+      messageType: sendMessageDto.messageType || 'text',
     });
 
     const savedMessage = await this.messageRepository.save(message);
@@ -78,33 +102,47 @@ export class SupportChatService {
       updatedAt: new Date(),
     });
 
+    if (sendMessageDto.senderType === 'user' && ticket.status === 'open') {
+      await this.ticketRepository.update(ticketId, {
+        status: 'assigned',
+      });
+    }
+
     return savedMessage;
+  }
+
+  async getMessages(ticketId: string): Promise<ChatMessage[]> {
+    return await this.messageRepository.find({
+      where: { ticketId },
+      order: { timestamp: 'ASC' },
+    });
+  }
+
+  async markMessageAsRead(messageId: string): Promise<void> {
+    await this.messageRepository.update(messageId, {
+      isRead: true,
+    });
   }
 
   async getAvailableCoaches(): Promise<Coach[]> {
     return await this.coachRepository.find({
-      where: { isOnline: true },
-      order: { name: 'ASC' },
+      select: ['id', 'name', 'email', 'specialties'],
     });
   }
 
   async assignCoach(ticketId: string, coachId?: string): Promise<SupportTicket> {
-    let selectedCoach: Coach;
+    let selectedCoachId = coachId;
 
-    if (coachId) {
-      selectedCoach = await this.coachRepository.findOne({
-        where: { id: coachId, isOnline: true },
-      });
-    } else {
+    if (!selectedCoachId) {
       const availableCoaches = await this.getAvailableCoaches();
       if (availableCoaches.length > 0) {
-        selectedCoach = availableCoaches[0];
+        selectedCoachId = availableCoaches[0].id;
       }
     }
 
-    if (selectedCoach) {
+    if (selectedCoachId) {
       await this.ticketRepository.update(ticketId, {
-        coachId: selectedCoach.id,
+        coachId: selectedCoachId,
         status: 'assigned',
         updatedAt: new Date(),
       });
@@ -113,7 +151,7 @@ export class SupportChatService {
         ticketId,
         senderId: 'system',
         senderType: 'bot',
-        content: `${selectedCoach.name} a été assigné à votre ticket et va vous contacter.`,
+        content: `Un coach a été assigné à votre ticket et va vous contacter.`,
         timestamp: new Date(),
         isRead: false,
         messageType: 'system',
@@ -122,7 +160,28 @@ export class SupportChatService {
       await this.messageRepository.save(systemMessage);
     }
 
-    return await this.getTicket(ticketId);
+    return this.getTicket(ticketId);
+  }
+
+  async closeTicket(ticketId: string): Promise<SupportTicket> {
+    await this.ticketRepository.update(ticketId, {
+      status: 'closed',
+      updatedAt: new Date(),
+    });
+
+    const systemMessage = this.messageRepository.create({
+      ticketId,
+      senderId: 'system',
+      senderType: 'bot',
+      content: 'Ce ticket a été fermé. Merci de nous avoir contactés.',
+      timestamp: new Date(),
+      isRead: false,
+      messageType: 'system',
+    });
+
+    await this.messageRepository.save(systemMessage);
+
+    return this.getTicket(ticketId);
   }
 
   async getBotResponse(message: string, category?: string): Promise<string> {
