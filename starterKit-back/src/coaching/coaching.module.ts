@@ -6,9 +6,12 @@ import { CoachingController } from './controllers/coaching.controller';
 import { SessionHistoryController } from './controllers/session-history.controller';
 import { FeedbackController } from './controllers/feedback.controller';
 import { CoachController } from './controllers/coach.controller';
+import { SupportChatController } from './controllers/support-chat.controller';
 import { CoachingService } from './service/coaching.service';
 import { SessionHistoryService } from './service/session-history.service';
 import { SmartNotificationService } from './service/smart-notification.service';
+import { SupportChatService } from './service/support-chat.service';
+import { SupportChatNotificationService } from './service/support-chat-notification.service';
 import { Coach } from './entities/coach.entity';
 import { Session } from './entities/session.entity';
 import { Review } from './entities/review.entity';
@@ -17,6 +20,7 @@ import { SessionHistory } from './entities/session-history.entity';
 import { Feedback } from './entities/feedback.entity';
 import { SessionDocument } from './entities/session-document.entity';
 import { ProgressTracking } from './entities/progress-tracking.entity';
+import { SupportTicket, ChatMessage } from './entities/support-ticket.entity';
 import { CommonModule } from '../common/common.module';
 
 @Module({
@@ -29,7 +33,9 @@ import { CommonModule } from '../common/common.module';
       SessionHistory,
       Feedback,
       SessionDocument,
-      ProgressTracking
+      ProgressTracking,
+      SupportTicket,
+      ChatMessage
     ]),
     CommonModule,
     HttpModule,
@@ -39,17 +45,22 @@ import { CommonModule } from '../common/common.module';
     CoachingController, 
     SessionHistoryController, 
     FeedbackController,
-    CoachController
+    CoachController,
+    SupportChatController
   ],
   providers: [
     CoachingService, 
     SessionHistoryService,
-    SmartNotificationService
+    SmartNotificationService,
+    SupportChatService,
+    SupportChatNotificationService
   ],
   exports: [
     CoachingService, 
     SessionHistoryService,
-    SmartNotificationService
+    SmartNotificationService,
+    SupportChatService,
+    SupportChatNotificationService
   ]
 })
 export class CoachingModule {}

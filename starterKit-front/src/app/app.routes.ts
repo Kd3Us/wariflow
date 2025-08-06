@@ -38,6 +38,15 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'chat-support',
+    loadChildren: () => import('./modules/chat-support/chat-support.module').then(m => m.ChatSupportModule),
+    canActivate: [authGuard],
+    data: { 
+      title: 'Support Chat',
+      description: 'Chat de support avec assistance virtuelle et coaches'
+    }
+  },
+  {
     path: '**',
     redirectTo: 'kanban'
   }

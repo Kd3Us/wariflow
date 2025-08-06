@@ -34,6 +34,14 @@
       Calendrier
     </button>
     <button
+      (click)="setViewMode('support')"
+      [class]="'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors duration-200 ' + 
+              (viewMode === 'support' ? 'bg-secondary text-white' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200')"
+    >
+      <span class="material-icons text-lg">support_agent</span>
+      Support Chat
+    </button>
+    <button
       (click)="setViewMode('history')"
       [class]="'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors duration-200 ' + 
                (viewMode === 'history' ? 'bg-secondary text-white' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200')"
@@ -56,6 +64,11 @@
 
   <!-- Main Content Area -->
   <div class="flex-1 overflow-hidden">
+
+  <!-- Support Chat View -->
+  <div *ngIf="viewMode === 'support'" class="h-full">
+    <app-chat-support></app-chat-support>
+  </div>
 
     <!-- Matching Panel -->
     <div *ngIf="viewMode === 'matched'" class="card p-6 mb-6">

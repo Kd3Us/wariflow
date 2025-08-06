@@ -5,6 +5,7 @@ import { CoachingService } from '../../services/coaching.service';
 import { NotificationService } from '../../services/notification.service';
 import { CoachCreationTabComponent } from './coach-creation-tab/coach-creation-tab.component';
 import { JwtService } from '../../services/jwt.service';
+import { ChatSupportComponent } from './chat-support/chat-support.component';
 
 export interface Coach {
   id: string;
@@ -77,7 +78,7 @@ export interface MatchingCriteria {
 @Component({
   selector: 'app-coach-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachCreationTabComponent],
+  imports: [CommonModule, FormsModule, CoachCreationTabComponent, ChatSupportComponent],
   templateUrl: './coach-manager.component.html',
   styleUrls: ['./coach-manager.component.css']
 })
@@ -102,7 +103,7 @@ export class CoachManagerComponent implements OnInit {
   searchTerm: string = '';
   filterSpecialty: string = '';
   showFilters: boolean = false;
-  viewMode: 'browse' | 'matched' | 'calendar' | 'history' | 'admin' = 'browse';
+  viewMode: 'browse' | 'matched' | 'calendar' | 'history' | 'support' | 'admin' = 'browse';
   showBookingModal: boolean = false;
   selectedTimeSlot: { date: Date; slot: TimeSlot } | null = null;
 
@@ -683,7 +684,7 @@ export class CoachManagerComponent implements OnInit {
     return coach ? coach.name : 'Coach inconnu';
   }
 
-  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history' | 'admin'): void {
+  setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history' | 'support' | 'admin'): void {
     this.viewMode = mode;
     if (mode === 'browse') {
       this.filteredCoaches = this.coaches;
