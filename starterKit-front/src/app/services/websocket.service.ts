@@ -43,18 +43,27 @@ export class WebSocketService {
     const token = this.jwtService.getToken();
     if (!token) {
       console.warn('No JWT token available for WebSocket connection');
+      this.connectionStatus$.next({
+        connected: false,
+        reconnecting: false,
+        error: 'No token available'
+      });
       return;
     }
 
-    this.socket = socketIo.connect('ws://localhost:3009/support-chat', {
+    console.log('Attempting WebSocket connection to localhost:3009');
+    
+    this.socket = socketIo.connect('http://localhost:3009', {
+      forceNew: true,
       auth: {
-        token: `Bearer ${token}`
+        token: token.startsWith('Bearer ') ? token : `Bearer ${token}`
       },
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      timeout: 20000
     });
 
     this.setupEventListeners();
@@ -64,25 +73,27 @@ export class WebSocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('WebSocket connected');
+      console.log('WebSocket connected successfully');
       this.connectionStatus$.next({ connected: true, reconnecting: false });
+      this.socket.emit('join_support_chat');
       this.requestOnlineCoaches();
-    });
-
-    this.socket.on('disconnect', (reason: string) => {
-      console.log('WebSocket disconnected:', reason);
-      this.connectionStatus$.next({ 
-        connected: false, 
-        reconnecting: reason === 'io server disconnect' ? false : true 
-      });
     });
 
     this.socket.on('connect_error', (error: any) => {
       console.error('WebSocket connection error:', error);
       this.connectionStatus$.next({ 
         connected: false, 
-        reconnecting: true,
-        error: error.message 
+        reconnecting: false,
+        error: `Connection error: ${error.message || 'Unknown error'}`
+      });
+    });
+
+    this.socket.on('disconnect', (reason: string) => {
+      console.log('WebSocket disconnected:', reason);
+      this.connectionStatus$.next({ 
+        connected: false, 
+        reconnecting: reason === 'io server disconnect' ? false : true,
+        error: reason
       });
     });
 
@@ -91,8 +102,19 @@ export class WebSocketService {
       this.connectionStatus$.next({ connected: false, reconnecting: true });
     });
 
-    this.socket.on('connection_established', (data: any) => {
-      console.log('Connection established:', data);
+    this.socket.on('reconnect', () => {
+      console.log('WebSocket reconnected');
+      this.connectionStatus$.next({ connected: true, reconnecting: false });
+      this.socket.emit('join_support_chat');
+      this.requestOnlineCoaches();
+    });
+
+    this.socket.on('connection_success', (data: any) => {
+      console.log('Connection success:', data);
+    });
+
+    this.socket.on('user_tickets', (data: any) => {
+      console.log('User tickets received:', data);
       if (data.tickets) {
         this.currentTickets = data.tickets;
         this.tickets$.next([...this.currentTickets]);
@@ -101,12 +123,16 @@ export class WebSocketService {
 
     this.socket.on('new_message', (data: any) => {
       console.log('New message received:', data);
-      this.handleNewMessage(data.message);
+      if (data.message) {
+        this.handleNewMessage(data.message);
+      }
     });
 
-    this.socket.on('ticket_created', (ticket: SupportTicket) => {
-      console.log('Ticket created:', ticket);
-      this.addTicket(ticket);
+    this.socket.on('ticket_created', (data: any) => {
+      console.log('Ticket created:', data);
+      if (data.ticket) {
+        this.addTicket(data.ticket);
+      }
     });
 
     this.socket.on('ticket_assigned', (ticket: SupportTicket) => {
@@ -129,15 +155,24 @@ export class WebSocketService {
       this.onlineCoaches$.next(coaches);
     });
 
+    this.socket.on('typing_start', (data: TypingUser) => {
+      this.handleTypingIndicator({ ...data, isTyping: true });
+    });
+
+    this.socket.on('typing_stop', (data: TypingUser) => {
+      this.handleTypingIndicator({ ...data, isTyping: false });
+    });
+
     this.socket.on('user_typing', (data: TypingUser) => {
       this.handleTypingIndicator(data);
     });
 
     this.socket.on('messages_read', (data: any) => {
-      this.markTicketMessagesAsRead(data.ticketId, data.userId);
+      this.markTicketMessagesAsRead(data.ticketId, data.readBy);
     });
 
     this.socket.on('ticket_closed', (data: any) => {
+      console.log('Ticket closed:', data);
       this.updateTicketStatus(data.ticketId, 'closed');
     });
 
@@ -145,9 +180,20 @@ export class WebSocketService {
       console.log('New ticket available for coaches:', data);
     });
 
+    this.socket.on('new_ticket_created', (data: any) => {
+      console.log('New ticket created globally:', data);
+    });
+
     this.socket.on('urgent_ticket_assigned', (data: any) => {
       console.log('Urgent ticket assigned:', data);
       this.updateTicket(data.ticket);
+    });
+
+    this.socket.on('new_ticket_assignment', (data: any) => {
+      console.log('New ticket assignment:', data);
+      if (data.ticket) {
+        this.updateTicket(data.ticket);
+      }
     });
 
     this.socket.on('no_coach_available', (data: any) => {
@@ -156,6 +202,11 @@ export class WebSocketService {
 
     this.socket.on('error', (error: any) => {
       console.error('WebSocket error:', error);
+      this.connectionStatus$.next({
+        connected: this.socket?.connected || false,
+        reconnecting: false,
+        error: error.message || 'Server error'
+      });
     });
   }
 
@@ -187,10 +238,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('create_ticket', ticketData, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve(response.ticket);
         } else {
-          reject(new Error(response.error));
+          reject(new Error(response?.error || 'Failed to create ticket'));
         }
       });
     });
@@ -204,10 +255,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('send_message', { ticketId, content, messageType }, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve(response.message);
         } else {
-          reject(new Error(response.error));
+          reject(new Error(response?.error || 'Failed to send message'));
         }
       });
     });
@@ -221,10 +272,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('assign_coach', { ticketId, coachId }, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve(response);
         } else {
-          reject(new Error(response.error));
+          reject(new Error(response?.error || 'Failed to assign coach'));
         }
       });
     });
@@ -238,10 +289,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('request_human_coach', { ticketId }, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve(response);
         } else {
-          reject(new Error(response.error || response.message));
+          reject(new Error(response?.error || response?.message || 'Failed to request coach'));
         }
       });
     });
@@ -255,10 +306,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('mark_messages_read', { ticketId }, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve();
         } else {
-          reject(new Error(response.error));
+          reject(new Error(response?.error || 'Failed to mark messages as read'));
         }
       });
     });
@@ -267,9 +318,9 @@ export class WebSocketService {
   setTypingStatus(ticketId: string, isTyping: boolean): void {
     if (!this.socket?.connected) return;
 
-    this.socket.emit('coach_typing', { ticketId, isTyping });
-
     if (isTyping) {
+      this.socket.emit('typing_start', { ticketId });
+      
       if (this.typingTimeout[ticketId]) {
         clearTimeout(this.typingTimeout[ticketId]);
       }
@@ -277,6 +328,8 @@ export class WebSocketService {
       this.typingTimeout[ticketId] = setTimeout(() => {
         this.setTypingStatus(ticketId, false);
       }, 3000);
+    } else {
+      this.socket.emit('typing_stop', { ticketId });
     }
   }
 
@@ -288,10 +341,10 @@ export class WebSocketService {
       }
 
       this.socket.emit('close_ticket', { ticketId }, (response: any) => {
-        if (response.success) {
+        if (response?.success) {
           resolve();
         } else {
-          reject(new Error(response.error));
+          reject(new Error(response?.error || 'Failed to close ticket'));
         }
       });
     });
@@ -325,7 +378,6 @@ export class WebSocketService {
   private updateTicketCoach(ticketId: string, coach: any) {
     const ticket = this.currentTickets.find(t => t.id === ticketId);
     if (ticket) {
-      // Ajouter la propriété coach de manière dynamique
       (ticket as any).coach = coach;
       ticket.coachId = coach.id;
       this.tickets$.next([...this.currentTickets]);
@@ -387,6 +439,8 @@ export class WebSocketService {
 
     Object.values(this.typingTimeout).forEach(timeout => clearTimeout(timeout));
     this.typingTimeout = {};
+    
+    this.connectionStatus$.next({ connected: false, reconnecting: false });
   }
 
   reconnect() {
@@ -394,5 +448,9 @@ export class WebSocketService {
     setTimeout(() => {
       this.connect();
     }, 1000);
+  }
+
+  isConnected(): boolean {
+    return this.socket?.connected || false;
   }
 }

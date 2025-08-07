@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ChatSupportService, ChatMessage, SupportTicket, Coach } from '../../../services/chat-support.service';
 import { WebSocketService, ConnectionStatus, TypingUser } from '../../../services/websocket.service';
 
@@ -54,7 +55,8 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private chatService: ChatSupportService,
     private websocketService: WebSocketService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient
   ) {
     this.messageForm = this.fb.group({
       message: ['', [Validators.required]]
@@ -69,9 +71,11 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('ChatSupportComponent initialized');
     this.initializeWebSocketConnection();
     this.setupFormSubscriptions();
     this.loadAvailableCoaches();
+    this.loadUserTickets();
   }
 
   ngOnDestroy(): void {
@@ -81,6 +85,8 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private initializeWebSocketConnection(): void {
+    console.log('Initializing WebSocket connection...');
+    
     // Connexion WebSocket
     this.websocketService.connect();
 
@@ -88,6 +94,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.websocketService.getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe(status => {
+        console.log('Connection status changed:', status);
         this.connectionStatus = status;
         this.isConnected = status.connected;
         this.cdr.detectChanges();
@@ -97,6 +104,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.websocketService.getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe(messages => {
+        console.log('Messages received via WebSocket:', messages);
         this.messages = messages;
         this.updateUnreadCount();
         setTimeout(() => this.scrollToBottom(), 100);
@@ -107,10 +115,8 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.websocketService.getTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe(tickets => {
+        console.log('Tickets received via WebSocket:', tickets);
         this.tickets = tickets;
-        if (tickets.length > 0 && !this.currentTicket) {
-          this.selectTicket(tickets[0]);
-        }
         this.cdr.detectChanges();
       });
 
@@ -118,7 +124,10 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.websocketService.getOnlineCoaches()
       .pipe(takeUntil(this.destroy$))
       .subscribe(coaches => {
+        console.log('Online coaches received:', coaches);
         this.onlineCoaches = coaches;
+        // AUSSI mettre à jour coaches pour compatibilité
+        this.coaches = coaches;
         this.cdr.detectChanges();
       });
 
@@ -150,39 +159,124 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private loadAvailableCoaches(): void {
+    console.log('Loading available coaches via HTTP...');
+    
     this.chatService.getAvailableCoaches()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(coaches => {
-        this.coaches = coaches;
+      .subscribe({
+        next: (coaches) => {
+          console.log('Coaches loaded via HTTP:', coaches);
+          this.coaches = coaches;
+          // Si pas de coaches en ligne via WebSocket, utiliser ceux-ci
+          if (this.onlineCoaches.length === 0) {
+            this.onlineCoaches = coaches.filter(coach => coach.isOnline);
+          }
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading coaches:', error);
+        }
+      });
+  }
+
+  private loadUserTickets(): void {
+    console.log('Loading user tickets...');
+    
+    this.chatService.getUserTickets()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (tickets) => {
+          console.log('User tickets loaded:', tickets);
+          this.tickets = tickets;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading user tickets:', error);
+        }
+      });
+  }
+
+  private loadTicketMessages(ticketId: string): void {
+    console.log('Loading messages for ticket:', ticketId);
+    
+    // Pour l'instant, utiliser les messages déjà dans le ticket
+    if (this.currentTicket && this.currentTicket.messages) {
+      this.messages = this.currentTicket.messages;
+      this.cdr.detectChanges();
+      setTimeout(() => this.scrollToBottom(), 100);
+      return;
+    }
+
+    // Si pas de messages dans le ticket, essayer de les récupérer via HTTP
+    const token = sessionStorage.getItem('jwtToken');
+    if (!token) {
+      console.warn('No token available for fetching messages');
+      this.messages = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+    };
+
+    // Appel HTTP direct
+    this.http.get<ChatMessage[]>(`http://localhost:3009/api/coaching/support/tickets/${ticketId}/messages`, { headers })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (messages: ChatMessage[]) => {
+          console.log('Messages loaded for ticket:', ticketId, messages);
+          this.messages = messages;
+          this.cdr.detectChanges();
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (error: any) => {
+          console.error('Error loading ticket messages:', error);
+          // Fallback : utiliser un tableau vide
+          this.messages = [];
+          this.cdr.detectChanges();
+        }
       });
   }
 
   async createTicket(): Promise<void> {
-    if (!this.ticketForm.valid || !this.isConnected) return;
+    if (!this.ticketForm.valid) return;
 
     try {
+      const formValue = this.ticketForm.value;
       const ticketData = {
         userId: this.getCurrentUserId(),
-        ...this.ticketForm.value
+        title: formValue.title as string,
+        description: formValue.description as string,
+        category: formValue.category as string,
+        priority: formValue.priority as 'low' | 'medium' | 'high' | 'urgent'
       };
 
-      const ticket = await this.websocketService.createTicket(ticketData);
-      
-      this.showTicketForm = false;
-      this.ticketForm.reset();
-      this.selectTicket(ticket);
+      if (this.isConnected) {
+        const ticket = await this.websocketService.createTicket(ticketData);
+        this.showTicketForm = false;
+        this.ticketForm.reset();
+        this.selectTicket(ticket);
+      } else {
+        // Fallback HTTP
+        this.createTicketFallback();
+      }
       
     } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
-      // Fallback vers HTTP si WebSocket échoue
       this.createTicketFallback();
     }
   }
 
   private createTicketFallback(): void {
+    const formValue = this.ticketForm.value;
     const ticketData = {
       userId: this.getCurrentUserId(),
-      ...this.ticketForm.value,
+      title: formValue.title as string,
+      description: formValue.description as string,
+      category: formValue.category as string,
+      priority: formValue.priority as 'low' | 'medium' | 'high' | 'urgent',
       status: 'open' as const,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -192,10 +286,11 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.chatService.createTicket(ticketData)
       .pipe(takeUntil(this.destroy$))
       .subscribe(ticket => {
-        this.chatService.updateTicketInList(ticket);
+        this.tickets.unshift(ticket);
         this.selectTicket(ticket);
         this.showTicketForm = false;
         this.ticketForm.reset();
+        this.cdr.detectChanges();
       });
   }
 
@@ -229,7 +324,10 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
           messageType: 'text'
         };
 
-        this.chatService.addMessage(message);
+        this.messages.push(message);
+        this.cdr.detectChanges();
+        setTimeout(() => this.scrollToBottom(), 100);
+
         this.chatService.sendMessage(this.currentTicket.id, message)
           .pipe(takeUntil(this.destroy$))
           .subscribe();
@@ -275,7 +373,9 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       };
 
       setTimeout(() => {
-        this.chatService.addMessage(systemMessage);
+        this.messages.push(systemMessage);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       }, 1500);
     } else {
       const noCoachMessage: ChatMessage = {
@@ -289,28 +389,83 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       };
 
       setTimeout(() => {
-        this.chatService.addMessage(noCoachMessage);
+        this.messages.push(noCoachMessage);
         this.showTicketForm = true;
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       }, 1000);
     }
   }
 
   async assignSpecificCoach(coach: Coach): Promise<void> {
-    if (!this.currentTicket || !this.isConnected) return;
+    // Créer d'abord un ticket si pas de ticket courant
+    if (!this.currentTicket) {
+      // Créer un ticket temporaire pour contacter le coach
+      try {
+        const ticketData = {
+          userId: this.getCurrentUserId(),
+          title: `Contact avec ${coach.name}`,
+          description: `Demande de coaching avec ${coach.name}`,
+          category: 'Coaching' as string,
+          priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
+        };
+
+        if (this.isConnected) {
+          const ticket = await this.websocketService.createTicket(ticketData);
+          this.selectTicket(ticket);
+          // Ensuite assigner le coach
+          await this.websocketService.assignCoach(ticket.id, coach.id);
+        } else {
+          // Fallback HTTP
+          const fullTicketData = {
+            ...ticketData,
+            status: 'open' as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            messages: []
+          };
+          
+          this.chatService.createTicket(fullTicketData)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(ticket => {
+              this.tickets.unshift(ticket);
+              this.selectTicket(ticket);
+              this.assignedCoach = coach;
+              this.cdr.detectChanges();
+            });
+        }
+      } catch (error: any) {
+        console.error('Erreur lors de la création du ticket pour le coach:', error);
+      }
+      return;
+    }
+
+    // Si ticket existant, assigner directement
+    if (!this.isConnected) return;
 
     try {
       await this.websocketService.assignCoach(this.currentTicket.id, coach.id);
+      this.assignedCoach = coach;
+      this.cdr.detectChanges();
     } catch (error: any) {
       console.error('Erreur lors de l\'assignation du coach:', error);
     }
   }
 
   selectTicket(ticket: SupportTicket): void {
+    console.log('Selecting ticket:', ticket);
+    
     this.currentTicket = ticket;
     this.assignedCoach = (ticket as any).coach || null;
-    this.messages = ticket.messages || [];
     
-    // MODIFICATION : Vérifier la connexion avant de marquer comme lu
+    // Charger les messages du ticket depuis l'API HTTP si pas de messages
+    if (!ticket.messages || ticket.messages.length === 0) {
+      console.log('Loading messages for ticket:', ticket.id);
+      this.loadTicketMessages(ticket.id);
+    } else {
+      this.messages = ticket.messages;
+    }
+    
     if (this.isConnected) {
       this.websocketService.markMessagesRead(ticket.id).catch(error => {
         console.warn('Could not mark messages as read:', error);
@@ -319,6 +474,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     
     this.updateUnreadCount();
     setTimeout(() => this.scrollToBottom(), 100);
+    this.cdr.detectChanges();
   }
 
   selectBotOption(option: string): void {
@@ -330,18 +486,67 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private handleBotResponse(option: string): void {
+    // Créer un ticket si pas de ticket courant pour les options bot
+    if (!this.currentTicket) {
+      const ticketData = {
+        userId: this.getCurrentUserId(),
+        title: option,
+        description: `Demande d'aide pour: ${option}`,
+        category: 'Support technique' as string,
+        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
+      };
+
+      if (this.isConnected) {
+        this.websocketService.createTicket(ticketData)
+          .then(ticket => {
+            this.selectTicket(ticket);
+            this.addBotResponse(option);
+          })
+          .catch((error: any) => {
+            console.error('Erreur création ticket bot:', error);
+          });
+      } else {
+        const fullTicketData = {
+          ...ticketData,
+          status: 'open' as const,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          messages: []
+        };
+        
+        this.chatService.createTicket(fullTicketData)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(ticket => {
+            this.tickets.unshift(ticket);
+            this.selectTicket(ticket);
+            this.addBotResponse(option);
+          });
+      }
+    } else {
+      this.addBotResponse(option);
+    }
+  }
+
+  private addBotResponse(option: string): void {
     setTimeout(() => {
       const botResponse = this.chatService.simulateBotResponse(option);
-      this.chatService.addMessage(botResponse);
+      this.messages.push(botResponse);
+      this.cdr.detectChanges();
+      this.scrollToBottom();
     }, 1000);
   }
 
   async closeCurrentTicket(): Promise<void> {
-    if (!this.currentTicket || !this.isConnected) return;
+    if (!this.currentTicket) return;
 
     try {
-      await this.websocketService.closeTicket(this.currentTicket.id);
+      if (this.isConnected) {
+        await this.websocketService.closeTicket(this.currentTicket.id);
+      }
       this.currentTicket = null;
+      this.messages = [];
+      this.assignedCoach = null;
+      this.cdr.detectChanges();
     } catch (error: any) {
       console.error('Erreur lors de la fermeture du ticket:', error);
     }
@@ -349,6 +554,40 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
 
   reconnectWebSocket(): void {
     this.websocketService.reconnect();
+  }
+
+  refreshData(): void {
+    console.log('Refreshing all data...');
+    this.loadAvailableCoaches();
+    this.loadUserTickets();
+    if (this.isConnected) {
+      this.websocketService.requestOnlineCoaches();
+    }
+  }
+
+  debugState(): void {
+    console.log('=== CHAT SUPPORT DEBUG STATE ===');
+    console.log('isConnected:', this.isConnected);
+    console.log('currentView:', this.currentView);
+    console.log('currentTicket:', this.currentTicket);
+    console.log('tickets:', this.tickets);
+    console.log('messages:', this.messages);
+    console.log('coaches:', this.coaches);
+    console.log('onlineCoaches:', this.onlineCoaches);
+    console.log('assignedCoach:', this.assignedCoach);
+    console.log('================================');
+  }
+
+  trackTicket(index: number, ticket: SupportTicket): string {
+    return ticket.id;
+  }
+
+  trackCoach(index: number, coach: Coach): string {
+    return coach.id;
+  }
+
+  trackMessage(index: number, message: ChatMessage): string {
+    return message.id;
   }
 
   private updateUnreadCount(): void {

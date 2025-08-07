@@ -20,11 +20,11 @@ interface AuthenticatedSocket extends Socket {
 }
 
 @WebSocketGateway({
-  namespace: 'support-chat',
   cors: {
     origin: ['http://localhost:4200', 'https://your-domain.com'],
     credentials: true
-  }
+  },
+  transports: ['websocket', 'polling']
 })
 export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -41,20 +41,26 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
   ) {}
 
   afterInit(server: Server) {
-    this.logger.log('Support Chat WebSocket Gateway initialized');
+    this.logger.log('Support Chat WebSocket Gateway initialized on default namespace');
   }
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
+      this.logger.log(`Client attempting to connect: ${client.id}`);
+      
       const token = client.handshake.auth.token || client.handshake.headers.authorization;
       
       if (!token) {
+        this.logger.warn('Client disconnected: No authentication token');
+        client.emit('error', { message: 'Authentication required' });
         client.disconnect();
         return;
       }
 
       const decodedToken = this.extractUserFromToken(token);
       if (!decodedToken) {
+        this.logger.warn('Client disconnected: Invalid token');
+        client.emit('error', { message: 'Invalid authentication token' });
         client.disconnect();
         return;
       }
@@ -72,39 +78,71 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
         });
       }
 
-      const userTickets = await this.supportChatService.getUserTickets(client.userId);
-      userTickets.forEach(ticket => {
-        client.join(`ticket_${ticket.id}`);
-      });
+      this.logger.log(`User ${client.userId} (${client.userType}) connected successfully`);
 
-      client.emit('connection_established', {
+      client.emit('connection_success', {
         userId: client.userId,
-        userType: client.userType,
-        tickets: userTickets
+        userType: client.userType
       });
 
-      this.logger.log(`User ${client.userId} connected as ${client.userType}`);
+      this.broadcastOnlineCoaches();
 
     } catch (error) {
-      this.logger.error('Connection error:', error);
+      this.logger.error('Error during connection:', error);
+      client.emit('error', { message: 'Connection failed' });
       client.disconnect();
     }
   }
 
   handleDisconnect(client: AuthenticatedSocket) {
     if (client.userId) {
+      this.logger.log(`User ${client.userId} disconnected`);
+      
       this.connectedUsers.delete(client.userId);
 
       if (client.userType === 'coach') {
-        this.coachAvailability.set(client.userId, false);
+        this.coachAvailability.delete(client.userId);
         this.server.emit('coach_status_changed', {
           coachId: client.userId,
           isOnline: false
         });
       }
 
-      this.cleanupUserRooms(client.userId);
-      this.logger.log(`User ${client.userId} disconnected`);
+      const userRooms = this.userRooms.get(client.userId);
+      if (userRooms) {
+        userRooms.forEach(room => {
+          client.leave(room);
+        });
+        this.userRooms.delete(client.userId);
+      }
+
+      this.broadcastOnlineCoaches();
+    }
+  }
+
+  @SubscribeMessage('join_support_chat')
+  async handleJoinSupportChat(@ConnectedSocket() client: AuthenticatedSocket) {
+    try {
+      this.logger.log(`User ${client.userId} joined support chat`);
+      
+      const userTickets = await this.supportChatService.getUserTickets(client.userId);
+      
+      userTickets.forEach(ticket => {
+        const roomName = `ticket_${ticket.id}`;
+        client.join(roomName);
+        
+        if (!this.userRooms.has(client.userId)) {
+          this.userRooms.set(client.userId, new Set());
+        }
+        this.userRooms.get(client.userId).add(roomName);
+      });
+
+      client.emit('user_tickets', { tickets: userTickets });
+      this.broadcastOnlineCoaches();
+
+    } catch (error) {
+      this.logger.error('Error joining support chat:', error);
+      client.emit('error', { message: 'Failed to join support chat' });
     }
   }
 
@@ -117,14 +155,26 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
     try {
       const ticketData = {
         ...createTicketDto,
-        userId: client.userId
+        userId: client.userId,
+        status: 'open'
       };
 
       const ticket = await this.supportChatService.createTicket(ticketData);
       
-      client.join(`ticket_${ticket.id}`);
+      const roomName = `ticket_${ticket.id}`;
+      client.join(roomName);
 
-      client.emit('ticket_created', ticket);
+      if (!this.userRooms.has(client.userId)) {
+        this.userRooms.set(client.userId, new Set());
+      }
+      this.userRooms.get(client.userId).add(roomName);
+
+      client.emit('ticket_created', { ticket });
+
+      this.server.emit('new_ticket_created', {
+        ticket,
+        userType: client.userType
+      });
 
       const availableCoaches = await this.supportChatService.getAvailableCoaches();
       availableCoaches.forEach(coach => {
@@ -193,6 +243,12 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
         const coachSocket = this.connectedUsers.get(result.coachId);
         if (coachSocket) {
           coachSocket.join(`ticket_${data.ticketId}`);
+          
+          if (!this.userRooms.has(result.coachId)) {
+            this.userRooms.set(result.coachId, new Set());
+          }
+          this.userRooms.get(result.coachId).add(`ticket_${data.ticketId}`);
+          
           coachSocket.emit('ticket_assigned', result);
         }
 
@@ -233,17 +289,34 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
         const coachSocket = this.connectedUsers.get(assignResult.coachId);
         if (coachSocket) {
           coachSocket.join(`ticket_${data.ticketId}`);
+          
+          if (!this.userRooms.has(assignResult.coachId)) {
+            this.userRooms.set(assignResult.coachId, new Set());
+          }
+          this.userRooms.get(assignResult.coachId).add(`ticket_${data.ticketId}`);
+          
+          coachSocket.emit('new_ticket_assignment', {
+            ticket: assignResult,
+            message: 'Nouveau ticket assigné'
+          });
+
           coachSocket.emit('urgent_ticket_assigned', {
             ticket: assignResult,
             requestType: 'human_coach_requested'
           });
         }
+
+        client.emit('coach_assigned', {
+          ticketId: data.ticketId,
+          coach: assignResult.coach
+        });
       }
 
       return { success: true, ticket: assignResult, coachId: assignResult.coachId };
 
     } catch (error) {
       this.logger.error('Error requesting human coach:', error);
+      client.emit('error', { message: 'Erreur lors de la demande de coach' });
       return { success: false, error: error.message };
     }
   }
@@ -254,7 +327,6 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
     @MessageBody() data: { ticketId: string }
   ) {
     try {
-      // Utiliser la méthode existante pour marquer les messages individuellement
       const messages = await this.supportChatService.getMessages(data.ticketId);
       const unreadMessages = messages.filter(msg => !msg.isRead && msg.senderId !== client.userId);
       
@@ -264,7 +336,7 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
       
       this.server.to(`ticket_${data.ticketId}`).emit('messages_read', {
         ticketId: data.ticketId,
-        userId: client.userId
+        readBy: client.userId
       });
 
       return { success: true };
@@ -273,6 +345,32 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
       this.logger.error('Error marking messages as read:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  @SubscribeMessage('typing_start')
+  handleTypingStart(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { ticketId: string }
+  ) {
+    client.to(`ticket_${data.ticketId}`).emit('typing_start', {
+      userId: client.userId,
+      userType: client.userType,
+      ticketId: data.ticketId,
+      isTyping: true
+    });
+  }
+
+  @SubscribeMessage('typing_stop')
+  handleTypingStop(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { ticketId: string }
+  ) {
+    client.to(`ticket_${data.ticketId}`).emit('typing_stop', {
+      userId: client.userId,
+      userType: client.userType,
+      ticketId: data.ticketId,
+      isTyping: false
+    });
   }
 
   @SubscribeMessage('coach_typing')
@@ -291,18 +389,13 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
   @SubscribeMessage('get_online_coaches')
   async handleGetOnlineCoaches(@ConnectedSocket() client: AuthenticatedSocket) {
     try {
-      const onlineCoaches = Array.from(this.coachAvailability.entries())
-        .filter(([coachId, isOnline]) => isOnline)
-        .map(([coachId]) => coachId);
-
-      const coaches = await this.supportChatService.getAvailableCoaches();
-      const onlineCoachesData = coaches.filter(coach => onlineCoaches.includes(coach.id));
-
-      client.emit('online_coaches', onlineCoachesData);
-      return { success: true, coaches: onlineCoachesData };
+      const onlineCoaches = await this.getOnlineCoachesData();
+      client.emit('online_coaches', onlineCoaches);
+      return { success: true, coaches: onlineCoaches };
 
     } catch (error) {
       this.logger.error('Error getting online coaches:', error);
+      client.emit('error', { message: 'Erreur lors de la récupération des coaches' });
       return { success: false, error: error.message };
     }
   }
@@ -313,17 +406,19 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
     @MessageBody() data: { ticketId: string }
   ) {
     try {
-      await this.supportChatService.closeTicket(data.ticketId);
+      const ticket = await this.supportChatService.closeTicket(data.ticketId);
 
       this.server.to(`ticket_${data.ticketId}`).emit('ticket_closed', {
         ticketId: data.ticketId,
+        ticket,
         closedBy: client.userId
       });
 
-      return { success: true };
+      return { success: true, ticket };
 
     } catch (error) {
       this.logger.error('Error closing ticket:', error);
+      client.emit('error', { message: 'Erreur lors de la fermeture du ticket' });
       return { success: false, error: error.message };
     }
   }
@@ -337,6 +432,25 @@ export class SupportChatGateway implements OnGatewayInit, OnGatewayConnection, O
       this.logger.error('Token decode error:', error);
       return null;
     }
+  }
+
+  private async broadcastOnlineCoaches() {
+    try {
+      const onlineCoaches = await this.getOnlineCoachesData();
+      this.server.emit('online_coaches', onlineCoaches);
+    } catch (error) {
+      this.logger.error('Error broadcasting online coaches:', error);
+    }
+  }
+
+  private async getOnlineCoachesData() {
+    const onlineCoachIds = Array.from(this.coachAvailability.keys());
+    if (onlineCoachIds.length === 0) {
+      return [];
+    }
+    
+    const coaches = await this.supportChatService.getAvailableCoaches();
+    return coaches.filter(coach => onlineCoachIds.includes(coach.id));
   }
 
   private cleanupUserRooms(userId: string) {
