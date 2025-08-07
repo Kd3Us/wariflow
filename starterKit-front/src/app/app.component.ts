@@ -5,6 +5,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { CommonModule } from '@angular/common';
 import { EmbedService } from './services/embed.service';
 import { ToastNotificationComponent } from './components/shared/toast-notification.component';
+import { WebSocketService } from './services/websocket.service';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +26,10 @@ export class AppComponent implements OnInit {
   title = 'starter-kit';
   isEmbedRoute = false;
 
-  constructor(private embedService: EmbedService) {}
+  constructor(
+    private embedService: EmbedService,
+    private websocketService: WebSocketService
+  ) {}
 
   ngOnInit() {
     this.embedService.embed$.subscribe(res => {
@@ -33,5 +37,10 @@ export class AppComponent implements OnInit {
         this.isEmbedRoute = res;
       }
     });
+
+    // Initialiser la connexion WebSocket au démarrage de l'app
+    setTimeout(() => {
+      this.websocketService.connect();
+    }, 1000);
   }
 }

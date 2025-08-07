@@ -130,6 +130,7 @@ export class CoachManagerComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('CoachManager initialized, viewMode:', this.viewMode);
     this.checkAdminRights();
     this.loadCoaches();
     this.loadAvailabilities();
@@ -685,6 +686,7 @@ export class CoachManagerComponent implements OnInit {
   }
 
   setViewMode(mode: 'browse' | 'matched' | 'calendar' | 'history' | 'support' | 'admin'): void {
+     console.log('Changing viewMode to:', mode);
     this.viewMode = mode;
     if (mode === 'browse') {
       this.filteredCoaches = this.coaches;

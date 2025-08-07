@@ -5,11 +5,13 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as bodyParser from 'body-parser';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
-
-
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Configuration WebSocket avec Socket.IO
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Configuration pour accepter des payloads plus volumineux (pour les images base64)
   app.use(bodyParser.json({ limit: '50mb' }));
@@ -20,9 +22,9 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // Enable CORS for frontend integration
+  // Enable CORS for frontend integration + WebSocket
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:4200', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });

@@ -22,6 +22,7 @@ import { SessionDocument } from './entities/session-document.entity';
 import { ProgressTracking } from './entities/progress-tracking.entity';
 import { SupportTicket, ChatMessage } from './entities/support-ticket.entity';
 import { CommonModule } from '../common/common.module';
+import { SupportChatGateway } from './gateways/support-chat.gateway';
 
 @Module({
   imports: [
@@ -53,14 +54,16 @@ import { CommonModule } from '../common/common.module';
     SessionHistoryService,
     SmartNotificationService,
     SupportChatService,
-    SupportChatNotificationService
+    SupportChatNotificationService,
+    SupportChatGateway
   ],
   exports: [
     CoachingService, 
     SessionHistoryService,
     SmartNotificationService,
     SupportChatService,
-    SupportChatNotificationService
+    SupportChatNotificationService,
+    SupportChatGateway
   ]
 })
 export class CoachingModule {}

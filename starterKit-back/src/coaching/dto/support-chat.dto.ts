@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsUUID, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsUUID, IsBoolean, IsDate } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export type SenderType = 'user' | 'coach' | 'bot';
@@ -57,6 +57,12 @@ export class UpdateTicketDto {
   @IsOptional()
   @IsString()
   coachId?: string;
+
+  // AJOUT : Propriété manquante pour updatedAt
+  @ApiPropertyOptional({ description: 'Date de mise à jour' })
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }
 
 export class SendMessageDto {
@@ -81,4 +87,10 @@ export class SendMessageDto {
   @IsOptional()
   @IsEnum(['text', 'file', 'system'])
   messageType?: string;
+
+  // AJOUT : Propriété manquante pour isRead
+  @ApiPropertyOptional({ description: 'Message lu', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isRead?: boolean;
 }
