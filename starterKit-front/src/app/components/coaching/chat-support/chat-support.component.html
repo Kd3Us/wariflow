@@ -11,7 +11,7 @@
         </div>
       </div>
       
-      <!-- Debug Bar -->
+      <!-- Debug Bar AMÉLIORÉE -->
       <div class="p-2 bg-yellow-100 text-xs text-yellow-800 border rounded mb-4">
         <strong>Debug:</strong> 
         Connected: {{ isConnected }} | 
@@ -20,9 +20,22 @@
         Coaches: {{ coaches.length }} | 
         Online: {{ onlineCoaches.length }} |
         Current: {{ currentTicket?.title || 'None' }}
-        <div class="mt-1">
-          <button (click)="debugState()" class="mr-1 px-2 py-1 bg-yellow-200 rounded text-xs">Log State</button>
+        
+        <!-- Nouveaux boutons de debug pour le formulaire -->
+        <div class="mt-2 space-x-1">
+          <button (click)="debugState()" class="px-2 py-1 bg-yellow-200 rounded text-xs">Log State</button>
           <button (click)="refreshData()" class="px-2 py-1 bg-blue-200 rounded text-xs">Refresh</button>
+          <button (click)="checkFormState()" class="px-2 py-1 bg-green-200 rounded text-xs">Check Form</button>
+          <button (click)="testSendMessage()" class="px-2 py-1 bg-purple-200 rounded text-xs">Test Send</button>
+          <button (click)="forceValidateForm()" class="px-2 py-1 bg-orange-200 rounded text-xs">Force Validate</button>
+        </div>
+        
+        <!-- Debug info du formulaire -->
+        <div class="mt-1 text-xs">
+          <strong>Form:</strong> Valid: {{ messageForm.valid }} | 
+          Value: {{ messageForm.value | json }} | 
+          Message Control Valid: {{ messageForm.get('message')?.valid }} |
+          Message Value: "{{ messageForm.get('message')?.value }}"
         </div>
       </div>
       
@@ -217,7 +230,7 @@
           <p class="text-gray-500 mb-4">
             {{ currentView === 'tickets' ? 
                 'Choisissez un ticket dans la liste pour voir la conversation' : 
-                'Utilisez les options ci-contre pour commencer ou créez un nouveau ticket' }}
+                'Tapez votre message ci-dessous pour commencer automatiquement' }}
           </p>
           <button 
             (click)="showTicketForm = true"
@@ -269,26 +282,39 @@
       </div>
     </div>
 
-    <!-- Message Input -->
+    <!-- Message Input - TOUJOURS VISIBLE -->
     <div class="p-4 bg-white border-t border-gray-200 message-input">
+      <div class="mb-2 text-xs text-gray-500" *ngIf="!currentTicket">
+        💡 Astuce: Tapez votre message pour créer automatiquement une conversation
+      </div>
+      
       <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="flex items-end space-x-3">
         <div class="flex-1">
           <textarea 
+            #messageTextarea
             formControlName="message"
             (keydown)="onKeyDown($event)"
+            (input)="onMessageInput($event)"
+            (focus)="onMessageFocus()"
             placeholder="Tapez votre message..."
             rows="1"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
         </div>
         <button 
           type="submit"
-          [disabled]="!messageForm.valid"
-          class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          [disabled]="!messageForm.valid || isSubmitting"
+          class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+          <svg *ngIf="!isSubmitting" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
           </svg>
+          <div *ngIf="isSubmitting" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         </button>
       </form>
+      
+      <!-- Debug info pour le formulaire -->
+      <div class="mt-2 text-xs text-gray-400" *ngIf="messageForm.get('message')?.errors">
+        Erreurs: {{ messageForm.get('message')?.errors | json }}
+      </div>
     </div>
   </div>
 </div>

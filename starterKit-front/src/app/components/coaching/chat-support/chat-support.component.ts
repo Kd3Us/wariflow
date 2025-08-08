@@ -15,11 +15,12 @@ import { WebSocketService, ConnectionStatus, TypingUser } from '../../../service
 })
 export class ChatSupportComponent implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
+  @ViewChild('messageTextarea') messageTextarea!: ElementRef;
 
   private destroy$ = new Subject<void>();
 
-  messageForm: FormGroup;
-  ticketForm: FormGroup;
+  messageForm!: FormGroup;
+  ticketForm!: FormGroup;
   
   currentTicket: SupportTicket | null = null;
   tickets: SupportTicket[] = [];
@@ -35,6 +36,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   currentView: 'chat' | 'tickets' = 'chat';
   isTyping = false;
   typingUsers: TypingUser[] = [];
+  isSubmitting = false;
   
   categories = [
     'Support technique',
@@ -58,8 +60,12 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private http: HttpClient
   ) {
+    this.initializeForms();
+  }
+
+  private initializeForms(): void {
     this.messageForm = this.fb.group({
-      message: ['', [Validators.required]]
+      message: ['', [Validators.required, this.customMessageValidator]]
     });
 
     this.ticketForm = this.fb.group({
@@ -70,8 +76,26 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     });
   }
 
+  private customMessageValidator(control: any) {
+    const value = control.value;
+    if (!value || typeof value !== 'string') {
+      return { required: true };
+    }
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return { required: true };
+    }
+    return null;
+  }
+
   ngOnInit(): void {
     console.log('ChatSupportComponent initialized');
+    console.log('Initial form state:', {
+      valid: this.messageForm.valid,
+      value: this.messageForm.value,
+      errors: this.messageForm.errors
+    });
+    
     this.initializeWebSocketConnection();
     this.setupFormSubscriptions();
     this.loadAvailableCoaches();
@@ -84,13 +108,47 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.websocketService.disconnect();
   }
 
+  checkFormState(): void {
+    console.log('=== FORM DEBUG ===');
+    console.log('messageForm valid:', this.messageForm.valid);
+    console.log('messageForm value:', this.messageForm.value);
+    console.log('messageForm errors:', this.messageForm.errors);
+    console.log('message control:', this.messageForm.get('message'));
+    console.log('message control value:', this.messageForm.get('message')?.value);
+    console.log('message control errors:', this.messageForm.get('message')?.errors);
+    console.log('message control valid:', this.messageForm.get('message')?.valid);
+    console.log('==================');
+  }
+
+  testSendMessage(): void {
+    console.log('Test send message...');
+    this.messageForm.get('message')?.setValue('Test message');
+    this.checkFormState();
+    this.sendMessage();
+  }
+
+  forceValidateForm(): void {
+    this.messageForm.markAllAsTouched();
+    this.messageForm.updateValueAndValidity();
+    this.checkFormState();
+  }
+
+  onMessageInput(event: Event): void {
+    const target = event.target as HTMLTextAreaElement;
+    this.messageForm.get('message')?.setValue(target.value);
+    this.messageForm.get('message')?.updateValueAndValidity();
+  }
+
+  onMessageFocus(): void {
+    console.log('Message input focused, checking form state...');
+    this.checkFormState();
+  }
+
   private initializeWebSocketConnection(): void {
     console.log('Initializing WebSocket connection...');
     
-    // Connexion WebSocket
     this.websocketService.connect();
 
-    // Écouter le statut de connexion
     this.websocketService.getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe(status => {
@@ -100,7 +158,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-    // Écouter les messages
     this.websocketService.getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe(messages => {
@@ -111,7 +168,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-    // Écouter les tickets
     this.websocketService.getTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe(tickets => {
@@ -120,18 +176,15 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-    // Écouter les coaches en ligne
     this.websocketService.getOnlineCoaches()
       .pipe(takeUntil(this.destroy$))
       .subscribe(coaches => {
         console.log('Online coaches received:', coaches);
         this.onlineCoaches = coaches;
-        // AUSSI mettre à jour coaches pour compatibilité
         this.coaches = coaches;
         this.cdr.detectChanges();
       });
 
-    // Écouter les indicateurs de frappe
     this.websocketService.getTypingUsers()
       .pipe(takeUntil(this.destroy$))
       .subscribe(typingUsers => {
@@ -143,7 +196,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private setupFormSubscriptions(): void {
-    // Indicateur de frappe
     this.messageForm.get('message')?.valueChanges
       .pipe(
         takeUntil(this.destroy$),
@@ -167,7 +219,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         next: (coaches) => {
           console.log('Coaches loaded via HTTP:', coaches);
           this.coaches = coaches;
-          // Si pas de coaches en ligne via WebSocket, utiliser ceux-ci
           if (this.onlineCoaches.length === 0) {
             this.onlineCoaches = coaches.filter(coach => coach.isOnline);
           }
@@ -206,7 +257,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Utiliser le service au lieu d'un appel HTTP direct
     this.chatService.getTicketMessages(ticketId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -243,7 +293,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         this.ticketForm.reset();
         this.selectTicket(ticket);
       } else {
-        // Fallback HTTP
         this.createTicketFallback();
       }
       
@@ -270,7 +319,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.chatService.createTicket(ticketData)
       .pipe(takeUntil(this.destroy$))
       .subscribe(ticket => {
-        // Ajouter un message de bienvenue au nouveau ticket
         const welcomeMessage: ChatMessage = {
           id: this.generateId(),
           ticketId: ticket.id,
@@ -292,31 +340,53 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   async sendMessage(): Promise<void> {
-    if (!this.messageForm.valid) return;
-
-    const content = this.messageForm.get('message')?.value?.trim();
-    if (!content) return;
-
-    // Si pas de ticket sélectionné, créer un ticket automatiquement
-    if (!this.currentTicket) {
-      console.log('Aucun ticket sélectionné, création automatique...');
-      await this.createAutoTicket(content);
+    console.log('=== SEND MESSAGE DEBUG ===');
+    console.log('Form valid:', this.messageForm.valid);
+    console.log('Form value:', this.messageForm.value);
+    
+    if (this.isSubmitting) {
+      console.log('Already submitting, returning...');
       return;
     }
 
+    if (!this.messageForm.valid) {
+      console.log('Form is invalid, stopping');
+      console.log('Form errors:', this.messageForm.errors);
+      console.log('Message control errors:', this.messageForm.get('message')?.errors);
+      this.forceValidateForm();
+      return;
+    }
+
+    const content = this.messageForm.get('message')?.value?.trim();
+    console.log('Message content:', content);
+    
+    if (!content) {
+      console.log('No content after trim, stopping');
+      return;
+    }
+
+    this.isSubmitting = true;
+    console.log('Current ticket:', this.currentTicket);
+
     try {
-      // Arrêter l'indicateur de frappe
+      if (!this.currentTicket) {
+        console.log('Aucun ticket sélectionné, création automatique...');
+        await this.createAutoTicket(content);
+        return;
+      }
+
       if (this.isConnected) {
         this.websocketService.setTypingStatus(this.currentTicket.id, false);
       }
 
       this.messageForm.get('message')?.setValue('');
+      this.messageForm.get('message')?.markAsPristine();
 
       if (this.isConnected) {
-        // Utiliser WebSocket
+        console.log('Sending via WebSocket...');
         await this.websocketService.sendMessage(this.currentTicket.id, content);
       } else {
-        // Fallback HTTP
+        console.log('Sending via HTTP fallback...');
         this.chatService.sendMessage(this.currentTicket.id, content)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
@@ -328,6 +398,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
             },
             error: (error) => {
               console.error('Error sending message via HTTP:', error);
+              this.messageForm.get('message')?.setValue(content);
             }
           });
       }
@@ -338,7 +409,12 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
       this.messageForm.get('message')?.setValue(content);
+    } finally {
+      this.isSubmitting = false;
+      this.cdr.detectChanges();
     }
+
+    console.log('=== END SEND MESSAGE DEBUG ===');
   }
 
   private async createAutoTicket(firstMessage: string): Promise<void> {
@@ -372,9 +448,11 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('Erreur création auto ticket:', error);
+    } finally {
+      this.isSubmitting = false;
+      this.messageForm.get('message')?.setValue('');
+      this.cdr.detectChanges();
     }
-
-    this.messageForm.get('message')?.setValue('');
   }
 
   async requestHumanCoach(): Promise<void> {
@@ -384,7 +462,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       if (this.isConnected) {
         await this.websocketService.requestHumanCoach(this.currentTicket.id);
       } else {
-        // Fallback HTTP
         this.requestHumanCoachFallback();
       }
     } catch (error: any) {
@@ -435,9 +512,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   async assignSpecificCoach(coach: Coach): Promise<void> {
-    // Créer d'abord un ticket si pas de ticket courant
     if (!this.currentTicket) {
-      // Créer un ticket temporaire pour contacter le coach
       try {
         const ticketData = {
           userId: this.getCurrentUserId(),
@@ -450,10 +525,8 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         if (this.isConnected) {
           const ticket = await this.websocketService.createTicket(ticketData);
           this.selectTicket(ticket);
-          // Ensuite assigner le coach
           await this.websocketService.assignCoach(ticket.id, coach.id);
         } else {
-          // Fallback HTTP
           const fullTicketData = {
             ...ticketData,
             status: 'open' as const,
@@ -477,7 +550,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Si ticket existant, assigner directement
     if (!this.isConnected) return;
 
     try {
@@ -516,7 +588,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       this.messages = [welcomeMessage];
     }
     
-    // FORCER la mise à jour
     this.cdr.detectChanges();
     setTimeout(() => this.scrollToBottom(), 100);
     
@@ -532,7 +603,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private handleBotResponse(option: string): void {
-    // Créer un ticket si pas de ticket courant pour les options bot
     if (!this.currentTicket) {
       const ticketData = {
         userId: this.getCurrentUserId(),
@@ -621,6 +691,9 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     console.log('coaches:', this.coaches);
     console.log('onlineCoaches:', this.onlineCoaches);
     console.log('assignedCoach:', this.assignedCoach);
+    console.log('messageForm valid:', this.messageForm.valid);
+    console.log('messageForm value:', this.messageForm.value);
+    console.log('isSubmitting:', this.isSubmitting);
     console.log('================================');
   }
 
@@ -727,8 +800,10 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   onKeyDown(event: KeyboardEvent): void {
+    console.log('Key pressed:', event.key, 'Form valid:', this.messageForm.valid);
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+      console.log('Enter pressed, attempting to send message...');
       this.sendMessage();
     }
   }
