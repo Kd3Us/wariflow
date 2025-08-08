@@ -1,13 +1,13 @@
-<div class="h-screen flex bg-gray-50">
+<div class="h-screen flex bg-gray-50 chat-support">
   <!-- Sidebar -->
-  <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+  <div class="w-80 bg-white border-r border-gray-200 flex flex-col sidebar">
     <!-- Header -->
-    <div class="p-4 border-b border-gray-200">
+    <div class="p-4 border-b border-gray-200 header">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-900">Support Chat</h2>
-        <div class="flex items-center space-x-2">
-          <div class="w-2 h-2 rounded-full" [class]="isConnected ? 'bg-green-400' : 'bg-red-400'"></div>
-          <span *ngIf="unreadCount > 0" class="bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ unreadCount }}</span>
+        <div class="flex items-center space-x-2 connection-status">
+          <div class="w-2 h-2 rounded-full status-dot" [class]="isConnected ? 'online' : 'offline'"></div>
+          <span *ngIf="unreadCount > 0" class="bg-red-500 text-white text-xs rounded-full px-2 py-1 unread-count">{{ unreadCount }}</span>
         </div>
       </div>
       
@@ -27,16 +27,16 @@
       </div>
       
       <!-- Tabs -->
-      <div class="flex bg-gray-100 rounded-lg p-1">
+      <div class="flex bg-gray-100 rounded-lg p-1 tabs">
         <button 
           (click)="setView('chat')"
-          [class]="currentView === 'chat' ? 'bg-white shadow-sm' : ''"
+          [class]="currentView === 'chat' ? 'bg-white shadow-sm active' : ''"
           class="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors">
           Chat
         </button>
         <button 
           (click)="setView('tickets')"
-          [class]="currentView === 'tickets' ? 'bg-white shadow-sm' : ''"
+          [class]="currentView === 'tickets' ? 'bg-white shadow-sm active' : ''"
           class="flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors">
           Tickets
         </button>
@@ -44,7 +44,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto content">
       <!-- Tickets View -->
       <div *ngIf="currentView === 'tickets'" class="p-4">
         <div class="flex justify-between items-center mb-4">
@@ -65,19 +65,19 @@
           </button>
         </div>
 
-        <div class="space-y-3">
+        <div class="space-y-3 tickets-list">
           <div 
             *ngFor="let ticket of tickets; trackBy: trackTicket" 
             (click)="selectTicket(ticket)"
-            [class]="currentTicket?.id === ticket.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
-            class="border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+            [class]="currentTicket?.id === ticket.id ? 'border-blue-500 bg-blue-50 active' : 'border-gray-200'"
+            class="border rounded-lg p-3 cursor-pointer hover:bg-gray-50 ticket-item">
             
             <div class="flex items-start justify-between">
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">{{ ticket.title }}</p>
                 <p class="text-xs text-gray-500 mt-1">{{ ticket.description | slice:0:50 }}...</p>
               </div>
-              <span class="text-xs px-2 py-1 rounded-full" [class]="getTicketStatusColor(ticket.status)">
+              <span class="text-xs px-2 py-1 rounded-full ticket-status" [class]="getTicketStatusColor(ticket.status)">
                 {{ ticket.status }}
               </span>
             </div>
@@ -103,13 +103,13 @@
           <p class="text-xs text-gray-400 mt-1">{{ coaches.length }} coach(s) total disponible(s)</p>
         </div>
 
-        <div class="space-y-2">
+        <div class="space-y-2 coaches-list">
           <div *ngFor="let coach of (onlineCoaches.length > 0 ? onlineCoaches : coaches); trackBy: trackCoach" 
-               class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 border border-gray-100">
-            <div class="relative">
+               class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 border border-gray-100 coach-item">
+            <div class="relative coach-avatar">
               <img [src]="coach.avatar || 'assets/images/default-avatar.png'" [alt]="coach.name" class="w-8 h-8 rounded-full bg-gray-200">
-              <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white" 
-                   [class]="coach.isOnline ? 'bg-green-400' : 'bg-gray-400'"></div>
+              <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white status-indicator" 
+                   [class]="coach.isOnline ? 'online' : 'offline'"></div>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900">{{ coach.name }}</p>
@@ -140,9 +140,9 @@
   </div>
 
   <!-- Main Chat Area -->
-  <div class="flex-1 flex flex-col">
+  <div class="flex-1 flex flex-col main-chat">
     <!-- Chat Header -->
-    <div class="p-4 bg-white border-b border-gray-200">
+    <div class="p-4 bg-white border-b border-gray-200 chat-header">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
           <div *ngIf="assignedCoach" class="flex items-center space-x-3">
@@ -180,7 +180,7 @@
       </div>
 
       <!-- Ticket Info -->
-      <div *ngIf="currentTicket" class="mt-3 p-3 bg-gray-50 rounded-lg">
+      <div *ngIf="currentTicket" class="mt-3 p-3 bg-gray-50 rounded-lg ticket-info">
         <div class="flex items-center justify-between">
           <div>
             <h4 class="text-sm font-medium text-gray-900">{{ currentTicket.title }}</h4>
@@ -202,7 +202,7 @@
     </div>
 
     <!-- Messages -->
-    <div class="flex-1 overflow-y-auto p-4 bg-gray-50" #messagesContainer>
+    <div class="flex-1 overflow-y-auto p-4 bg-gray-50 messages-container" #messagesContainer>
       <!-- Placeholder quand aucun ticket sélectionné -->
       <div *ngIf="!currentTicket" class="flex items-center justify-center h-full">
         <div class="text-center">
@@ -235,15 +235,15 @@
         </div>
 
         <div *ngFor="let message of messages; trackBy: trackMessage" 
-             [class]="message.senderType === 'user' ? 'flex justify-end' : 'flex justify-start'">
+             [class]="message.senderType === 'user' ? 'flex justify-end message user' : 'flex justify-start message bot'">
           
-          <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
+          <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg message-bubble"
                [class]="message.senderType === 'user' ? 
                  'bg-blue-600 text-white' : 
                  (message.senderType === 'bot' ? 'bg-gray-200 text-gray-800' : 'bg-white text-gray-800 border')">
             
             <!-- Bot Options -->
-            <div *ngIf="message.content === 'options'; else normalMessage" class="space-y-2">
+            <div *ngIf="message.content === 'options'; else normalMessage" class="space-y-2 bot-options">
               <button 
                 *ngFor="let option of botResponses"
                 (click)="selectBotOption(option)"
@@ -255,7 +255,7 @@
             <!-- Normal Message -->
             <ng-template #normalMessage>
               <p class="text-sm">{{ message.content }}</p>
-              <p class="text-xs mt-1 opacity-75">{{ formatTime(message.timestamp) }}</p>
+              <p class="text-xs mt-1 opacity-75 message-time">{{ formatTime(message.timestamp) }}</p>
             </ng-template>
           </div>
         </div>
@@ -269,8 +269,8 @@
       </div>
     </div>
 
-    <!-- Message Input - Apparaît seulement si ticket sélectionné -->
-    <div *ngIf="currentTicket" class="p-4 bg-white border-t border-gray-200">
+    <!-- Message Input -->
+    <div class="p-4 bg-white border-t border-gray-200 message-input">
       <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="flex items-end space-x-3">
         <div class="flex-1">
           <textarea 
@@ -294,9 +294,9 @@
 </div>
 
 <!-- Ticket Creation Modal -->
-<div *ngIf="showTicketForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-    <div class="flex items-center justify-between mb-4">
+<div *ngIf="showTicketForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 modal-content">
+    <div class="flex items-center justify-between mb-4 modal-header">
       <h3 class="text-lg font-semibold text-gray-900">Créer un Ticket</h3>
       <button (click)="showTicketForm = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,17 +307,17 @@
 
     <form [formGroup]="ticketForm" (ngSubmit)="createTicket()">
       <div class="space-y-4">
-        <div>
+        <div class="form-group">
           <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
           <input formControlName="title" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
-        <div>
+        <div class="form-group">
           <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea formControlName="description" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
-        <div>
+        <div class="form-group">
           <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
           <select formControlName="category" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Sélectionner une catégorie</option>
@@ -325,7 +325,7 @@
           </select>
         </div>
 
-        <div>
+        <div class="form-group">
           <label class="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
           <select formControlName="priority" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="low">Faible</option>
@@ -336,11 +336,11 @@
         </div>
       </div>
 
-      <div class="flex justify-end space-x-3 mt-6">
-        <button type="button" (click)="showTicketForm = false" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+      <div class="flex justify-end space-x-3 mt-6 modal-actions">
+        <button type="button" (click)="showTicketForm = false" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 secondary">
           Annuler
         </button>
-        <button type="submit" [disabled]="!ticketForm.valid" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+        <button type="submit" [disabled]="!ticketForm.valid" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 primary">
           Créer
         </button>
       </div>

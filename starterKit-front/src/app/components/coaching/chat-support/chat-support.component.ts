@@ -199,30 +199,15 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   private loadTicketMessages(ticketId: string): void {
     console.log('Loading messages for ticket:', ticketId);
     
-    // Pour l'instant, utiliser les messages déjà dans le ticket
-    if (this.currentTicket && this.currentTicket.messages) {
+    if (this.currentTicket && this.currentTicket.messages && this.currentTicket.messages.length > 0) {
       this.messages = this.currentTicket.messages;
       this.cdr.detectChanges();
       setTimeout(() => this.scrollToBottom(), 100);
       return;
     }
 
-    // Si pas de messages dans le ticket, essayer de les récupérer via HTTP
-    const token = sessionStorage.getItem('jwtToken');
-    if (!token) {
-      console.warn('No token available for fetching messages');
-      this.messages = [];
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
-    };
-
-    // Appel HTTP direct
-    this.http.get<ChatMessage[]>(`http://localhost:3009/api/coaching/support/tickets/${ticketId}/messages`, { headers })
+    // Utiliser le service au lieu d'un appel HTTP direct
+    this.chatService.getTicketMessages(ticketId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (messages: ChatMessage[]) => {
@@ -233,7 +218,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           console.error('Error loading ticket messages:', error);
-          // Fallback : utiliser un tableau vide
           this.messages = [];
           this.cdr.detectChanges();
         }
@@ -286,6 +270,19 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     this.chatService.createTicket(ticketData)
       .pipe(takeUntil(this.destroy$))
       .subscribe(ticket => {
+        // Ajouter un message de bienvenue au nouveau ticket
+        const welcomeMessage: ChatMessage = {
+          id: this.generateId(),
+          ticketId: ticket.id,
+          senderId: 'bot',
+          senderType: 'bot',
+          content: `Votre ticket "${ticket.title}" a été créé avec succès. Comment puis-je vous aider ?`,
+          timestamp: new Date(),
+          isRead: false,
+          messageType: 'text'
+        };
+        
+        ticket.messages = [welcomeMessage];
         this.tickets.unshift(ticket);
         this.selectTicket(ticket);
         this.showTicketForm = false;
@@ -295,10 +292,17 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   async sendMessage(): Promise<void> {
-    if (!this.messageForm.valid || !this.currentTicket) return;
+    if (!this.messageForm.valid) return;
 
     const content = this.messageForm.get('message')?.value?.trim();
     if (!content) return;
+
+    // Si pas de ticket sélectionné, créer un ticket automatiquement
+    if (!this.currentTicket) {
+      console.log('Aucun ticket sélectionné, création automatique...');
+      await this.createAutoTicket(content);
+      return;
+    }
 
     try {
       // Arrêter l'indicateur de frappe
@@ -313,31 +317,64 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         await this.websocketService.sendMessage(this.currentTicket.id, content);
       } else {
         // Fallback HTTP
-        const message: ChatMessage = {
-          id: this.generateId(),
-          ticketId: this.currentTicket.id,
-          senderId: this.getCurrentUserId(),
-          senderType: 'user',
-          content: content,
-          timestamp: new Date(),
-          isRead: true,
-          messageType: 'text'
-        };
-
-        this.messages.push(message);
-        this.cdr.detectChanges();
-        setTimeout(() => this.scrollToBottom(), 100);
-
-        this.chatService.sendMessage(this.currentTicket.id, message)
+        this.chatService.sendMessage(this.currentTicket.id, content)
           .pipe(takeUntil(this.destroy$))
-          .subscribe();
+          .subscribe({
+            next: (message) => {
+              console.log('Message sent via HTTP:', message);
+              this.messages.push(message);
+              this.cdr.detectChanges();
+              setTimeout(() => this.scrollToBottom(), 100);
+            },
+            error: (error) => {
+              console.error('Error sending message via HTTP:', error);
+            }
+          });
       }
-      
+
+      this.cdr.detectChanges();
+      setTimeout(() => this.scrollToBottom(), 100);
+
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
-      // Remettre le message dans le champ en cas d'erreur
       this.messageForm.get('message')?.setValue(content);
     }
+  }
+
+  private async createAutoTicket(firstMessage: string): Promise<void> {
+    const ticketData = {
+      title: `Conversation - ${new Date().toLocaleTimeString()}`,
+      description: firstMessage.substring(0, 100),
+      category: 'Support technique',
+      priority: 'medium' as const
+    };
+
+    try {
+      if (this.isConnected) {
+        const ticket = await this.websocketService.createTicket(ticketData);
+        this.selectTicket(ticket);
+        await this.websocketService.sendMessage(ticket.id, firstMessage);
+      } else {
+        this.chatService.createTicket({
+          ...ticketData,
+          status: 'open',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          messages: []
+        }).pipe(takeUntil(this.destroy$))
+        .subscribe(ticket => {
+          this.tickets.unshift(ticket);
+          this.selectTicket(ticket);
+          this.chatService.sendMessage(ticket.id, firstMessage)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe();
+        });
+      }
+    } catch (error) {
+      console.error('Erreur création auto ticket:', error);
+    }
+
+    this.messageForm.get('message')?.setValue('');
   }
 
   async requestHumanCoach(): Promise<void> {
@@ -453,28 +490,37 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   selectTicket(ticket: SupportTicket): void {
-    console.log('Selecting ticket:', ticket);
+    console.log('=== SELECTING TICKET ===');
+    console.log('Ticket reçu:', ticket);
     
     this.currentTicket = ticket;
+    this.currentView = 'chat'; 
+    
+    console.log('currentTicket assigné:', this.currentTicket);
+    console.log('Vue changée vers:', this.currentView);
+    
     this.assignedCoach = (ticket as any).coach || null;
     
-    // Charger les messages du ticket depuis l'API HTTP si pas de messages
-    if (!ticket.messages || ticket.messages.length === 0) {
-      console.log('Loading messages for ticket:', ticket.id);
-      this.loadTicketMessages(ticket.id);
-    } else {
-      this.messages = ticket.messages;
+    this.messages = ticket.messages || [];
+    if (this.messages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: this.generateId(),
+        ticketId: ticket.id,
+        senderId: 'bot',
+        senderType: 'bot',
+        content: `Bonjour ! Votre ticket "${ticket.title}" a été créé. Comment puis-je vous aider aujourd'hui ?`,
+        timestamp: new Date(),
+        isRead: false,
+        messageType: 'text'
+      };
+      this.messages = [welcomeMessage];
     }
     
-    if (this.isConnected) {
-      this.websocketService.markMessagesRead(ticket.id).catch(error => {
-        console.warn('Could not mark messages as read:', error);
-      });
-    }
-    
-    this.updateUnreadCount();
-    setTimeout(() => this.scrollToBottom(), 100);
+    // FORCER la mise à jour
     this.cdr.detectChanges();
+    setTimeout(() => this.scrollToBottom(), 100);
+    
+    console.log('=== TICKET SELECTED - SHOULD SHOW CHAT ===');
   }
 
   selectBotOption(option: string): void {
@@ -590,6 +636,12 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     return message.id;
   }
 
+  hasSelectedTicket(): boolean {
+    const result = !!(this.currentTicket && this.currentTicket.id);
+    console.log('hasSelectedTicket():', result, this.currentTicket?.id);
+    return result;
+  }
+
   private updateUnreadCount(): void {
     if (!this.currentTicket) {
       this.unreadCount = 0;
@@ -614,7 +666,19 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private getCurrentUserId(): string {
-    return localStorage.getItem('userId') || 'guest-user';
+    const token = sessionStorage.getItem('startupkit_SESSION');
+    if (!token) {
+      console.warn('No token found, using guest user');
+      return 'guest-user';
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || payload.id || payload.userId || 'guest-user';
+    } catch (error) {
+      console.error('Error parsing token:', error);
+      return 'guest-user';
+    }
   }
 
   setView(view: 'chat' | 'tickets'): void {

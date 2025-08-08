@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import * as socketIo from 'socket.io-client';
-import { JwtService } from './jwt.service';
 import { ChatMessage, SupportTicket, Coach } from './chat-support.service';
 
 export interface ConnectionStatus {
@@ -37,10 +36,10 @@ export class WebSocketService {
   private currentTickets: SupportTicket[] = [];
   private typingTimeout: { [key: string]: any } = {};
 
-  constructor(private jwtService: JwtService) {}
+  constructor() {}
 
   connect() {
-    const token = this.jwtService.getToken();
+    const token = sessionStorage.getItem('startupkit_SESSION');
     if (!token) {
       console.warn('No JWT token available for WebSocket connection');
       this.connectionStatus$.next({
@@ -52,6 +51,7 @@ export class WebSocketService {
     }
 
     console.log('Attempting WebSocket connection to localhost:3009');
+    console.log('Token found:', token ? 'Yes' : 'No');
     
     this.socket = socketIo.connect('http://localhost:3009', {
       forceNew: true,
@@ -81,6 +81,11 @@ export class WebSocketService {
 
     this.socket.on('connect_error', (error: any) => {
       console.error('WebSocket connection error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        type: error.type,
+        description: error.description
+      });
       this.connectionStatus$.next({ 
         connected: false, 
         reconnecting: false,
@@ -233,11 +238,15 @@ export class WebSocketService {
   createTicket(ticketData: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for createTicket');
         reject(new Error('WebSocket not connected'));
         return;
       }
 
+      console.log('Creating ticket via WebSocket:', ticketData);
+      
       this.socket.emit('create_ticket', ticketData, (response: any) => {
+        console.log('Create ticket response:', response);
         if (response?.success) {
           resolve(response.ticket);
         } else {
@@ -250,11 +259,15 @@ export class WebSocketService {
   sendMessage(ticketId: string, content: string, messageType: string = 'text'): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for sendMessage');
         reject(new Error('WebSocket not connected'));
         return;
       }
 
+      console.log('Sending message via WebSocket:', { ticketId, content });
+
       this.socket.emit('send_message', { ticketId, content, messageType }, (response: any) => {
+        console.log('Send message response:', response);
         if (response?.success) {
           resolve(response.message);
         } else {
@@ -267,6 +280,7 @@ export class WebSocketService {
   assignCoach(ticketId: string, coachId?: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for assignCoach');
         reject(new Error('WebSocket not connected'));
         return;
       }
@@ -284,6 +298,7 @@ export class WebSocketService {
   requestHumanCoach(ticketId: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for requestHumanCoach');
         reject(new Error('WebSocket not connected'));
         return;
       }
@@ -301,6 +316,7 @@ export class WebSocketService {
   markMessagesRead(ticketId: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for markMessagesRead');
         reject(new Error('WebSocket not connected'));
         return;
       }
@@ -313,6 +329,16 @@ export class WebSocketService {
         }
       });
     });
+  }
+
+  joinTicketRoom(ticketId: string): void {
+    if (!this.socket?.connected) {
+      console.warn('WebSocket not connected for joinTicketRoom');
+      return;
+    }
+    
+    console.log('Joining ticket room:', ticketId);
+    this.socket.emit('join_ticket_room', { ticketId });
   }
 
   setTypingStatus(ticketId: string, isTyping: boolean): void {
@@ -336,6 +362,7 @@ export class WebSocketService {
   closeTicket(ticketId: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
+        console.warn('WebSocket not connected for closeTicket');
         reject(new Error('WebSocket not connected'));
         return;
       }
@@ -351,7 +378,11 @@ export class WebSocketService {
   }
 
   requestOnlineCoaches(): void {
-    if (!this.socket?.connected) return;
+    if (!this.socket?.connected) {
+      console.warn('WebSocket not connected for requestOnlineCoaches');
+      return;
+    }
+    console.log('Requesting online coaches');
     this.socket.emit('get_online_coaches');
   }
 
@@ -433,6 +464,7 @@ export class WebSocketService {
 
   disconnect() {
     if (this.socket) {
+      console.log('Disconnecting WebSocket');
       this.socket.disconnect();
       this.socket = null;
     }
@@ -444,6 +476,7 @@ export class WebSocketService {
   }
 
   reconnect() {
+    console.log('Reconnecting WebSocket');
     this.disconnect();
     setTimeout(() => {
       this.connect();

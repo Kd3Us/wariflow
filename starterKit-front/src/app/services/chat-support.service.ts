@@ -57,7 +57,7 @@ export class ChatSupportService {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = sessionStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('startupkit_SESSION');
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
@@ -145,6 +145,22 @@ export class ChatSupportService {
     );
   }
 
+  getTicketMessages(ticketId: string): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(
+      `${this.apiUrl}/tickets/${ticketId}/messages`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(messages => {
+        console.log('Messages récupérés pour ticket:', ticketId, messages);
+        this.messagesSubject.next(messages);
+      }),
+      catchError(error => {
+        console.error('Erreur récupération messages:', error);
+        return of([]);
+      })
+    );
+  }
+
   updateTicket(ticketId: string, updateData: Partial<SupportTicket>): Observable<SupportTicket> {
     return this.http.patch<SupportTicket>(
       `${this.apiUrl}/tickets/${ticketId}`, 
@@ -158,11 +174,13 @@ export class ChatSupportService {
     );
   }
 
-  sendMessage(ticketId: string, message: Partial<ChatMessage>): Observable<ChatMessage> {
+  sendMessage(ticketId: string, content: string): Observable<ChatMessage> {
     const messageData = {
-      ...message,
       ticketId,
-      senderId: message.senderId || this.getCurrentUserId(),
+      senderId: this.getCurrentUserId(),
+      senderType: 'user' as const,
+      content,
+      messageType: 'text' as const,
       timestamp: new Date(),
       isRead: false
     };
@@ -231,16 +249,19 @@ export class ChatSupportService {
   }
 
   private getCurrentUserId(): string {
-    const token = sessionStorage.getItem('jwtToken');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.sub || payload.userId || 'guest-user';
-      } catch {
-        return 'guest-user';
-      }
+    const token = sessionStorage.getItem('startupkit_SESSION');
+    if (!token) {
+      console.warn('No token found, using guest user');
+      return 'guest-user';
     }
-    return localStorage.getItem('userId') || 'guest-user';
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || payload.id || payload.userId || 'guest-user';
+    } catch (error) {
+      console.error('Error parsing token:', error);
+      return 'guest-user';
+    }
   }
 
   simulateBotResponse(userMessage: string): ChatMessage {
