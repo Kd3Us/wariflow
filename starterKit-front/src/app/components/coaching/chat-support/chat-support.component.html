@@ -226,7 +226,7 @@
         💡 Tapez votre message pour créer automatiquement une conversation
       </div>
       
-      <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" style="display: flex; align-items: center; gap: 15px; flex: 1;">
+      <form [formGroup]="messageForm" style="display: flex; align-items: center; gap: 15px; flex: 1;">
         <div style="flex: 1;">
           <textarea 
             #messageTextarea
@@ -238,7 +238,8 @@
             class="focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
         <button 
-          type="submit"
+          type="button"
+          (click)="sendMessage()"
           [disabled]="!messageForm.valid || isSubmitting"
           style="width: 80px; height: 60px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;">
           <svg *ngIf="!isSubmitting" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: auto;">

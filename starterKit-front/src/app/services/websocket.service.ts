@@ -129,7 +129,20 @@ export class WebSocketService {
     this.socket.on('new_message', (data: any) => {
       console.log('New message received:', data);
       if (data.message) {
-        this.handleNewMessage(data.message);
+        // VÉRIFICATION ANTI-DOUBLON
+        const existingMessage = this.currentMessages.find(msg => 
+          msg.id === data.message.id || 
+          (msg.content === data.message.content && 
+           msg.senderId === data.message.senderId && 
+           msg.ticketId === data.message.ticketId &&
+           Math.abs(new Date(msg.timestamp).getTime() - new Date(data.message.timestamp).getTime()) < 1000)
+        );
+        
+        if (!existingMessage) {
+          this.handleNewMessage(data.message);
+        } else {
+          console.log('Message ignoré (doublon détecté):', data.message);
+        }
       }
     });
 
@@ -387,11 +400,22 @@ export class WebSocketService {
   }
 
   addMessage(message: ChatMessage): void {
-    this.currentMessages.push(message);
-    this.messages$.next([...this.currentMessages]);
+    // VÉRIFICATION ANTI-DOUBLON AUSSI ICI
+    const existingMessage = this.currentMessages.find(msg => 
+      msg.id === message.id || 
+      (msg.content === message.content && 
+       msg.senderId === message.senderId && 
+       msg.ticketId === message.ticketId)
+    );
+    
+    if (!existingMessage) {
+      this.currentMessages.push(message);
+      this.messages$.next([...this.currentMessages]);
+    }
   }
 
   private handleNewMessage(message: ChatMessage) {
+    console.log('Handling new message (après vérification anti-doublon):', message);
     this.currentMessages.push(message);
     this.messages$.next([...this.currentMessages]);
   }

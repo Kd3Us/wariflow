@@ -388,10 +388,25 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     try {
       if (!this.currentTicket) {
         console.log('Aucun ticket sélectionné, création automatique...');
-        await this.createAutoTicket(content);
-        return;
+        // Créer le ticket SANS le message dans la description
+        const ticketData = {
+          title: `Conversation - ${new Date().toLocaleTimeString()}`,
+          description: 'Nouvelle conversation de support',
+          category: 'Support technique',
+          priority: 'medium' as const
+        };
+        
+        const ticket = await this.websocketService.createTicket(ticketData);
+        this.selectTicket(ticket);
+        this.currentTicket = ticket;
       }
 
+      // Vérification de sécurité TypeScript
+      if (!this.currentTicket) {
+        throw new Error('Impossible de créer ou sélectionner un ticket');
+      }
+
+      // Envoyer le message une seule fois
       this.websocketService.setTypingStatus(this.currentTicket.id, false);
       console.log('Sending via WebSocket...');
       await this.websocketService.sendMessage(this.currentTicket.id, content);
@@ -406,34 +421,6 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     }
 
     console.log('=== END SEND MESSAGE DEBUG ===');
-  }
-
-  private async createAutoTicket(firstMessage: string): Promise<void> {
-    if (!this.isConnected) {
-      console.log('WebSocket not connected, cannot create ticket');
-      alert('Connexion WebSocket requise. Veuillez actualiser la page.');
-      return;
-    }
-
-    const ticketData = {
-      title: `Conversation - ${new Date().toLocaleTimeString()}`,
-      description: firstMessage.substring(0, 100),
-      category: 'Support technique',
-      priority: 'medium' as const
-    };
-
-    try {
-      const ticket = await this.websocketService.createTicket(ticketData);
-      this.selectTicket(ticket);
-      await this.websocketService.sendMessage(ticket.id, firstMessage);
-    } catch (error) {
-      console.error('Erreur création auto ticket:', error);
-      alert('Erreur lors de la création du ticket. Veuillez réessayer.');
-    } finally {
-      this.isSubmitting = false;
-      this.messageForm.get('message')?.setValue('');
-      this.cdr.detectChanges();
-    }
   }
 
   async requestHumanCoach(): Promise<void> {
