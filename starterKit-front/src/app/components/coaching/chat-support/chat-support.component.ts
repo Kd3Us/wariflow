@@ -162,10 +162,18 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(messages => {
         console.log('Messages received via WebSocket:', messages);
-        this.messages = messages;
-        this.updateUnreadCount();
-        setTimeout(() => this.scrollToBottom(), 100);
-        this.cdr.detectChanges();
+        
+        if (this.currentTicket?.id) {
+          const currentTicketId = this.currentTicket.id;
+          const filteredMessages = messages.filter(msg => msg.ticketId === currentTicketId);
+          // Mettre à jour SEULEMENT si les messages ont changé
+          if (JSON.stringify(this.messages) !== JSON.stringify(filteredMessages)) {
+            this.messages = filteredMessages;
+            this.updateUnreadCount();
+            setTimeout(() => this.scrollToBottom(), 100);
+            this.cdr.detectChanges();
+          }
+        }
       });
 
     this.websocketService.getTickets()
@@ -189,11 +197,11 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(typingUsers => {
         this.typingUsers = typingUsers.filter(user => 
-          this.currentTicket && user.ticketId === this.currentTicket.id
+          this.currentTicket?.id && user.ticketId === this.currentTicket.id
         );
         this.cdr.detectChanges();
       });
-  }
+    }
 
   private setupFormSubscriptions(): void {
     this.messageForm.get('message')?.valueChanges
@@ -277,6 +285,11 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   async createTicket(): Promise<void> {
     if (!this.ticketForm.valid) return;
 
+    if (!this.isConnected) {
+      alert('Connexion WebSocket requise pour créer un ticket. Veuillez actualiser la page.');
+      return;
+    }
+
     try {
       const formValue = this.ticketForm.value;
       const ticketData = {
@@ -287,18 +300,14 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         priority: formValue.priority as 'low' | 'medium' | 'high' | 'urgent'
       };
 
-      if (this.isConnected) {
-        const ticket = await this.websocketService.createTicket(ticketData);
-        this.showTicketForm = false;
-        this.ticketForm.reset();
-        this.selectTicket(ticket);
-      } else {
-        this.createTicketFallback();
-      }
-      
+      const ticket = await this.websocketService.createTicket(ticketData);
+      this.showTicketForm = false;
+      this.ticketForm.reset();
+      this.selectTicket(ticket);
+        
     } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
-      this.createTicketFallback();
+      alert('Erreur lors de la création du ticket. Veuillez réessayer.');
     }
   }
 
@@ -365,7 +374,15 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.isConnected) {
+      console.log('WebSocket not connected, cannot send message');
+      alert('Connexion WebSocket requise pour envoyer des messages. Veuillez actualiser la page.');
+      return;
+    }
+
     this.isSubmitting = true;
+    this.messageForm.get('message')?.setValue('');
+    this.messageForm.get('message')?.markAsPristine();
     console.log('Current ticket:', this.currentTicket);
 
     try {
@@ -375,40 +392,14 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (this.isConnected) {
-        this.websocketService.setTypingStatus(this.currentTicket.id, false);
-      }
-
-      this.messageForm.get('message')?.setValue('');
-      this.messageForm.get('message')?.markAsPristine();
-
-      if (this.isConnected) {
-        console.log('Sending via WebSocket...');
-        await this.websocketService.sendMessage(this.currentTicket.id, content);
-      } else {
-        console.log('Sending via HTTP fallback...');
-        this.chatService.sendMessage(this.currentTicket.id, content)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (message) => {
-              console.log('Message sent via HTTP:', message);
-              this.messages.push(message);
-              this.cdr.detectChanges();
-              setTimeout(() => this.scrollToBottom(), 100);
-            },
-            error: (error) => {
-              console.error('Error sending message via HTTP:', error);
-              this.messageForm.get('message')?.setValue(content);
-            }
-          });
-      }
-
-      this.cdr.detectChanges();
-      setTimeout(() => this.scrollToBottom(), 100);
+      this.websocketService.setTypingStatus(this.currentTicket.id, false);
+      console.log('Sending via WebSocket...');
+      await this.websocketService.sendMessage(this.currentTicket.id, content);
 
     } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
       this.messageForm.get('message')?.setValue(content);
+      alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
     } finally {
       this.isSubmitting = false;
       this.cdr.detectChanges();
@@ -418,6 +409,12 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   }
 
   private async createAutoTicket(firstMessage: string): Promise<void> {
+    if (!this.isConnected) {
+      console.log('WebSocket not connected, cannot create ticket');
+      alert('Connexion WebSocket requise. Veuillez actualiser la page.');
+      return;
+    }
+
     const ticketData = {
       title: `Conversation - ${new Date().toLocaleTimeString()}`,
       description: firstMessage.substring(0, 100),
@@ -426,28 +423,12 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     };
 
     try {
-      if (this.isConnected) {
-        const ticket = await this.websocketService.createTicket(ticketData);
-        this.selectTicket(ticket);
-        await this.websocketService.sendMessage(ticket.id, firstMessage);
-      } else {
-        this.chatService.createTicket({
-          ...ticketData,
-          status: 'open',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          messages: []
-        }).pipe(takeUntil(this.destroy$))
-        .subscribe(ticket => {
-          this.tickets.unshift(ticket);
-          this.selectTicket(ticket);
-          this.chatService.sendMessage(ticket.id, firstMessage)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
-        });
-      }
+      const ticket = await this.websocketService.createTicket(ticketData);
+      this.selectTicket(ticket);
+      await this.websocketService.sendMessage(ticket.id, firstMessage);
     } catch (error) {
       console.error('Erreur création auto ticket:', error);
+      alert('Erreur lors de la création du ticket. Veuillez réessayer.');
     } finally {
       this.isSubmitting = false;
       this.messageForm.get('message')?.setValue('');
@@ -486,11 +467,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         messageType: 'system'
       };
 
-      setTimeout(() => {
-        this.messages.push(systemMessage);
-        this.cdr.detectChanges();
-        this.scrollToBottom();
-      }, 1500);
+      this.websocketService.addMessage(systemMessage);
     } else {
       const noCoachMessage: ChatMessage = {
         id: this.generateId(),
@@ -502,12 +479,9 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
         messageType: 'text'
       };
 
-      setTimeout(() => {
-        this.messages.push(noCoachMessage);
-        this.showTicketForm = true;
-        this.cdr.detectChanges();
-        this.scrollToBottom();
-      }, 1000);
+      this.websocketService.addMessage(noCoachMessage);
+      this.showTicketForm = true;
+      this.cdr.detectChanges();
     }
   }
 
@@ -573,23 +547,31 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
     
     this.assignedCoach = (ticket as any).coach || null;
     
-    this.messages = ticket.messages || [];
-    if (this.messages.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: this.generateId(),
-        ticketId: ticket.id,
-        senderId: 'bot',
-        senderType: 'bot',
-        content: `Bonjour ! Votre ticket "${ticket.title}" a été créé. Comment puis-je vous aider aujourd'hui ?`,
-        timestamp: new Date(),
-        isRead: false,
-        messageType: 'text'
-      };
-      this.messages = [welcomeMessage];
-    }
+    const allMessages = this.websocketService.getMessages().pipe(
+      takeUntil(this.destroy$)
+    );
     
-    this.cdr.detectChanges();
-    setTimeout(() => this.scrollToBottom(), 100);
+    allMessages.subscribe(messages => {
+      this.messages = messages.filter(msg => msg.ticketId === ticket.id);
+      
+      if (this.messages.length === 0) {
+        const welcomeMessage: ChatMessage = {
+          id: this.generateId(),
+          ticketId: ticket.id,
+          senderId: 'bot',
+          senderType: 'bot',
+          content: `Bonjour ! Votre ticket "${ticket.title}" a été créé. Comment puis-je vous aider aujourd'hui ?`,
+          timestamp: new Date(),
+          isRead: false,
+          messageType: 'text'
+        };
+        
+        this.websocketService.addMessage(welcomeMessage);
+      }
+      
+      this.cdr.detectChanges();
+      setTimeout(() => this.scrollToBottom(), 100);
+    });
     
     console.log('=== TICKET SELECTED - SHOULD SHOW CHAT ===');
   }
@@ -646,9 +628,7 @@ export class ChatSupportComponent implements OnInit, OnDestroy {
   private addBotResponse(option: string): void {
     setTimeout(() => {
       const botResponse = this.chatService.simulateBotResponse(option);
-      this.messages.push(botResponse);
-      this.cdr.detectChanges();
-      this.scrollToBottom();
+      this.websocketService.addMessage(botResponse);
     }, 1000);
   }
 

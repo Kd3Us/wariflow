@@ -386,6 +386,11 @@ export class WebSocketService {
     this.socket.emit('get_online_coaches');
   }
 
+  addMessage(message: ChatMessage): void {
+    this.currentMessages.push(message);
+    this.messages$.next([...this.currentMessages]);
+  }
+
   private handleNewMessage(message: ChatMessage) {
     this.currentMessages.push(message);
     this.messages$.next([...this.currentMessages]);

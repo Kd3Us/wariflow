@@ -191,8 +191,7 @@ export class ChatSupportService {
       { headers: this.getHeaders() }
     ).pipe(
       tap(msg => {
-        console.log('Message envoyé:', msg);
-        this.addMessage(msg);
+        console.log('Message envoyé via HTTP:', msg);
       }),
       catchError(error => {
         console.error('Erreur envoi message:', error);
